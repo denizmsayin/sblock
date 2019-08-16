@@ -1,5 +1,6 @@
 #include "sbpuzzle.h"
 
+#include <iostream>
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -47,6 +48,37 @@ std::ostream &operator<<(std::ostream &s, const SBPuzzle &p) {
     }
     s << dash_str;
     return s;
+}
+
+static int count_inversions(const std::vector<int> &v) {
+    // count inversions with O(n^2) instead of mergesort style, 
+    // since the vectors are very small
+    int inversions = 0;
+    int size = v.size();
+    int hole = size - 1;
+    for(int i = 0; i < size; i++) {
+        if(v[i] != hole) {
+            for(int j = i+1; j < size; j++) {
+                if(v[i] > v[j]) {
+                    inversions++;
+                }
+            }
+        }
+    }
+    return inversions;
+}
+
+bool SBPuzzle::is_solvable() const {
+    // see https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+    int inversions = count_inversions(tiles);
+    int hole_pos = find_hole();
+    int hole_row_from_bottom = h - hole_pos % w;
+    if(w % 2 == 1) // odd width
+        return inversions % 2 == 0; // must have even inversions
+    if(hole_row_from_bottom % 2 == 0) // even width
+        return inversions % 2 == 1; // must have odd inversions
+    // otherwise even
+    return inversions % 2 == 1;
 }
 
 int SBPuzzle::apply_move(Direction move, int hole_pos) {
@@ -108,6 +140,7 @@ static std::vector<SBPuzzle::Direction> reconstruct_moves(const BfsRec *final_re
     std::vector<SBPuzzle::Direction> moves;
     for(const BfsRec *rec = final_record; rec->prev != nullptr; rec = rec->prev)
         moves.push_back(rec->last_move);
+    std::reverse(moves.begin(), moves.end());
     return moves;
 }
 

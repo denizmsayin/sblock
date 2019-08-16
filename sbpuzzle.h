@@ -1,6 +1,7 @@
 #ifndef __SBPUZZLE_H__
 #define __SBPUZZLE_H__
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -33,6 +34,13 @@ public:
     // apply the move in the given direction using the cached hole position
     // and return the new hole position
     int apply_move(Direction move, int hole_pos);
+
+    // return true if the puzzle is part of the solvable permutations
+    bool is_solvable() const;
+
+    // shuffle the puzzle randomly
+    template <class URNG>
+    void shuffle(URNG &&urng) { std::shuffle(tiles.begin(), tiles.end(), urng); }
 
     // Applies the list of moves on the puzzle. The direction specifies which side of 
     // the hole is to be moved. e.g.:
