@@ -1,4 +1,4 @@
-CFLAGS=-Wall -std=c++11 -O0
+CFLAGS=-Wall -std=c++11 -g -O0
 SRC=sbpuzzle.cpp sbpuzzle_test.cpp
 OUT=sbpuzzle_test.out
 
