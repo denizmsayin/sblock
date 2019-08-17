@@ -51,7 +51,7 @@ public:
 
     void push(const T &e) { pq.push(e); }
 
-    const T &top() const { pq.top(); }
+    const T &top() const { return pq.top(); }
 
     void pop() { pq.pop(); }
 };

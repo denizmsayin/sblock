@@ -154,3 +154,17 @@ std::string SBPuzzle::encode() const {
         encoded.push_back(tiles[i]);
     return encoded;
 }
+
+int SBPuzzle::manhattan_distance_to_solution() const {
+    int dist = 0;
+    int size = h * w;
+    int hole = size - 1;
+    for(int i = 0; i < size; i++) {
+        if(tiles[i] != hole) {
+            int row = i / w, col = i % w;
+            int actual_row = tiles[i] / w, actual_col = tiles[i] % w;
+            dist += abs(row - actual_row) + abs(col - actual_col);
+        }
+    }
+    return dist;
+}

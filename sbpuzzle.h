@@ -78,8 +78,10 @@ public:
     // but a shortcut. Will have to try the alternative...
     std::string encode() const;
 
+    // heuristic for manhattan distance
+    int manhattan_distance_to_solution() const;
+
 private:
-public:
     std::vector<int> tiles;
     int h;
     int w;
