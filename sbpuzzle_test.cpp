@@ -13,8 +13,8 @@ using Dir = SBPuzzle::Direction;
 
 unsigned SEED = 42;
 
-int N = 100;
-int H = 3, W = 3;
+int N = 1;
+int H = 4, W = 4;
 
 template <class URNG>
 SBPuzzle create_solvable_puzzle(int h, int w, URNG &&rng) {

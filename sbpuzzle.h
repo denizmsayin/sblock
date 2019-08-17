@@ -25,6 +25,8 @@ public:
     SBPuzzle(const SBPuzzle &other) = default;
     SBPuzzle(SBPuzzle &&other) = default;
 
+    SBPuzzle goal_state() const;
+    
     // returns True if the puzzle is in a solved state
     bool is_solved() const;
 

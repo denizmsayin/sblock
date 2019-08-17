@@ -20,6 +20,10 @@ SBPuzzle::SBPuzzle(const std::vector<int> &tiles, int h, int w) : tiles(tiles), 
     hole_pos = find_hole();
 }
 
+SBPuzzle SBPuzzle::goal_state() const {
+    return SBPuzzle(h, w);
+}
+
 bool SBPuzzle::is_solved() const {
     int size = h * w;
     for(int i = 0; i < size; i++)
