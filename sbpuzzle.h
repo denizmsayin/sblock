@@ -28,19 +28,24 @@ public:
     // returns True if the puzzle is in a solved state
     bool is_solved() const;
 
-    // return the position of the hole
-    int find_hole() const;
+    // returns the possible actions on the puzzle
+    std::vector<Direction> possible_actions() const;
 
     // apply the move in the given direction using the cached hole position
-    // and return the new hole position
-    int apply_move(Direction move, int hole_pos);
+    // return the path cost, which is 1 for our case for any choice
+    int apply_action(Direction move);
 
     // return true if the puzzle is part of the solvable permutations
     bool is_solvable() const;
 
+    bool operator==(const SBPuzzle &other) const; // equality check for hashing
+
     // shuffle the puzzle randomly
     template <class URNG>
-    void shuffle(URNG &&urng) { std::shuffle(tiles.begin(), tiles.end(), urng); }
+    void shuffle(URNG &&urng) { 
+        std::shuffle(tiles.begin(), tiles.end(), urng); 
+        hole_pos = find_hole();
+    }
 
     // Applies the list of moves on the puzzle. The direction specifies which side of 
     // the hole is to be moved. e.g.:
@@ -69,16 +74,28 @@ public:
     // -------------
     friend std::ostream &operator<<(std::ostream &s, const SBPuzzle &p);
 
-private:
-    std::vector<int> tiles;
-    int h;
-    int w;
-
     // encode the puzzle into a string for hashing, not as good as making your own hash,
     // but a shortcut. Will have to try the alternative...
     std::string encode() const;
+
+private:
+public:
+    std::vector<int> tiles;
+    int h;
+    int w;
+    int hole_pos; // cached
+
+    int find_hole() const;
 };
 
 std::ostream &operator<<(std::ostream &s, SBPuzzle::Direction dir);
+
+// add hashability
+namespace std {
+    template <>
+    struct hash<SBPuzzle> {
+        size_t operator()(SBPuzzle const &p) const noexcept;
+    };
+}
 
 #endif

@@ -7,7 +7,25 @@
 #include <unordered_set>
 #include <stdexcept>
 
-template <class Puzzle, class Action, class ActionFunc, class SuccessorFunc, class HeuristicFunc, class Queue>
+// The class Puzzle has to implement the following functions:
+//     bool is_solved() const { returns true if the Puzzle is in a goal state, false o.w. }
+//     Container possible_actions() const { returns possible actions for the current puzzle }
+//     int apply_action(Action a) { applies 'a' to the puzzle and returns the cost of the action }
+// the class must also define a hash function so that it can be stored in unordered_set.
+//
+// The class Action must be used and returned by Puzzle as explained above.
+//
+// The class HeuristicFunc must be called as if it has the following signature:
+//     int HeuristicFunc(const Puzzle &p) { returns a heuristic value, lower is better }
+//
+// The template<class, class> class Queue must support the following functions:
+//     Queue() { empty constructor }
+//     bool empty() const { returns true if the queue is empty, false o.w. }
+//     void push(Record &r) { adds record r to the queue }
+//     const Record &top() const { returns the top record }
+//     void pop() { pops the top record }
+//
+template <class Puzzle, class Action, class HeuristicFunc, template<class, class> class Queue>
 class GraphSearchIterator {
 public:
     struct Record {
@@ -21,6 +39,13 @@ public:
             last_action(a), path_cost(pc), est_cost(ec) {}
     };
 
+    class RecordComparator {
+    public:
+        bool operator()(const Record *r1, const Record *r2) {
+            return r1->est_cost > r2->est_cost;
+        }
+    };
+
     GraphSearchIterator(const Puzzle &initial_state, const Action &invalid_function);
 
     bool done() const;
@@ -28,57 +53,50 @@ public:
     Record next();
 
 private:
-    Queue frontier;
+    Queue<Record *, RecordComparator> frontier;
     std::list<Record> records;
     std::unordered_set<Puzzle> visited;
 };
 
-template <class P, class A, class AF, class SF, class HF, class Q>
-class RecordComparator {
-using Rec = typename GraphSearchIterator<P, A, AF, SF, HF, Q>::Record;
-public:
-    bool operator()(const Rec &r1, const Rec &r2) {
-        return r1.est_cost > r2.est_cost;
-    }
-};
 
-template <class P, class A, class AF, class SF, class HF, class Q>
-GraphSearchIterator<P, A, AF, SF, HF, Q>
+template <class P, class A, class HF, template<class, class> class Q>
+GraphSearchIterator<P, A, HF, Q>
 ::GraphSearchIterator(const P &initial_state, const A &invalid_action) 
+    : frontier(), records(), visited()
 {
-    frontier = Q(); // TODO: move to initializer list
     records.emplace_back(
         initial_state, 
         nullptr, 
         invalid_action, 
         0, 
-        HF(initial_state)
+        HF()(initial_state)
     );
     frontier.push(&records.back());
 }
 
-template <class P, class A, class AF, class SF, class HF, class Q>
-bool GraphSearchIterator<P, A, AF, SF, HF, Q>
+template <class P, class A, class HF, template<class, class> class Q>
+bool GraphSearchIterator<P, A, HF, Q>
 ::done() const 
 {
     return frontier.empty();
 }
 
-template <class P, class A, class AF, class SF, class HF, class Q>
-typename GraphSearchIterator<P, A, AF, SF, HF, Q>::Record
-GraphSearchIterator<P, A, AF, SF, HF, Q>
+template <class P, class A, class HF, template<class, class> class Q>
+typename GraphSearchIterator<P, A, HF, Q>::Record
+GraphSearchIterator<P, A, HF, Q>
 ::next()
 {
     Record *rec = frontier.top(); // get the record from the top of the frontier
+    frontier.pop();
     if(visited.find(rec->state) == visited.end()) { // if the state in the record is unvisited
-        visited.push(rec->state); // add it to the visited state
-        for(auto &action : AF(rec->state)) { // get the set of possible actions
+        visited.insert(rec->state); // add it to the visited state
+        for(auto &action : rec->state.possible_actions()) { // get the set of possible actions
             // copy the existing state, and mutate it + get its path cost
             P new_state = rec->state;
-            int path_cost = SF(new_state, action);
+            int path_cost = new_state.apply_action(action);
             if(visited.find(new_state) == visited.end()) { // the new state is not visited
                 int new_path_cost = rec->path_cost + path_cost; // g(n) in A*
-                int est_cost = new_path_cost + HF(new_state); // f(n) = g(n) + h(n)
+                int est_cost = new_path_cost + HF()(new_state); // f(n) = g(n) + h(n)
                 records.emplace_back(
                     new_state, // the new state
                     rec, // previous record leading to this one
@@ -86,23 +104,23 @@ GraphSearchIterator<P, A, AF, SF, HF, Q>
                     new_path_cost, // path cost so far
                     est_cost // estimated cost for the function
                 );
-                frontier.push_back(&records.back());
+                frontier.push(&records.back());
             }
         }
     }
     return *rec;
 }
 
-template <class P, class A, class GoalTestFunc, class AF, class SF, class HF, class Q>
+template <class P, class A, class HF, template<class, class> class Q>
 std::vector<A> graphSearch(const P &initial_state, const A &invalid_action) {
-    auto itr = GraphSearchIterator<P, A, AF, SF, HF, Q>(initial_state, invalid_action);
+    auto itr = GraphSearchIterator<P, A, HF, Q>(initial_state, invalid_action);
     while(!itr.done()) {
         auto rec = itr.next();
-        if(GoalTestFunc(rec.state)) {
+        if(rec.state.is_solved()) {
             // Reconstruct the set of actions from the record
             std::vector<A> actions;
             for(auto rec_itr = &rec; rec_itr->prev != nullptr; rec_itr = rec_itr->prev)
-                actions.push_back(rec_itr->action);
+                actions.push_back(rec_itr->last_action);
             std::reverse(actions.begin(), actions.end());
             return actions;
         }

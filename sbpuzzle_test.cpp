@@ -1,6 +1,9 @@
+#include "search.hpp"
+#include "search_queues.hpp"
 #include "sbpuzzle.h"
 
 #include <iostream>
+#include <queue>
 #include <vector>
 #include <random>
 #include <chrono>
@@ -22,6 +25,13 @@ SBPuzzle create_solvable_puzzle(int h, int w, URNG &&rng) {
     return puzzle;
 }
 
+class NoHeuristic {
+public:
+    int operator()(const SBPuzzle &p) {
+        return 0;
+    }
+};
+
 int main() {
     auto rng = std::default_random_engine(SEED);
     vector<SBPuzzle> puzzles;
@@ -31,7 +41,7 @@ int main() {
     auto t1 = std::chrono::high_resolution_clock::now();
     int num_moves = 0;
     for(int i = 0; i < N; i++) {
-        vector<Dir> moves = puzzles[i].solution_bfs();
+        vector<Dir> moves = graphSearch<SBPuzzle, Dir, NoHeuristic, Queue>(puzzles[i], Dir::INVALID);
         num_moves += moves.size();
     }
     auto t2 = std::chrono::high_resolution_clock::now();
