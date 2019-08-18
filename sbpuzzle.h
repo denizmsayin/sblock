@@ -81,6 +81,9 @@ public:
     // but a shortcut. Will have to try the alternative...
     std::string encode() const;
 
+    // heuristic for misplaced tiles
+    int num_misplaced_tiles() const;
+
     // heuristic for manhattan distance
     int manhattan_distance_to_solution() const;
 

@@ -183,3 +183,13 @@ int SBPuzzle::manhattan_distance_to_solution() const {
     }
     return dist;
 }
+
+int SBPuzzle::num_misplaced_tiles() const {
+    int n = 0;
+    int size = h * w;
+    int hole = size - 1;
+    for(int i = 0; i < size; i++)
+        if(tiles[i] != hole && tiles[i] != i)
+            n++;
+    return n;
+}
