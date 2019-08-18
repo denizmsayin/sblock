@@ -361,6 +361,11 @@ std::vector<A> iterative_deepening_dfs(const P &initial_state, const A &invalid_
     return deepening_tree_search<P, A, NoHeuristic<P>, PriorityQueue>(initial_state, invalid_action, 0);
 }
 
+template <class P, class A, class HF>
+std::vector<A> iterative_deepening_a_star(const P &initial_state, const A &invalid_action) {
+    return deepening_graph_search<P, A, HF, PriorityQueue>(initial_state, invalid_action, 0);
+}
+
 template <class P, class A, class HF, template <class, class> class Q>
 std::vector<A> tree_search(const P &initial_state, const A &invalid_action) {
     return deepening_tree_search<P, A, HF, Q>(initial_state, invalid_action, 

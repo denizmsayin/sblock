@@ -13,8 +13,8 @@ using Dir = SBPuzzle::Direction;
 
 unsigned SEED = 42;
 
-int N = 100;
-int H = 3, W = 3;
+int N = 1;
+int H = 4, W = 4;
 
 template <class URNG>
 SBPuzzle create_solvable_puzzle(int h, int w, URNG &&rng) {
@@ -54,12 +54,12 @@ bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
 }
 
 int main() {
-    auto rng = std::default_random_engine(SEED);
+    auto rng = default_random_engine(SEED);
     vector<SBPuzzle> puzzles;
     for(int i = 0; i < N; i++) 
         puzzles.push_back(create_solvable_puzzle(H, W, rng));
 
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = chrono::high_resolution_clock::now();
     int num_moves = 0;
     for(int i = 0; i < N; i++) {
         /* 
@@ -87,18 +87,21 @@ int main() {
         }
         */
         // vector<Dir> moves = breadth_first_search<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
-        vector<Dir> moves = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = bidirectional_bfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
-        // vector<Dir> moves = iterative_deepening_dfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves = iterative_deepening_a_star<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
+        SBPuzzle p(puzzles[i]);
+        p.apply_moves(moves);
+        cout << p << endl;
         num_moves += moves.size();
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
+    auto t2 = chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+    chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
     double avg_moves = static_cast<double>(num_moves) / N;
-    std::cout << "Solved " << N << " puzzles in " << fp_ms.count() / N << " milliseconds on "
-              << "average with " << avg_moves << " moves on average." << endl;
+    cout << "Solved " << N << " puzzles in " << fp_ms.count() / N << " milliseconds on "
+         << "average with " << avg_moves << " moves on average." << endl;
 
     return 0;
 }
