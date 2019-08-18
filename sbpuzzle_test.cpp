@@ -13,8 +13,8 @@ using Dir = SBPuzzle::Direction;
 
 unsigned SEED = 42;
 
-int N = 1;
-int H = 4, W = 4;
+int N = 100;
+int H = 3, W = 3;
 
 template <class URNG>
 SBPuzzle create_solvable_puzzle(int h, int w, URNG &&rng) {
@@ -24,13 +24,6 @@ SBPuzzle create_solvable_puzzle(int h, int w, URNG &&rng) {
     } while(!puzzle.is_solvable());
     return puzzle;
 }
-
-class NoHeuristic {
-public:
-    int operator()(const SBPuzzle &p) {
-        return 0;
-    }
-};
 
 class ManhattanHeuristic {
 public:
@@ -62,10 +55,10 @@ int main() {
     auto t1 = std::chrono::high_resolution_clock::now();
     int num_moves = 0;
     for(int i = 0; i < N; i++) {
-        /*
+        /* 
         cout << i << endl;
-        vector<Dir> moves1 = graphSearch<SBPuzzle, Dir, ManhattanHeuristic, PriorityQueue>(puzzles[i], Dir::INVALID);
-        vector<Dir> moves2 = graphSearch<SBPuzzle, Dir, NoHeuristic, Queue>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves1 = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves2 = bidirectional_bfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
         if(!check_equality(moves1, moves2) && moves1.size() != moves2.size()) {
             cout << "Not equal!" << endl;
             cout << puzzles[i] << endl;
@@ -86,8 +79,9 @@ int main() {
 
         }
         */
-        // vector<Dir> moves = graphSearch<SBPuzzle, Dir, ManhattanHeuristic, PriorityQueue>(puzzles[i], Dir::INVALID);
-        vector<Dir> moves = graphSearch<SBPuzzle, Dir, NoHeuristic, Queue>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = bidirectional_bfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = breadth_first_search<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
         num_moves += moves.size();
     }
     auto t2 = std::chrono::high_resolution_clock::now();

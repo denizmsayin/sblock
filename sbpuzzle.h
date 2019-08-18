@@ -25,6 +25,7 @@ public:
     SBPuzzle(const SBPuzzle &other) = default;
     SBPuzzle(SBPuzzle &&other) = default;
 
+    // return the goal state for this puzzle
     SBPuzzle goal_state() const;
     
     // returns True if the puzzle is in a solved state
@@ -91,6 +92,9 @@ private:
 
     int find_hole() const;
 };
+
+// reverse of the action, for bidirectional search
+SBPuzzle::Direction inverse(SBPuzzle::Direction d);
 
 std::ostream &operator<<(std::ostream &s, SBPuzzle::Direction dir);
 

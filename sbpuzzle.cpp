@@ -8,6 +8,17 @@
 #include <queue>
 #include <unordered_set>
 
+SBPuzzle::Direction inverse(SBPuzzle::Direction d) {
+    using Dir = SBPuzzle::Direction;
+    switch(d) {
+        case Dir::UP:       return Dir::DOWN;
+        case Dir::RIGHT:    return Dir::LEFT;
+        case Dir::DOWN:     return Dir::UP;
+        case Dir::LEFT:     return Dir::RIGHT;
+        default:            return Dir::INVALID;
+    }
+}
+
 SBPuzzle::SBPuzzle(int h, int w) : tiles(h*w), h(h), w(w), hole_pos(h*w-1)
 {
     int size = h * w;
@@ -62,7 +73,7 @@ int SBPuzzle::apply_action(Direction move) {
 }
 
 bool SBPuzzle::operator==(const SBPuzzle &other) const {
-    if(h == other.h && w == other.w) {
+    if(h == other.h && w == other.w && hole_pos == other.hole_pos) {
         int size = h * w;
         for(int i = 0; i < size; i++) {
             if(tiles[i] != other.tiles[i])
