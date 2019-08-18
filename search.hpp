@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <stdexcept>
+#include <limits>
 
 #include "search_queues.hpp"
 
@@ -55,22 +56,30 @@ public:
     };
 
     GraphSearchIterator(const Puzzle &initial_state, const Action &invalid_action);
+    GraphSearchIterator(const Puzzle &initial_state, const Action &invalid_action, int cost_lim);
 
     bool done() const;
 
     Record *next();
 
+    int get_exceeding_cost() const { return exceeding_cost; };
+
+    constexpr static int MAX_COST = std::numeric_limits<int>::max();
+
 private:
     Queue<Record *, RecordComparator> frontier;
     std::list<Record> records;
     std::unordered_set<Puzzle> visited;
+    int cost_limit;
+    int exceeding_cost;
+
+    void init(const Puzzle &initial_state, const Action &invalid_action);
+    void clean_frontier();
 };
 
 
-template <class P, class A, class HF, template<class, class> class Q>
-GraphSearchIterator<P, A, HF, Q>
-::GraphSearchIterator(const P &initial_state, const A &invalid_action) 
-    : frontier(), records(), visited()
+template <class P, class A, class HF, template <class, class> class Q>
+void GraphSearchIterator<P, A, HF, Q>::init(const P &initial_state, const A &invalid_action)
 {
     records.emplace_back(
         initial_state, 
@@ -80,6 +89,43 @@ GraphSearchIterator<P, A, HF, Q>
         HF()(initial_state)
     );
     frontier.push(&records.back());
+}
+
+// Since we are constructing an iterator, which checks to see if the frontier
+// is empty to see if it is done, we should always keep the frontier clean of
+// unacceptable states at its top before the next call of .next()! This is
+// done by removing visited and cost exceeding states from the top. Note
+// that we also have to keep track of the minimum cost that exceeds the
+// limit
+template <class P, class A, class HF, template <class, class> class Q>
+void GraphSearchIterator<P, A, HF, Q>::clean_frontier() {
+    while(!frontier.empty() 
+          && (visited.find(frontier.top()->state) != visited.end() 
+              || frontier.top()->est_cost > cost_limit)) 
+    {
+        int est_cost = frontier.top()->est_cost;
+        if(est_cost > cost_limit && est_cost < exceeding_cost)
+            exceeding_cost = est_cost;
+        frontier.pop();
+    }
+}
+
+template <class P, class A, class HF, template<class, class> class Q>
+GraphSearchIterator<P, A, HF, Q>
+::GraphSearchIterator(const P &initial_state, const A &invalid_action) 
+    : frontier(), records(), visited(), cost_limit(MAX_COST),
+      exceeding_cost(MAX_COST)
+{
+    init(initial_state, invalid_action);
+}
+
+template <class P, class A, class HF, template<class, class> class Q>
+GraphSearchIterator<P, A, HF, Q>
+::GraphSearchIterator(const P &initial_state, const A &invalid_action, int cost_limit) 
+    : frontier(), records(), visited(), cost_limit(cost_limit),
+      exceeding_cost(MAX_COST)
+{
+    init(initial_state, invalid_action);
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
@@ -94,16 +140,11 @@ typename GraphSearchIterator<P, A, HF, Q>::Record*
 GraphSearchIterator<P, A, HF, Q>
 ::next()
 {
-    // since we do not have a decrease-key operation, it is possible
-    // to pull already visited states from the frontier, which is why
-    // we need a loop to skip those states first
-    Record *rec;
-    do {
-        rec = frontier.top(); // get the record from the top of the frontier
-        frontier.pop();
-    } while(visited.find(rec->state) != visited.end());
-    // at this point we have reached a visited state
-    visited.insert(rec->state); // add it to the visited state
+    // assumption: the state we take from the frontier is unvisited
+    Record *rec = frontier.top();
+    frontier.pop();
+    // allow the state in if the cost limit was not exceeded
+    visited.insert(rec->state); // add it to the visited states
     for(const auto &action : rec->state.possible_actions()) { // get the set of possible actions
         // copy the existing state, and mutate it + get its path cost
         P new_state = rec->state;
@@ -111,16 +152,21 @@ GraphSearchIterator<P, A, HF, Q>
         if(visited.find(new_state) == visited.end()) { // the new state is not visited
             int new_path_cost = rec->path_cost + path_cost; // g(n) in A*
             int est_cost = new_path_cost + HF()(new_state); // f(n) = g(n) + h(n)
-            records.emplace_back(
-                new_state, // the new state
-                rec, // previous record leading to this one
-                action, // action that led to this state
-                new_path_cost, // path cost so far
-                est_cost // estimated cost for the function
-            );
-            frontier.push(&records.back());
+            if(est_cost <= cost_limit) {
+                records.emplace_back(
+                        new_state, // the new state
+                        rec, // previous record leading to this one
+                        action, // action that led to this state
+                        new_path_cost, // path cost so far
+                        est_cost // estimated cost for the function
+                        );
+                frontier.push(&records.back());
+            } else if(est_cost < exceeding_cost) {
+                exceeding_cost = est_cost;
+            }
         }
     }
+    clean_frontier();
     return rec;
 }
 
@@ -164,19 +210,46 @@ static std::vector<A> construct_inverse_action_chain(
     return actions;
 }
 
+#include <iostream>
 
 // a generic graph search, forms base for BFS, DFS, A*
 template <class P, class A, class HF, template<class, class> class Q>
-std::vector<A> graph_search(const P &initial_state, const A &invalid_action) {
-    auto itr = GraphSearchIterator<P, A, HF, Q>(initial_state, invalid_action);
-    while(!itr.done()) {
-        auto rec = itr.next();
-        if(rec->state.is_solved())
-            // Reconstruct the set of actions from the record
-            return construct_reverse_action_chain<P, A, HF, Q>(rec);
+std::vector<A> deepening_graph_search(
+    const P &initial_state, 
+    const A &invalid_action, 
+    int initial_max_cost) 
+{
+    int max_cost = initial_max_cost;
+    while(true) {
+        using namespace std;
+        std::cout << max_cost << std::endl;
+        auto itr = GraphSearchIterator<P, A, HF, Q>(initial_state, invalid_action, max_cost);
+        int i = 0;
+        while(!itr.done()) {
+            auto rec = itr.next();
+            i++;
+            if(rec->state.is_solved())
+                // Reconstruct the set of actions from the record
+                return construct_reverse_action_chain<P, A, HF, Q>(rec);
+        }
+        cout << i << endl;
+        // at this point, either all states have been explored or the cost exceeded
+        if(itr.get_exceeding_cost() == GraphSearchIterator<P, A, HF, Q>::MAX_COST) // none exceeded
+            break;
+        max_cost = itr.get_exceeding_cost(); // some exceeded, get the next cost
     }
     throw std::invalid_argument("The initial state cannot be transformed to the goal state");
     return std::vector<A>(); // to prevent void warning
+}
+
+template <class P, class A>
+std::vector<A> iterative_deepening_dfs(const P &initial_state, const A &invalid_action) {
+    return deepening_graph_search<P, A, NoHeuristic<P>, PriorityQueue>(initial_state, invalid_action, 0);}
+
+template <class P, class A, class HF, template <class, class> class Q>
+std::vector<A> graph_search(const P &initial_state, const A &invalid_action) {
+    return deepening_graph_search<P, A, HF, Q>(initial_state, invalid_action, 
+                                               GraphSearchIterator<P, A, HF, Q>::MAX_COST);
 }
 
 template <class P, class A>

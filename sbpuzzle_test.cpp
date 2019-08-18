@@ -13,7 +13,7 @@ using Dir = SBPuzzle::Direction;
 
 unsigned SEED = 42;
 
-int N = 100;
+int N = 1;
 int H = 3, W = 3;
 
 template <class URNG>
@@ -79,9 +79,14 @@ int main() {
 
         }
         */
-        // vector<Dir> moves = bidirectional_bfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
-        vector<Dir> moves = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = breadth_first_search<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = bidirectional_bfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves = iterative_deepening_dfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
+        SBPuzzle cp(puzzles[i]);
+        cp.apply_moves(moves);
+        cout << puzzles[i] << endl;
+        cout << cp << endl;
         num_moves += moves.size();
     }
     auto t2 = std::chrono::high_resolution_clock::now();
