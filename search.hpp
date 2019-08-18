@@ -11,6 +11,10 @@
 
 #include "search_queues.hpp"
 
+// The goal of this header is to provide all sorts of searching functions while achieving
+// maximal code reuse, rather than maximal optimisation.
+
+// A base class for both tree and graph search classes
 // The class Puzzle has to implement the following functions:
 //     bool is_solved() const { returns true if the Puzzle is in a goal state, false o.w. }
 //     Container possible_actions() const { returns possible actions for the current puzzle }
@@ -31,11 +35,16 @@
 //     const Record &top() const { returns the top record }
 //     void pop() { pops the top record }
 //
-// Examples: GraphSearchIterator<Puzzle, Action, Zero Returning Functor, Queue> would be breadth first
-//           GraphSearchIterator<Puzzle, Action, Zero Returning Functor, Stack> would be depth first
-//           GraphSearchIterator<Puzzle, Action, Some Heuristic, PriorityQueue> would be A*
+// To increase code reuse, I decided to have both tree and graph search classes to inherit from
+// the same class, and have visitation insertions/checks performed by virtual functions. Graph
+// search does the insertions & checks in these functions, while the tree search simply skips
+// them
+//
+// Examples: BaseSearchIterator<Puzzle, Action, Zero Returning Functor, Queue> would be breadth first
+//           BaseSearchIterator<Puzzle, Action, Zero Returning Functor, Stack> would be depth first
+//           BaseSearchIterator<Puzzle, Action, Some Heuristic, PriorityQueue> would be A*
 template <class Puzzle, class Action, class HeuristicFunc, template<class, class> class Queue>
-class GraphSearchIterator {
+class BaseSearchIterator {
 public:
     struct Record {
         Puzzle state;
@@ -55,8 +64,8 @@ public:
         }
     };
 
-    GraphSearchIterator(const Puzzle &initial_state, const Action &invalid_action);
-    GraphSearchIterator(const Puzzle &initial_state, const Action &invalid_action, int cost_lim);
+    BaseSearchIterator(const Puzzle &initial_state, const Action &invalid_action);
+    BaseSearchIterator(const Puzzle &initial_state, const Action &invalid_action, int cost_lim);
 
     bool done() const;
 
@@ -66,10 +75,13 @@ public:
 
     constexpr static int MAX_COST = std::numeric_limits<int>::max();
 
+protected:
+    virtual bool is_visited(const Puzzle &state) const = 0;
+    virtual void visited_insert(const Puzzle &state) = 0;
+
 private:
     Queue<Record *, RecordComparator> frontier;
     std::list<Record> records;
-    std::unordered_set<Puzzle> visited;
     int cost_limit;
     int exceeding_cost;
 
@@ -77,9 +89,41 @@ private:
     void clean_frontier();
 };
 
+// the tree search iterator does not keep track of visited states and may revisit them
+template <class P, class A, class HF, template<class, class> class Q>
+class TreeSearchIterator : public BaseSearchIterator<P, A, HF, Q> {
+public:
+    TreeSearchIterator(const P &is, const A &ia) : BaseSearchIterator<P, A, HF, Q>(is, ia) {}
+    TreeSearchIterator(const P &is, const A &ia, int cl) : 
+        BaseSearchIterator<P, A, HF, Q>(is, ia, cl) {}
+protected:
+    virtual bool is_visited(const P &state) const { return false; }
+    virtual void visited_insert(const P &state) {}
+};
+
+// graph search keeps track of visited states and prevents them from being revisited
+template <class P, class A, class HF, template<class, class> class Q>
+class GraphSearchIterator : public BaseSearchIterator<P, A, HF, Q> {
+public:
+    GraphSearchIterator(const P &is, const A &ia) : BaseSearchIterator<P, A, HF, Q>(is, ia), 
+        visited() {}
+    GraphSearchIterator(const P &is, const A &ia, int cl) : 
+        BaseSearchIterator<P, A, HF, Q>(is, ia, cl), visited() {}
+
+protected:
+    virtual bool is_visited(const P &state) const { 
+        return visited.find(state) != visited.end(); 
+    }
+    virtual void visited_insert(const P &state) {
+        visited.insert(state);
+    }
+
+private:
+    std::unordered_set<P> visited;
+};
 
 template <class P, class A, class HF, template <class, class> class Q>
-void GraphSearchIterator<P, A, HF, Q>::init(const P &initial_state, const A &invalid_action)
+void BaseSearchIterator<P, A, HF, Q>::init(const P &initial_state, const A &invalid_action)
 {
     records.emplace_back(
         initial_state, 
@@ -98,9 +142,9 @@ void GraphSearchIterator<P, A, HF, Q>::init(const P &initial_state, const A &inv
 // that we also have to keep track of the minimum cost that exceeds the
 // limit
 template <class P, class A, class HF, template <class, class> class Q>
-void GraphSearchIterator<P, A, HF, Q>::clean_frontier() {
+void BaseSearchIterator<P, A, HF, Q>::clean_frontier() {
     while(!frontier.empty() 
-          && (visited.find(frontier.top()->state) != visited.end() 
+          && (is_visited(frontier.top()->state)
               || frontier.top()->est_cost > cost_limit)) 
     {
         int est_cost = frontier.top()->est_cost;
@@ -111,48 +155,48 @@ void GraphSearchIterator<P, A, HF, Q>::clean_frontier() {
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
-GraphSearchIterator<P, A, HF, Q>
-::GraphSearchIterator(const P &initial_state, const A &invalid_action) 
-    : frontier(), records(), visited(), cost_limit(MAX_COST),
+BaseSearchIterator<P, A, HF, Q>
+::BaseSearchIterator(const P &initial_state, const A &invalid_action) 
+    : frontier(), records(), cost_limit(MAX_COST),
       exceeding_cost(MAX_COST)
 {
     init(initial_state, invalid_action);
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
-GraphSearchIterator<P, A, HF, Q>
-::GraphSearchIterator(const P &initial_state, const A &invalid_action, int cost_limit) 
-    : frontier(), records(), visited(), cost_limit(cost_limit),
+BaseSearchIterator<P, A, HF, Q>
+::BaseSearchIterator(const P &initial_state, const A &invalid_action, int cost_limit) 
+    : frontier(), records(), cost_limit(cost_limit),
       exceeding_cost(MAX_COST)
 {
     init(initial_state, invalid_action);
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
-bool GraphSearchIterator<P, A, HF, Q>
+bool BaseSearchIterator<P, A, HF, Q>
 ::done() const 
 {
     return frontier.empty();
 }
 
+// Returns the next valid state with its record
 template <class P, class A, class HF, template<class, class> class Q>
-typename GraphSearchIterator<P, A, HF, Q>::Record*
-GraphSearchIterator<P, A, HF, Q>
+typename BaseSearchIterator<P, A, HF, Q>::Record*
+BaseSearchIterator<P, A, HF, Q>
 ::next()
 {
     // assumption: the state we take from the frontier is unvisited
     Record *rec = frontier.top();
     frontier.pop();
-    // allow the state in if the cost limit was not exceeded
-    visited.insert(rec->state); // add it to the visited states
+    visited_insert(rec->state); // add it to the visited states
     for(const auto &action : rec->state.possible_actions()) { // get the set of possible actions
         // copy the existing state, and mutate it + get its path cost
         P new_state = rec->state;
         int path_cost = new_state.apply_action(action);
-        if(visited.find(new_state) == visited.end()) { // the new state is not visited
+        if(!is_visited(new_state)) { // the new state is not visited
             int new_path_cost = rec->path_cost + path_cost; // g(n) in A*
             int est_cost = new_path_cost + HF()(new_state); // f(n) = g(n) + h(n)
-            if(est_cost <= cost_limit) {
+            if(est_cost <= cost_limit) { // if the state does not exceed the cost limit
                 records.emplace_back(
                         new_state, // the new state
                         rec, // previous record leading to this one
@@ -182,7 +226,7 @@ public:
 // Reconstruct the chain of actions that led to the provided record by following the pointers
 template <class P, class A, class HF, template<class, class> class Q>
 static std::vector<A> construct_action_chain(
-        const typename GraphSearchIterator<P, A, HF, Q>::Record *rec) 
+        const typename BaseSearchIterator<P, A, HF, Q>::Record *rec) 
 {
     std::vector<A> actions;
     for(auto rec_itr = rec; rec_itr->prev != nullptr; rec_itr = rec_itr->prev)
@@ -193,7 +237,7 @@ static std::vector<A> construct_action_chain(
 // Reconstruct the chain of actions that led to the provided record by following the pointers, but reverse it at the end
 template <class P, class A, class HF, template<class, class> class Q>
 static std::vector<A> construct_reverse_action_chain(
-        const typename GraphSearchIterator<P, A, HF, Q>::Record *rec) 
+        const typename BaseSearchIterator<P, A, HF, Q>::Record *rec) 
 {
     std::vector<A> actions = construct_action_chain<P, A, HF, Q>(rec);
     std::reverse(actions.begin(), actions.end());
@@ -202,7 +246,7 @@ static std::vector<A> construct_reverse_action_chain(
 
 template <class P, class A, class HF, template<class, class> class Q>
 static std::vector<A> construct_inverse_action_chain(
-        const typename GraphSearchIterator<P, A, HF, Q>::Record *rec) 
+        const typename BaseSearchIterator<P, A, HF, Q>::Record *rec) 
 {
     std::vector<A> actions;
     for(auto rec_itr = rec; rec_itr->prev != nullptr; rec_itr = rec_itr->prev)
@@ -210,31 +254,27 @@ static std::vector<A> construct_inverse_action_chain(
     return actions;
 }
 
-#include <iostream>
-
-// a generic graph search, forms base for BFS, DFS, A*
-template <class P, class A, class HF, template<class, class> class Q>
-std::vector<A> deepening_graph_search(
+// a generic graph search, forms base for BFS, DFS, A*, IDDFS, IDA* etc.
+template <class P, class A, class HF, template<class, class> class Q,
+          template <class, class, class, template <class, class> class> class Iterator>
+std::vector<A> deepening_search(
     const P &initial_state, 
     const A &invalid_action, 
     int initial_max_cost) 
 {
+    // start with an initial max cost
     int max_cost = initial_max_cost;
     while(true) {
-        using namespace std;
-        std::cout << max_cost << std::endl;
-        auto itr = GraphSearchIterator<P, A, HF, Q>(initial_state, invalid_action, max_cost);
-        int i = 0;
+        auto itr = Iterator<P, A, HF, Q>(initial_state, invalid_action, max_cost);
+        // go through states returned by the iterator until there are none left
         while(!itr.done()) {
             auto rec = itr.next();
-            i++;
             if(rec->state.is_solved())
                 // Reconstruct the set of actions from the record
                 return construct_reverse_action_chain<P, A, HF, Q>(rec);
         }
-        cout << i << endl;
         // at this point, either all states have been explored or the cost exceeded
-        if(itr.get_exceeding_cost() == GraphSearchIterator<P, A, HF, Q>::MAX_COST) // none exceeded
+        if(itr.get_exceeding_cost() == Iterator<P, A, HF, Q>::MAX_COST) // none exceeded
             break;
         max_cost = itr.get_exceeding_cost(); // some exceeded, get the next cost
     }
@@ -242,37 +282,13 @@ std::vector<A> deepening_graph_search(
     return std::vector<A>(); // to prevent void warning
 }
 
-template <class P, class A>
-std::vector<A> iterative_deepening_dfs(const P &initial_state, const A &invalid_action) {
-    return deepening_graph_search<P, A, NoHeuristic<P>, PriorityQueue>(initial_state, invalid_action, 0);}
-
-template <class P, class A, class HF, template <class, class> class Q>
-std::vector<A> graph_search(const P &initial_state, const A &invalid_action) {
-    return deepening_graph_search<P, A, HF, Q>(initial_state, invalid_action, 
-                                               GraphSearchIterator<P, A, HF, Q>::MAX_COST);
-}
-
-template <class P, class A>
-std::vector<A> depth_first_search(const P &initial_state, const A &invalid_action) {
-    return graph_search<P, A, NoHeuristic<P>, Stack>(initial_state, invalid_action);
-}
-
-template <class P, class A>
-std::vector<A> breadth_first_search(const P &initial_state, const A &invalid_action) {
-    return graph_search<P, A, NoHeuristic<P>, Queue>(initial_state, invalid_action);
-}
-
-template <class P, class A, class HF>
-std::vector<A> a_star_search(const P &initial_state, const A &invalid_action) {
-    return graph_search<P, A, HF, PriorityQueue>(initial_state, invalid_action);
-}
-
 // Helper for bidirectional search
-template <class P, class A, class HF, template<class, class> class Q>
-bool process_itr(
+template <class P, class A, class HF, template<class, class> class Q,
+          template <class, class, class, template<class, class> class> class Iterator>
+static bool process_itr(
     bool is_forward_itr,
-    GraphSearchIterator<P, A, HF, Q> &itr, 
-    std::unordered_map<P, typename GraphSearchIterator<P, A, HF, Q>::Record *> &visited,
+    Iterator<P, A, HF, Q> &itr, 
+    std::unordered_map<P, typename BaseSearchIterator<P, A, HF, Q>::Record *> &visited,
     std::vector<A> &moves)
 {
     if(!itr.done()) {
@@ -295,14 +311,16 @@ bool process_itr(
     return false;
 }
 
-
-template <class P, class A, class HF, template<class, class> class Q>
+// Bidirectional search, which works by intersecting states reached from the starting
+// point and goal by advancing both at the same time
+template <class P, class A, class HF, template<class, class> class Q,
+          template <class, class, class, template<class, class> class> class Iterator>
 std::vector<A> bidirectional_search(const P &initial_state, const A &invalid_action) {
     std::vector<A> moves;
     P goal = initial_state.goal_state();
-    auto forward_itr = GraphSearchIterator<P, A, HF, Q>(initial_state, invalid_action);
-    auto backward_itr = GraphSearchIterator<P, A, HF, Q>(goal, invalid_action);
-    std::unordered_map<P, typename GraphSearchIterator<P, A, HF, Q>::Record *> visited;
+    auto forward_itr = Iterator<P, A, HF, Q>(initial_state, invalid_action);
+    auto backward_itr = Iterator<P, A, HF, Q>(goal, invalid_action);
+    std::unordered_map<P, typename BaseSearchIterator<P, A, HF, Q>::Record *> visited;
     while(!forward_itr.done() && !backward_itr.done()) {
         // try the forward iterator first
         bool found = process_itr(true, forward_itr, visited, moves);
@@ -317,9 +335,62 @@ std::vector<A> bidirectional_search(const P &initial_state, const A &invalid_act
     return std::vector<A>(); // to prevent void warning
 }
 
+// From here on out, there are lots of derived search functions which form a hierarchy,
+// with leaves being the usual DFS, BFS, A* etc.
+
+template <class P, class A, class HF, template<class, class> class Q>
+std::vector<A> deepening_tree_search(
+    const P &initial_state, 
+    const A &invalid_action, 
+    int initial_max_cost) 
+{
+    return deepening_search<P, A, HF, Q, TreeSearchIterator>(initial_state, invalid_action, initial_max_cost);
+}
+
+template <class P, class A, class HF, template<class, class> class Q>
+std::vector<A> deepening_graph_search(
+    const P &initial_state, 
+    const A &invalid_action, 
+    int initial_max_cost) 
+{
+    return deepening_search<P, A, HF, Q, GraphSearchIterator>(initial_state, invalid_action, initial_max_cost);
+}
+
+template <class P, class A>
+std::vector<A> iterative_deepening_dfs(const P &initial_state, const A &invalid_action) {
+    return deepening_tree_search<P, A, NoHeuristic<P>, PriorityQueue>(initial_state, invalid_action, 0);
+}
+
+template <class P, class A, class HF, template <class, class> class Q>
+std::vector<A> tree_search(const P &initial_state, const A &invalid_action) {
+    return deepening_tree_search<P, A, HF, Q>(initial_state, invalid_action, 
+                                              BaseSearchIterator<P, A, HF, Q>::MAX_COST);
+}
+
+template <class P, class A, class HF, template <class, class> class Q>
+std::vector<A> graph_search(const P &initial_state, const A &invalid_action) {
+    return deepening_graph_search<P, A, HF, Q>(initial_state, invalid_action, 
+                                               BaseSearchIterator<P, A, HF, Q>::MAX_COST);
+}
+
+template <class P, class A>
+std::vector<A> depth_first_search(const P &initial_state, const A &invalid_action) {
+    return graph_search<P, A, NoHeuristic<P>, Stack>(initial_state, invalid_action);
+}
+
+template <class P, class A>
+std::vector<A> breadth_first_search(const P &initial_state, const A &invalid_action) {
+    return graph_search<P, A, NoHeuristic<P>, Queue>(initial_state, invalid_action);
+}
+
+template <class P, class A, class HF>
+std::vector<A> a_star_search(const P &initial_state, const A &invalid_action) {
+    return graph_search<P, A, HF, PriorityQueue>(initial_state, invalid_action);
+}
+
 template <class P, class A>
 std::vector<A> bidirectional_bfs(const P &initial_state, const A &invalid_action) {
-    return bidirectional_search<P, A, NoHeuristic<P>, Queue>(initial_state, invalid_action);
+    return bidirectional_search<P, A, NoHeuristic<P>, Queue, GraphSearchIterator>(initial_state, invalid_action);
 }
 
 #endif
