@@ -1,7 +1,7 @@
 CFLAGS=-Wall -std=c++11
 RELEASEFLAGS=-O3
 DEBUGFLAGS=-O0 -g
-SRC=sbpuzzle.cpp sbpuzzle_test.cpp
+SRC=sbpuzzle_test.cpp
 OUT=sbpuzzle_test.out
 
 all:

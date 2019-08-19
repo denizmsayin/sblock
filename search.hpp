@@ -104,10 +104,6 @@ private:
     // gone, they will be automatically cleaned up by the smart pointer. In case too many
     // small allocations cause a significant performance hit, I will implement my own
     // object cache to handle their allocation in bulk, but only after profiling.
-    // LOG:
-    // -----
-    // -> Implemented with shared_ptrs, the program takes around 12.5% longer to terminate
-    //    compared to previous commit
 
     // The next thing is that states are generated somewhat prematurely for DFS and its
     // derivatives, due to all successors being put on the stack, and not used until long
@@ -117,6 +113,18 @@ private:
     // have been generated. This will require the records to store where they're left at in
     // the list of actions. It is possible that this will slightly slow down BFS, A* etc.,
     // but it should improve the memory complexity of IDDFS and IDA* nicely
+
+    // LOG:
+    // -----
+    // -> Implemented with shared_ptrs, the program takes around 12.5% longer to terminate
+    //    compared to previous commit, memory usage fell from approx. 2.5 GB to approx. 2 GB
+    //    for the first instance of 4x4 with seed 42
+    // -> I tried the idea of generating successors one by one, the results were not much
+    //    better than before, shelved for now
+    // -> I changed SBPuzzle's height and width to template parameters so that they
+    //    become compile time constants, leaving only a few uint8_t's as members. Memory
+    //    usage fell from around 2 GB to 800 MB for the first instance of 4x4, and time
+    //    dropped from around 27 sec to 20 sec
 
     Queue<std::shared_ptr<Record>, RecordComparator> frontier;
     int cost_limit;
