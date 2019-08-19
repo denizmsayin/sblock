@@ -15,6 +15,9 @@ public:
 
     bool empty() const { return q.empty(); }
 
+    template <typename... Args>
+    void emplace(Args&&... args) { q.emplace(args...); }
+
     void push(const T &e) { q.push(e); }
 
     const T &top() const { return q.front(); }
@@ -32,6 +35,9 @@ public:
 
     bool empty() const { return s.empty(); }
 
+    template <typename... Args>
+    void emplace(Args&&... args) { s.emplace(args...); }
+
     void push(const T &e) { s.push(e); }
 
     const T &top() const { return s.top(); }
@@ -48,6 +54,9 @@ public:
     PriorityQueue() : pq() {}
 
     bool empty() const { return pq.empty(); }
+
+    template <typename... Args>
+    void emplace(Args&&... args) { pq.emplace(args...); }
 
     void push(const T &e) { pq.push(e); }
 
