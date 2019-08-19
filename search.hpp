@@ -54,7 +54,7 @@ public:
         int path_cost;
         int est_cost;
 
-        Record(const Puzzle &p, Record *r, const Action &a, int pc, int ec) : state(p), 
+        Record(const Puzzle &p, Record *r, const Action &a, int pc, int ec) : state(p),
             prev(r), last_action(a), path_cost(pc), est_cost(ec) {}
         Record(const Puzzle &p, const std::shared_ptr<Record> &r, const Action &a, int pc, int ec)
             : state(p), prev(r), last_action(a), path_cost(pc), est_cost(ec) {}
@@ -104,6 +104,19 @@ private:
     // gone, they will be automatically cleaned up by the smart pointer. In case too many
     // small allocations cause a significant performance hit, I will implement my own
     // object cache to handle their allocation in bulk, but only after profiling.
+    // LOG:
+    // -----
+    // -> Implemented with shared_ptrs, the program takes around 12.5% longer to terminate
+    //    compared to previous commit
+
+    // The next thing is that states are generated somewhat prematurely for DFS and its
+    // derivatives, due to all successors being put on the stack, and not used until long
+    // after. This causes the memory complexity to be O(bd), where b is the branching factor
+    // and d the solution depth, instead of simply O(d). To remedy this, I plan to generate
+    // successors one by one, and leave records in the frontier until all their successors
+    // have been generated. This will require the records to store where they're left at in
+    // the list of actions. It is possible that this will slightly slow down BFS, A* etc.,
+    // but it should improve the memory complexity of IDDFS and IDA* nicely
 
     Queue<std::shared_ptr<Record>, RecordComparator> frontier;
     int cost_limit;
