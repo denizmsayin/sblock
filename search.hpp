@@ -2,6 +2,7 @@
 #define __SEARCH_HPP__
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 #include <list>
 #include <unordered_set>
@@ -48,18 +49,20 @@ class BaseSearchIterator {
 public:
     struct Record {
         Puzzle state;
-        Record *prev;
+        std::shared_ptr<Record> prev;
         Action last_action;
         int path_cost;
         int est_cost;
 
-        Record(Puzzle p, Record *r, Action a, int pc, int ec) : state(p), prev(r), 
-            last_action(a), path_cost(pc), est_cost(ec) {}
+        Record(const Puzzle &p, Record *r, const Action &a, int pc, int ec) : state(p), 
+            prev(r), last_action(a), path_cost(pc), est_cost(ec) {}
+        Record(const Puzzle &p, const std::shared_ptr<Record> &r, const Action &a, int pc, int ec)
+            : state(p), prev(r), last_action(a), path_cost(pc), est_cost(ec) {}
     };
 
     class RecordComparator {
     public:
-        bool operator()(const Record *r1, const Record *r2) {
+        bool operator()(const std::shared_ptr<Record> &r1, const std::shared_ptr<Record> &r2) {
             return r1->est_cost > r2->est_cost;
         }
     };
@@ -69,7 +72,7 @@ public:
 
     bool done() const;
 
-    Record *next();
+    std::shared_ptr<Record> next();
 
     int get_exceeding_cost() const { return exceeding_cost; };
 
@@ -80,8 +83,29 @@ protected:
     virtual void visited_insert(const Puzzle &state) = 0;
 
 private:
-    Queue<Record *, RecordComparator> frontier;
-    std::list<Record> records;
+    // A note on remembering paths:
+    // Since one of the aims of this search library is being able to remember the path
+    // to the solution, it requires the implementation of extra things that deal with
+    // this issue. To prevent storing the whole path inside the record for each node,
+    // I decided to implement a chain of links between records, with each record
+    // pointing to the record which generated it, all the way to the root. Since records
+    // are popped from the queue when they have been processed, they are lost, which
+    // implies that we need to work out a way to preserve them.
+    //
+    // My initial idea was to store records in a global list, and store their pointers
+    // in the queue. This worked well enough well enough for BFS and A*, but completely
+    // eliminates the point of using depth-first approaches such as IDDFS and IDA*, due
+    // to the records from cut-off paths being remember.
+    //
+    // I have considered how to solve this, and decided to do away with the global list,
+    // and instead dynamically allocate each record. Smart pointers to dynamically allocated
+    // records will be stored both by the original entry in the queue, and by child states
+    // still remaining in the queue in the case they are removed. Once all references are
+    // gone, they will be automatically cleaned up by the smart pointer. In case too many
+    // small allocations cause a significant performance hit, I will implement my own
+    // object cache to handle their allocation in bulk, but only after profiling.
+
+    Queue<std::shared_ptr<Record>, RecordComparator> frontier;
     int cost_limit;
     int exceeding_cost;
 
@@ -94,7 +118,7 @@ template <class P, class A, class HF, template<class, class> class Q>
 class TreeSearchIterator : public BaseSearchIterator<P, A, HF, Q> {
 public:
     TreeSearchIterator(const P &is, const A &ia) : BaseSearchIterator<P, A, HF, Q>(is, ia) {}
-    TreeSearchIterator(const P &is, const A &ia, int cl) : 
+    TreeSearchIterator(const P &is, const A &ia, int cl) :
         BaseSearchIterator<P, A, HF, Q>(is, ia, cl) {}
 protected:
     virtual bool is_visited(const P &state) const { return false; }
@@ -105,14 +129,14 @@ protected:
 template <class P, class A, class HF, template<class, class> class Q>
 class GraphSearchIterator : public BaseSearchIterator<P, A, HF, Q> {
 public:
-    GraphSearchIterator(const P &is, const A &ia) : BaseSearchIterator<P, A, HF, Q>(is, ia), 
+    GraphSearchIterator(const P &is, const A &ia) : BaseSearchIterator<P, A, HF, Q>(is, ia),
         visited() {}
-    GraphSearchIterator(const P &is, const A &ia, int cl) : 
+    GraphSearchIterator(const P &is, const A &ia, int cl) :
         BaseSearchIterator<P, A, HF, Q>(is, ia, cl), visited() {}
 
 protected:
-    virtual bool is_visited(const P &state) const { 
-        return visited.find(state) != visited.end(); 
+    virtual bool is_visited(const P &state) const {
+        return visited.find(state) != visited.end();
     }
     virtual void visited_insert(const P &state) {
         visited.insert(state);
@@ -125,14 +149,13 @@ private:
 template <class P, class A, class HF, template <class, class> class Q>
 void BaseSearchIterator<P, A, HF, Q>::init(const P &initial_state, const A &invalid_action)
 {
-    records.emplace_back(
-        initial_state, 
-        nullptr, 
-        invalid_action, 
-        0, 
+    frontier.emplace(new Record(
+        initial_state,
+        nullptr,
+        invalid_action,
+        0,
         HF()(initial_state)
-    );
-    frontier.push(&records.back());
+    ));
 }
 
 // Since we are constructing an iterator, which checks to see if the frontier
@@ -143,9 +166,9 @@ void BaseSearchIterator<P, A, HF, Q>::init(const P &initial_state, const A &inva
 // limit
 template <class P, class A, class HF, template <class, class> class Q>
 void BaseSearchIterator<P, A, HF, Q>::clean_frontier() {
-    while(!frontier.empty() 
+    while(!frontier.empty()
           && (is_visited(frontier.top()->state)
-              || frontier.top()->est_cost > cost_limit)) 
+              || frontier.top()->est_cost > cost_limit))
     {
         int est_cost = frontier.top()->est_cost;
         if(est_cost > cost_limit && est_cost < exceeding_cost)
@@ -156,37 +179,35 @@ void BaseSearchIterator<P, A, HF, Q>::clean_frontier() {
 
 template <class P, class A, class HF, template<class, class> class Q>
 BaseSearchIterator<P, A, HF, Q>
-::BaseSearchIterator(const P &initial_state, const A &invalid_action) 
-    : frontier(), records(), cost_limit(MAX_COST),
-      exceeding_cost(MAX_COST)
+::BaseSearchIterator(const P &initial_state, const A &invalid_action)
+    : frontier(), cost_limit(MAX_COST), exceeding_cost(MAX_COST)
 {
     init(initial_state, invalid_action);
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
 BaseSearchIterator<P, A, HF, Q>
-::BaseSearchIterator(const P &initial_state, const A &invalid_action, int cost_limit) 
-    : frontier(), records(), cost_limit(cost_limit),
-      exceeding_cost(MAX_COST)
+::BaseSearchIterator(const P &initial_state, const A &invalid_action, int cost_limit)
+    : frontier(), cost_limit(cost_limit), exceeding_cost(MAX_COST)
 {
     init(initial_state, invalid_action);
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
 bool BaseSearchIterator<P, A, HF, Q>
-::done() const 
+::done() const
 {
     return frontier.empty();
 }
 
 // Returns the next valid state with its record
 template <class P, class A, class HF, template<class, class> class Q>
-typename BaseSearchIterator<P, A, HF, Q>::Record*
+std::shared_ptr<typename BaseSearchIterator<P, A, HF, Q>::Record>
 BaseSearchIterator<P, A, HF, Q>
 ::next()
 {
     // assumption: the state we take from the frontier is unvisited
-    Record *rec = frontier.top();
+    std::shared_ptr<Record> rec = frontier.top();
     frontier.pop();
     visited_insert(rec->state); // add it to the visited states
     for(const auto &action : rec->state.possible_actions()) { // get the set of possible actions
@@ -197,14 +218,13 @@ BaseSearchIterator<P, A, HF, Q>
             int new_path_cost = rec->path_cost + path_cost; // g(n) in A*
             int est_cost = new_path_cost + HF()(new_state); // f(n) = g(n) + h(n)
             if(est_cost <= cost_limit) { // if the state does not exceed the cost limit
-                records.emplace_back(
-                        new_state, // the new state
-                        rec, // previous record leading to this one
-                        action, // action that led to this state
-                        new_path_cost, // path cost so far
-                        est_cost // estimated cost for the function
-                        );
-                frontier.push(&records.back());
+                frontier.emplace(new Record(
+                    new_state, // the new state
+                    rec, // previous record leading to this one
+                    action, // action that led to this state
+                    new_path_cost, // path cost so far
+                    est_cost // estimated cost for the function
+                ));
             } else if(est_cost < exceeding_cost) {
                 exceeding_cost = est_cost;
             }
@@ -226,7 +246,7 @@ public:
 // Reconstruct the chain of actions that led to the provided record by following the pointers
 template <class P, class A, class HF, template<class, class> class Q>
 static std::vector<A> construct_action_chain(
-        const typename BaseSearchIterator<P, A, HF, Q>::Record *rec) 
+        const std::shared_ptr<typename BaseSearchIterator<P, A, HF, Q>::Record> &rec)
 {
     std::vector<A> actions;
     for(auto rec_itr = rec; rec_itr->prev != nullptr; rec_itr = rec_itr->prev)
@@ -237,7 +257,7 @@ static std::vector<A> construct_action_chain(
 // Reconstruct the chain of actions that led to the provided record by following the pointers, but reverse it at the end
 template <class P, class A, class HF, template<class, class> class Q>
 static std::vector<A> construct_reverse_action_chain(
-        const typename BaseSearchIterator<P, A, HF, Q>::Record *rec) 
+        const std::shared_ptr<typename BaseSearchIterator<P, A, HF, Q>::Record> &rec)
 {
     std::vector<A> actions = construct_action_chain<P, A, HF, Q>(rec);
     std::reverse(actions.begin(), actions.end());
@@ -246,7 +266,7 @@ static std::vector<A> construct_reverse_action_chain(
 
 template <class P, class A, class HF, template<class, class> class Q>
 static std::vector<A> construct_inverse_action_chain(
-        const typename BaseSearchIterator<P, A, HF, Q>::Record *rec) 
+        const std::shared_ptr<typename BaseSearchIterator<P, A, HF, Q>::Record> &rec)
 {
     std::vector<A> actions;
     for(auto rec_itr = rec; rec_itr->prev != nullptr; rec_itr = rec_itr->prev)
@@ -258,9 +278,9 @@ static std::vector<A> construct_inverse_action_chain(
 template <class P, class A, class HF, template<class, class> class Q,
           template <class, class, class, template <class, class> class> class Iterator>
 std::vector<A> deepening_search(
-    const P &initial_state, 
-    const A &invalid_action, 
-    int initial_max_cost) 
+    const P &initial_state,
+    const A &invalid_action,
+    int initial_max_cost)
 {
     // start with an initial max cost
     int max_cost = initial_max_cost;
@@ -287,8 +307,8 @@ template <class P, class A, class HF, template<class, class> class Q,
           template <class, class, class, template<class, class> class> class Iterator>
 static bool process_itr(
     bool is_forward_itr,
-    Iterator<P, A, HF, Q> &itr, 
-    std::unordered_map<P, typename BaseSearchIterator<P, A, HF, Q>::Record *> &visited,
+    Iterator<P, A, HF, Q> &itr,
+    std::unordered_map<P, std::shared_ptr<typename BaseSearchIterator<P, A, HF, Q>::Record>> &visited,
     std::vector<A> &moves)
 {
     if(!itr.done()) {
@@ -320,7 +340,7 @@ std::vector<A> bidirectional_search(const P &initial_state, const A &invalid_act
     P goal = initial_state.goal_state();
     auto forward_itr = Iterator<P, A, HF, Q>(initial_state, invalid_action);
     auto backward_itr = Iterator<P, A, HF, Q>(goal, invalid_action);
-    std::unordered_map<P, typename BaseSearchIterator<P, A, HF, Q>::Record *> visited;
+    std::unordered_map<P, std::shared_ptr<typename BaseSearchIterator<P, A, HF, Q>::Record>> visited;
     while(!forward_itr.done() && !backward_itr.done()) {
         // try the forward iterator first
         bool found = process_itr(true, forward_itr, visited, moves);
@@ -328,7 +348,7 @@ std::vector<A> bidirectional_search(const P &initial_state, const A &invalid_act
         if(!found)
             found = process_itr(false, backward_itr, visited, moves);
         // if the solution was found, return the moves
-        if(found) 
+        if(found)
             return moves;
     }
     throw std::invalid_argument("The initial state cannot be transformed to the goal state");
@@ -340,18 +360,18 @@ std::vector<A> bidirectional_search(const P &initial_state, const A &invalid_act
 
 template <class P, class A, class HF, template<class, class> class Q>
 std::vector<A> deepening_tree_search(
-    const P &initial_state, 
-    const A &invalid_action, 
-    int initial_max_cost) 
+    const P &initial_state,
+    const A &invalid_action,
+    int initial_max_cost)
 {
     return deepening_search<P, A, HF, Q, TreeSearchIterator>(initial_state, invalid_action, initial_max_cost);
 }
 
 template <class P, class A, class HF, template<class, class> class Q>
 std::vector<A> deepening_graph_search(
-    const P &initial_state, 
-    const A &invalid_action, 
-    int initial_max_cost) 
+    const P &initial_state,
+    const A &invalid_action,
+    int initial_max_cost)
 {
     return deepening_search<P, A, HF, Q, GraphSearchIterator>(initial_state, invalid_action, initial_max_cost);
 }
@@ -368,13 +388,13 @@ std::vector<A> iterative_deepening_a_star(const P &initial_state, const A &inval
 
 template <class P, class A, class HF, template <class, class> class Q>
 std::vector<A> tree_search(const P &initial_state, const A &invalid_action) {
-    return deepening_tree_search<P, A, HF, Q>(initial_state, invalid_action, 
+    return deepening_tree_search<P, A, HF, Q>(initial_state, invalid_action,
                                               BaseSearchIterator<P, A, HF, Q>::MAX_COST);
 }
 
 template <class P, class A, class HF, template <class, class> class Q>
 std::vector<A> graph_search(const P &initial_state, const A &invalid_action) {
-    return deepening_graph_search<P, A, HF, Q>(initial_state, invalid_action, 
+    return deepening_graph_search<P, A, HF, Q>(initial_state, invalid_action,
                                                BaseSearchIterator<P, A, HF, Q>::MAX_COST);
 }
 
