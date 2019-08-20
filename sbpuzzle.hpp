@@ -20,7 +20,7 @@ template <int H, int W>
 class SBPuzzle {
 public:
 
-    // Initializes an hxw sliding block puzzle with a solved configuration 
+    // Initializes an hxw sliding block puzzle with a solved configuration
     explicit SBPuzzle();
     // Initializes an hxw sliding block puzzle with the provided configuration
     explicit SBPuzzle(const int tiles[]);
@@ -32,7 +32,7 @@ public:
 
     // return the goal state for this puzzle
     SBPuzzle goal_state() const;
-    
+
     // returns True if the puzzle is in a solved state
     bool is_solved() const;
 
@@ -50,12 +50,12 @@ public:
 
     // shuffle the puzzle randomly
     template <class URNG>
-    void shuffle(URNG &&urng) { 
-        std::shuffle(tiles, tiles + SIZE, urng); 
+    void shuffle(URNG &&urng) {
+        std::shuffle(tiles, tiles + SIZE, urng);
         hole_pos = find_hole();
     }
 
-    // Applies the list of moves on the puzzle. The direction specifies which side of 
+    // Applies the list of moves on the puzzle. The direction specifies which side of
     // the hole is to be moved. e.g.:
     // -------------
     // | 0 | 2 | 1 |
@@ -67,13 +67,13 @@ public:
     // In the state above, knowing that 8 is the hole, 'UP' would mean that 2 and 8 are
     // swapped
     template <typename Iterator>
-    void apply_moves(Iterator begin, Iterator end); 
+    void apply_moves(Iterator begin, Iterator end);
 
     // Optimally solves the puzzle using breadth first search. Returns the ordered list
     // of moves to be done to reach the solution, without modifying the original
     std::vector<Direction> solution_bfs() const;
 
-    // Operator overload for output streams. Example output for a solved 3x3 puzzle: 
+    // Operator overload for output streams. Example output for a solved 3x3 puzzle:
     // -------------
     // | 0 | 1 | 2 |
     // -------------
@@ -233,7 +233,7 @@ std::ostream &operator<<(std::ostream &s, const SBPuzzle<H, W> &p) {
 
 template <typename RandomAccessIterator>
 static int count_inversions(RandomAccessIterator begin, RandomAccessIterator end) {
-    // count inversions with O(n^2) instead of mergesort style, 
+    // count inversions with O(n^2) instead of mergesort style,
     // since the vectors are very small
     int inversions = 0;
     int size = end - begin;
@@ -248,6 +248,80 @@ static int count_inversions(RandomAccessIterator begin, RandomAccessIterator end
         }
     }
     return inversions;
+}
+
+// A fast way to count inversions is during merge-sort, which comes down to O(nlogn)
+// Is it really faster for small arrays though, will have to test.
+
+template <typename RandomAccessIterator>
+static int _count_inversion_q_merge(
+    RandomAccessIterator begin,
+    RandomAccessIterator mid,
+    RandomAccessIterator end,
+    typename std::iterator_traits<RandomAccessIterator>::value_type *extra_begin)
+{
+    int inversions = 0;
+    RandomAccessIterator i = begin, j = mid;
+    typename std::iterator_traits<RandomAccessIterator>::value_type *k = extra_begin;
+    while(i != mid && j != end) {
+        if(*i <= *j) {
+            *k++ = *i++;
+        } else {
+            *k++ = *j++;
+            inversions += mid - i;
+        }
+    }
+    while(i != mid) {
+        *k++ = *i++;
+    }
+    while(j != end) {
+        *k++ = *j++;
+        inversions += mid - i;
+    }
+    for(i = begin, k = extra_begin; i != end; i++, k++) // copy back
+        *i = *k;
+    return inversions;
+}
+
+template <typename RandomAccessIterator>
+static int _count_inversions_q(
+    RandomAccessIterator begin,
+    RandomAccessIterator end,
+    typename std::iterator_traits<RandomAccessIterator>::value_type *extra_begin)
+{
+    // count inversions with O(n^2) instead of mergesort style,
+    // since the vectors are very small
+    int size = end - begin;
+    if(size <= 1) {
+        return 0;
+    }
+    RandomAccessIterator mid = begin + size / 2;
+    int l = _count_inversions_q(begin, mid, extra_begin);
+    int r = _count_inversions_q(mid, end, extra_begin);
+    int m = _count_inversion_q_merge(begin, mid, end, extra_begin);
+    return l + r + m;
+}
+
+template <typename RandomAccessIterator>
+static int count_inversions_q_nomodif(RandomAccessIterator begin, RandomAccessIterator end) {
+    using val_type = typename std::iterator_traits<RandomAccessIterator>::value_type;
+    size_t size = end - begin;
+    val_type *cp = new val_type [size];
+    copy(begin, end, cp);
+    val_type *extra = new val_type [size];
+    int res = _count_inversions_q(cp, cp + size, extra);
+    delete[] cp;
+    delete[] extra;
+    return res;
+}
+
+template <typename RandomAccessIterator>
+static int count_inversions_q(RandomAccessIterator begin, RandomAccessIterator end) {
+    using val_type = typename std::iterator_traits<RandomAccessIterator>::value_type;
+    val_type *extra = new val_type [end - begin];
+    int res = _count_inversions_q(begin, end, extra);
+    delete[] extra;
+    return res;
 }
 
 template <int H, int W>
