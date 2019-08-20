@@ -250,78 +250,27 @@ static int count_inversions(RandomAccessIterator begin, RandomAccessIterator end
     return inversions;
 }
 
-// A fast way to count inversions is during merge-sort, which comes down to O(nlogn)
-// Is it really faster for small arrays though, will have to test.
-
+// Calculates the lexicographical index of a permutation
+// e.g. reference 0 1 2 3
+//      0 1 2 3 -> 0
+//      0 1 3 2 -> 1
+//      1 0 2 3 -> 6 etc.
+//      3 2 1 0 -> 23
 template <typename RandomAccessIterator>
-static int _count_inversion_q_merge(
-    RandomAccessIterator begin,
-    RandomAccessIterator mid,
-    RandomAccessIterator end,
-    typename std::iterator_traits<RandomAccessIterator>::value_type *extra_begin)
-{
-    int inversions = 0;
-    RandomAccessIterator i = begin, j = mid;
-    typename std::iterator_traits<RandomAccessIterator>::value_type *k = extra_begin;
-    while(i != mid && j != end) {
-        if(*i <= *j) {
-            *k++ = *i++;
-        } else {
-            *k++ = *j++;
-            inversions += mid - i;
-        }
-    }
-    while(i != mid) {
-        *k++ = *i++;
-    }
-    while(j != end) {
-        *k++ = *j++;
-        inversions += mid - i;
-    }
-    for(i = begin, k = extra_begin; i != end; i++, k++) // copy back
-        *i = *k;
-    return inversions;
-}
-
-template <typename RandomAccessIterator>
-static int _count_inversions_q(
-    RandomAccessIterator begin,
-    RandomAccessIterator end,
-    typename std::iterator_traits<RandomAccessIterator>::value_type *extra_begin)
-{
-    // count inversions with O(n^2) instead of mergesort style,
-    // since the vectors are very small
-    int size = end - begin;
-    if(size <= 1) {
+static size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end) {
+    // Once again, we use the O(n^2) approach since it is faster for the small arrays
+    // that we intend to deal with
+    if(end - begin <= 1LL) // arrays with 0 or 1 size
         return 0;
+    size_t counter = 0;
+    size_t mult = 1;
+    for(RandomAccessIterator i = end - 2; i >= begin; i--) {
+        for(RandomAccessIterator j = i + 1; j != end; j++)
+            if(*i > *j)
+                counter += mult;
+        mult *= (end - i); // mult starts from 1!, becomes 2!, 3!, 4! etc.
     }
-    RandomAccessIterator mid = begin + size / 2;
-    int l = _count_inversions_q(begin, mid, extra_begin);
-    int r = _count_inversions_q(mid, end, extra_begin);
-    int m = _count_inversion_q_merge(begin, mid, end, extra_begin);
-    return l + r + m;
-}
-
-template <typename RandomAccessIterator>
-static int count_inversions_q_nomodif(RandomAccessIterator begin, RandomAccessIterator end) {
-    using val_type = typename std::iterator_traits<RandomAccessIterator>::value_type;
-    size_t size = end - begin;
-    val_type *cp = new val_type [size];
-    copy(begin, end, cp);
-    val_type *extra = new val_type [size];
-    int res = _count_inversions_q(cp, cp + size, extra);
-    delete[] cp;
-    delete[] extra;
-    return res;
-}
-
-template <typename RandomAccessIterator>
-static int count_inversions_q(RandomAccessIterator begin, RandomAccessIterator end) {
-    using val_type = typename std::iterator_traits<RandomAccessIterator>::value_type;
-    val_type *extra = new val_type [end - begin];
-    int res = _count_inversions_q(begin, end, extra);
-    delete[] extra;
-    return res;
+    return counter;
 }
 
 template <int H, int W>
