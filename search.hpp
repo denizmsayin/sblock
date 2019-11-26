@@ -95,7 +95,7 @@ private:
     // My initial idea was to store records in a global list, and store their pointers
     // in the queue. This worked well enough well enough for BFS and A*, but completely
     // eliminates the point of using depth-first approaches such as IDDFS and IDA*, due
-    // to the records from cut-off paths being remember.
+    // to the records from cut-off paths being remembered.
     //
     // I have considered how to solve this, and decided to do away with the global list,
     // and instead dynamically allocate each record. Smart pointers to dynamically allocated

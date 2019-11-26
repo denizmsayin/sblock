@@ -1,4 +1,5 @@
 #include "search.hpp"
+#include "search2.hpp"
 #include "search_queues.hpp"
 #include "sbpuzzle.hpp"
 
@@ -11,7 +12,7 @@
 unsigned SEED = 42;
 
 constexpr int N = 1;
-constexpr int H = 4, W = 4;
+constexpr int H = 3, W = 3;
 
 using namespace std;
 using Dir = Direction;
@@ -88,8 +89,9 @@ int main() {
 
         }
         */
-        // vector<Dir> moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
-        vector<Dir> moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+         vector<Dir> moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
+        // vector<Dir> moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
         /*
