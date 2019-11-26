@@ -68,6 +68,10 @@
 // we can reconstruct the solution path
 namespace search2 {
 namespace details {
+void throw_unreachable() {
+    throw std::invalid_argument("The goal state is not reachable from the provided initial state");
+}
+
 template <class Action>
 struct BfsActionRecord {
     std::shared_ptr<BfsActionRecord> prev;
@@ -132,7 +136,7 @@ std::vector<Action> breadth_first_search(const Puzzle &p) {
                 q.emplace(new details::BfsActionRecord<Action>(node.prev, action), new_p);
         }
     }
-    throw std::invalid_argument("The goal state is not reachable from the provided initial state");
+    details::throw_unreachable();
 }
 }
 
@@ -149,16 +153,188 @@ int breadth_first_search(const Puzzle &p) {
             return node.cost;
         // otherwise, we have to expand each action into a new node
         for(auto action : p.possible_actions()) {
-            Puzzle new_p = p; new_p.apply_action(action);
+            Puzzle new_p = p; 
+            int path_cost = new_p.apply_action(action);
             if(visited.find(new_p) == visited.end()) // not visited
-                q.emplace(new_p, node.cost+1);
+                q.emplace(new_p, node.cost + path_cost);
         }
     }
-    throw std::invalid_argument("The goal state is not reachable from the provided initial state");
+    details::throw_unreachable();
     return 0;
 }
 
+enum class IDFSResult {
+    CUTOFF,
+    FOUND,
+    NOT_FOUND
+};
 
+template <class Puzzle, class Action>
+IDFSResult depth_limited_dfs(const Puzzle &p, int depth) {
+    if(p.is_solved()) {
+        return IDFSResult::FOUND;
+    } else if(depth == 0) {
+        return IDFSResult::CUTOFF;
+    } else {
+        bool cutoff = false;
+        for(auto action : p.possible_actions()) {
+            Puzzle new_p = p; new_p.apply_action(action);
+            IDFSResult result = depth_limited_dfs<Puzzle, Action>(new_p, depth-1);
+            if(result == IDFSResult::CUTOFF)
+                cutoff = true;
+            else if(result != IDFSResult::NOT_FOUND) 
+                return IDFSResult::FOUND;
+        }
+        if(cutoff)
+            return IDFSResult::CUTOFF;
+        else
+            return IDFSResult::NOT_FOUND;
+    }
 }
 
+template <class Puzzle, class Action>
+int iterative_deepening_dfs(const Puzzle &p) {
+    static int LIMIT = 1000000;
+    for(int depth = 0; depth < LIMIT; depth++) {
+        IDFSResult result = depth_limited_dfs<Puzzle, Action>(p, depth);
+        if(result == IDFSResult::FOUND)
+            return depth;
+        else if(result == IDFSResult::NOT_FOUND) {
+            details::throw_unreachable();
+            return 0;
+        }
+    }
+    throw std::invalid_argument("The goal state could not be reached in 1M steps");
+}
+
+
+
+template <class Puzzle, class Action>
+int step_single_direction(std::queue<details::BfsNodeSimple<Puzzle>> &queue,
+                          std::unordered_map<Puzzle, int> &visited, 
+                          std::unordered_map<Puzzle, int> &other_visited)
+{
+    if(!queue.empty()) {
+        auto node = queue.front(); queue.pop();
+        const auto &p = node.puzzle;
+        // check if the node has been visited the other way
+        auto lookup = other_visited.find(p);
+        if(lookup != other_visited.end())
+            return node.cost + lookup->second;
+        // otherwise insert and generate new nodes like bfs
+        visited.emplace(p, node.cost);
+        for(auto action : p.possible_actions()) {
+            Puzzle new_p = p; 
+            int path_cost = new_p.apply_action(action);
+            if(visited.find(new_p) == visited.end()) // not visited
+                queue.emplace(new_p, node.cost + path_cost);
+        }
+    }
+    return -1;
+}
+
+template <class Puzzle, class Action>
+int bidirectional_bfs(const Puzzle &p) {
+    std::unordered_map<Puzzle, int> f_visited, b_visited;
+    std::queue<details::BfsNodeSimple<Puzzle>> fq, bq;
+    fq.emplace(p, 0);
+    bq.emplace(p.goal_state(), 0);
+    while(!fq.empty() || !bq.empty()) {
+        // forward step
+        int r = step_single_direction<Puzzle, Action>(fq, f_visited, b_visited);
+        if(r > 0) return r;
+        // backward step
+        r = step_single_direction<Puzzle, Action>(bq, b_visited, f_visited);
+        if(r > 0) return r;
+    }
+    details::throw_unreachable(); 
+    return 0;
+}
+
+template <class Puzzle>
+struct AStarNodeSimple {
+    Puzzle puzzle;
+    int path_cost;
+    int est_cost;
+
+    AStarNodeSimple(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) {}
+};
+
+template <class Puzzle>
+class AStarNodeSimpleComparator {
+public:
+    bool operator()(const AStarNodeSimple<Puzzle> &n1, const AStarNodeSimple<Puzzle> &n2) {
+        return n1.est_cost > n2.est_cost;
+    }
+};
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int a_star_search(const Puzzle &p) {
+    std::unordered_set<Puzzle> visited;
+    std::priority_queue<AStarNodeSimple<Puzzle>, std::vector<AStarNodeSimple<Puzzle>>, AStarNodeSimpleComparator<Puzzle>> pq;
+    pq.emplace(p, 0, HeuristicFunc()(p));
+    while(!pq.empty()) {
+        auto node = pq.top(); pq.pop();
+        const auto &p = node.puzzle;
+        if(p.is_solved())
+            return node.path_cost;
+        visited.insert(p);
+        for(auto action : p.possible_actions()) {
+            Puzzle new_p = p;
+            int step_cost = new_p.apply_action(action);
+            if(visited.find(new_p) == visited.end()) {
+                int new_path_cost = node.path_cost + step_cost;
+                int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+                pq.emplace(new_p, new_path_cost, new_est_cost);
+            }
+        }
+    }
+    details::throw_unreachable();
+    return 0;
+}
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int cost_limited_a_star_search(const Puzzle &p, int cost_limit) {
+    std::unordered_set<Puzzle> visited;
+    std::priority_queue<AStarNodeSimple<Puzzle>, std::vector<AStarNodeSimple<Puzzle>>, AStarNodeSimpleComparator<Puzzle>> pq;
+    pq.emplace(p, 0, HeuristicFunc()(p));
+    int min_exceeding_cost = std::numeric_limits<int>::max();
+    while(!pq.empty()) {
+        auto node = pq.top(); pq.pop();
+        const auto &p = node.puzzle;
+        if(p.is_solved())
+            return node.path_cost;
+        visited.insert(p);
+        for(auto action : p.possible_actions()) {
+            Puzzle new_p = p;
+            int step_cost = new_p.apply_action(action);
+            if(visited.find(new_p) == visited.end()) {
+                int new_path_cost = node.path_cost + step_cost;
+                int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+                if(new_est_cost <= cost_limit)
+                    pq.emplace(new_p, new_path_cost, new_est_cost);
+                else if(new_est_cost < min_exceeding_cost)
+                    min_exceeding_cost = new_est_cost;
+            }
+        }
+    }
+    if(min_exceeding_cost < std::numeric_limits<int>::max()) // cost exceeded
+        return min_exceeding_cost;
+    details::throw_unreachable();
+    return 0;
+}
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int iterative_deepening_a_star_search(const Puzzle &p) {
+    int cost_limit = -1, result = 0;
+    while(result > cost_limit) {
+        cost_limit = result;
+        result = cost_limited_a_star_search<Puzzle, Action, HeuristicFunc>(p, cost_limit);
+    }
+    return result;
+}
+
+
+
+}
 #endif

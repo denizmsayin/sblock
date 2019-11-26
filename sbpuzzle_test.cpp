@@ -11,8 +11,8 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 100;
-constexpr int H = 3, W = 3;
+constexpr int N = 20;
+constexpr int H = 4, W = 4;
 
 using namespace std;
 using Dir = Direction;
@@ -92,15 +92,20 @@ int main() {
         vector<Dir> moves;
         // vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
-        // vector<Dir> moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
-        // vector<Dir> moves = bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
+        // moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
+        // moves = bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
+        // moves = iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         /*
         SBPuzzle p(puzzles[i]);
         p.apply_moves(moves);
         cout << p << endl;
         */
-         num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // num_moves += search2::iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::iterative_deepening_a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();
         cout << '\r' << i << "/" << N << flush;
     }

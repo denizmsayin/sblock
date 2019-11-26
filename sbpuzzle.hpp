@@ -29,6 +29,8 @@ public:
 
     SBPuzzle(const SBPuzzle &other) = default;
     SBPuzzle(SBPuzzle &&other) = default;
+    SBPuzzle &operator=(const SBPuzzle &other) = default;
+    SBPuzzle &operator=(SBPuzzle &&other) = default;
 
     // return the goal state for this puzzle
     SBPuzzle goal_state() const;
@@ -37,7 +39,7 @@ public:
     bool is_solved() const;
 
     // returns the possible actions on the puzzle
-    const std::vector<Direction> &possible_actions() const;
+    std::vector<Direction> possible_actions() const;
 
     // apply the move in the given direction using the cached hole position
     // return the path cost, which is 1 for our case for any choice
@@ -167,19 +169,16 @@ bool SBPuzzle<H, W>::is_solved() const {
 }
 
 template <int H, int W>
-const std::vector<Direction> &SBPuzzle<H, W>::possible_actions() const {
-    static std::vector<Direction> actions;
-    actions.resize(4);
-    int i = 0;
+std::vector<Direction> SBPuzzle<H, W>::possible_actions() const {
+    std::vector<Direction> actions;
     if(hole_pos >= W) // not upper edge, can move UP
-        actions[i++] = Direction::UP;
+        actions.push_back(Direction::UP);
     if(hole_pos % W < W - 1) // not right edge, can move RIGHT
-        actions[i++] = Direction::RIGHT;
+        actions.push_back(Direction::RIGHT);
     if(hole_pos < SIZE - W) // not lower edge, can move DOWN
-        actions[i++] = Direction::DOWN;
+        actions.push_back(Direction::DOWN);
     if(hole_pos % W > 0) // not left edge, can move LEFT
-        actions[i++] = Direction::LEFT;
-    actions.resize(i);
+        actions.push_back(Direction::LEFT);
     return actions;
 }
 

@@ -1,5 +1,6 @@
 *.txt
 *.swp
+*.swo
 
 # Prerequisites
 *.d
