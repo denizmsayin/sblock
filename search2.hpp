@@ -67,7 +67,7 @@
 // to remember the state itself, just the action that led to it so that
 // we can reconstruct the solution path
 namespace search2 {
-namespace d {
+namespace details {
 template <class Action>
 struct BfsActionRecord {
     std::shared_ptr<BfsActionRecord> prev;
@@ -88,6 +88,14 @@ struct BfsNode {
         prev(pp), puzzle(p) {}
 };
 
+template <class Puzzle>
+struct BfsNodeSimple {
+    Puzzle puzzle;
+    int cost;
+
+    BfsNodeSimple(const Puzzle &p, int c) : puzzle(p), cost(c) {}
+};
+
 template <class Puzzle, class Action>
 std::vector<Action> reconstruct_action_chain(const BfsNode<Puzzle, Action> &node) {
     // first put all of the actions in a stack for reversing
@@ -102,12 +110,14 @@ std::vector<Action> reconstruct_action_chain(const BfsNode<Puzzle, Action> &node
     }
     return v;
 }
+
 }
 
+namespace path_remembering {
 template <class Puzzle, class Action>
 std::vector<Action> breadth_first_search(const Puzzle &p) {
     std::unordered_set<Puzzle> visited;
-    std::queue<d::BfsNode<Puzzle, Action>> q;
+    std::queue<details::BfsNode<Puzzle, Action>> q;
     q.emplace(nullptr, p);
     while(!q.empty()) {
         auto node = q.front(); q.pop(); // remove the top state
@@ -119,11 +129,36 @@ std::vector<Action> breadth_first_search(const Puzzle &p) {
         for(auto action : p.possible_actions()) {
             Puzzle new_p = p; new_p.apply_action(action);
             if(visited.find(new_p) == visited.end()) // not visited
-                q.emplace(new d::BfsActionRecord<Action>(node.prev, action), new_p);
+                q.emplace(new details::BfsActionRecord<Action>(node.prev, action), new_p);
         }
     }
     throw std::invalid_argument("The goal state is not reachable from the provided initial state");
 }
+}
+
+template <class Puzzle, class Action>
+int breadth_first_search(const Puzzle &p) {
+    std::unordered_set<Puzzle> visited;
+    std::queue<details::BfsNodeSimple<Puzzle>> q;
+    q.emplace(p, 0);
+    while(!q.empty()) {
+        auto node = q.front(); q.pop(); // remove the top state
+        const auto &p = node.puzzle;
+        visited.insert(p);
+        if(p.is_solved()) // if the puzzle is solved, return
+            return node.cost;
+        // otherwise, we have to expand each action into a new node
+        for(auto action : p.possible_actions()) {
+            Puzzle new_p = p; new_p.apply_action(action);
+            if(visited.find(new_p) == visited.end()) // not visited
+                q.emplace(new_p, node.cost+1);
+        }
+    }
+    throw std::invalid_argument("The goal state is not reachable from the provided initial state");
+    return 0;
+}
+
+
 }
 
 #endif

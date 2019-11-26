@@ -37,7 +37,7 @@ public:
     bool is_solved() const;
 
     // returns the possible actions on the puzzle
-    std::vector<Direction> possible_actions() const;
+    const std::vector<Direction> &possible_actions() const;
 
     // apply the move in the given direction using the cached hole position
     // return the path cost, which is 1 for our case for any choice
@@ -87,6 +87,8 @@ public:
     // encode the puzzle into a string for hashing, not as good as making your own hash,
     // but a shortcut. Will have to try the alternative...
     std::string encode() const;
+
+    size_t hash() const;
 
     // heuristic for misplaced tiles
     int num_misplaced_tiles() const;
@@ -165,16 +167,19 @@ bool SBPuzzle<H, W>::is_solved() const {
 }
 
 template <int H, int W>
-std::vector<Direction> SBPuzzle<H, W>::possible_actions() const {
-    std::vector<Direction> actions;
+const std::vector<Direction> &SBPuzzle<H, W>::possible_actions() const {
+    static std::vector<Direction> actions;
+    actions.resize(4);
+    int i = 0;
     if(hole_pos >= W) // not upper edge, can move UP
-        actions.push_back(Direction::UP);
+        actions[i++] = Direction::UP;
     if(hole_pos % W < W - 1) // not right edge, can move RIGHT
-        actions.push_back(Direction::RIGHT);
+        actions[i++] = Direction::RIGHT;
     if(hole_pos < SIZE - W) // not lower edge, can move DOWN
-        actions.push_back(Direction::DOWN);
+        actions[i++] = Direction::DOWN;
     if(hole_pos % W > 0) // not left edge, can move LEFT
-        actions.push_back(Direction::LEFT);
+        actions[i++] = Direction::LEFT;
+    actions.resize(i);
     return actions;
 }
 
@@ -307,7 +312,18 @@ int SBPuzzle<H, W>::find_hole() const {
 // TODO: figure out a nice index calculation
 template <int H, int W>
 size_t std::hash<SBPuzzle<H, W>>::operator()(SBPuzzle<H, W> const &p) const noexcept {
-    return std::hash<std::string>()(p.encode());
+    return p.hash();
+}
+
+template <int H, int W>
+size_t SBPuzzle<H, W>::hash() const {
+    // return calculate_lexindex(tiles, tiles + SIZE);
+    // copied from the  boost implementation
+    size_t seed = 0;
+    std::hash<uint8_t> hasher;
+    for(int i = 0; i < SIZE; i++)
+        seed ^= hasher(tiles[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    return seed;
 }
 
 template <int H, int W>

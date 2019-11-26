@@ -89,8 +89,9 @@ int main() {
 
         }
         */
-        vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
-        // vector<Dir> moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves;
+        // vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
@@ -99,6 +100,7 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
+         num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
         num_moves += moves.size();
         cout << '\r' << i << "/" << N << flush;
     }
