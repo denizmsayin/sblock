@@ -11,7 +11,7 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 1;
+constexpr int N = 100;
 constexpr int H = 3, W = 3;
 
 using namespace std;
@@ -89,8 +89,8 @@ int main() {
 
         }
         */
-        // vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
-         vector<Dir> moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
+        vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // vector<Dir> moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // vector<Dir> moves = iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
@@ -100,8 +100,9 @@ int main() {
         cout << p << endl;
         */
         num_moves += moves.size();
-        cout << i << endl;
+        cout << '\r' << i << "/" << N << flush;
     }
+    cout << '\r';
     auto t2 = chrono::high_resolution_clock::now();
 
     chrono::duration<double, std::milli> fp_ms = t2 - t1;
