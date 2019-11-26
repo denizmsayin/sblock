@@ -94,6 +94,8 @@ public:
     // heuristic for manhattan distance
     int manhattan_distance_to_solution() const;
 
+
+
 private:
     uint8_t tiles[H*W];
     uint8_t hole_pos; // cached
