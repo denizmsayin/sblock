@@ -11,8 +11,8 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 100;
-constexpr int H = 3, W = 3;
+constexpr int N = 1;
+constexpr int H = 3, W = 4;
 
 using namespace std;
 using Dir = Direction;
@@ -64,6 +64,7 @@ int main() {
 
     auto t1 = chrono::high_resolution_clock::now();
     int num_moves = 0;
+    size_t num_nodes = 0;
     for(int i = 0; i < N; i++) {
         /* 
         cout << i << endl;
@@ -108,6 +109,8 @@ int main() {
         num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();
+        num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();
+        search2::reset_node_counter<SBPuzzle<H, W>>();
         cout << '\r' << i << "/" << N << flush;
     }
     cout << '\r';
@@ -116,8 +119,10 @@ int main() {
     chrono::duration<double, std::milli> fp_ms = t2 - t1;
 
     double avg_moves = static_cast<double>(num_moves) / N;
+    double avg_nodes = static_cast<double>(num_nodes) / N;
     cout << "Solved " << N << " puzzles in " << fp_ms.count() / N << " milliseconds on "
-         << "average with " << avg_moves << " moves on average." << endl;
+         << "average with " << avg_moves << " moves and " << avg_nodes 
+         << " nodes generated on average." << endl;
 
     return 0;
 }

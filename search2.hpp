@@ -12,6 +12,7 @@
 #include <queue>
 #include <stack>
 #include <iostream>
+#include <chrono>
 
 #include "search_queues.hpp"
 
@@ -93,24 +94,6 @@ struct BfsNode {
         prev(pp), puzzle(p) {}
 };
 
-template <class Puzzle>
-struct SearchNode {
-    Puzzle puzzle;
-    int path_cost;
-    int est_cost;
-
-    SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) {}
-    SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) {}
-};
-
-template <class Puzzle>
-class SearchNodeComparator {
-public:
-    bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
-        return n1.est_cost > n2.est_cost;
-    }
-};
-
 template <class Puzzle, class Action>
 std::vector<Action> reconstruct_action_chain(const BfsNode<Puzzle, Action> &node) {
     // first put all of the actions in a stack for reversing
@@ -125,8 +108,76 @@ std::vector<Action> reconstruct_action_chain(const BfsNode<Puzzle, Action> &node
     }
     return v;
 }
-
 }
+
+// SEARCH NODE, the class that defines a search node, a record structure that keeps
+// both a puzzle state and extra book-keeping information about it. Also holds some
+// static variables such as a counter for the number of created nodes.
+namespace details {
+template <class Puzzle>
+struct SearchNode {
+    static size_t NODE_COUNTER;
+    static size_t LAST_RECORDED_NC;
+    static std::chrono::time_point<std::chrono::high_resolution_clock> LAST_RECORDED_T;
+
+    Puzzle puzzle;
+    int path_cost;
+    int est_cost;
+
+    SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) 
+    {
+        NODE_COUNTER++;
+        if(NODE_COUNTER == 1) {
+            record();
+        }
+        if(NODE_COUNTER % 100000000 == 0) {
+            display();
+            record();
+        }
+    }
+
+    SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) 
+    {
+        NODE_COUNTER++;
+    }
+
+private:
+    void record() {
+        LAST_RECORDED_NC = NODE_COUNTER;
+        LAST_RECORDED_T = std::chrono::high_resolution_clock::now();
+    }
+
+    void display() {
+        auto current_t = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> fp_ms = current_t - LAST_RECORDED_T;
+        size_t nps = static_cast<size_t>(1000.0 * (NODE_COUNTER - LAST_RECORDED_NC) / fp_ms.count());
+        std::cout << "Node count: " << NODE_COUNTER/1000000 << "M, nps: " << nps << std::endl;
+    }
+};
+
+template <class Puzzle>
+size_t SearchNode<Puzzle>::NODE_COUNTER = 0;
+
+template <class Puzzle>
+size_t SearchNode<Puzzle>::LAST_RECORDED_NC = 0;
+
+template <class Puzzle>
+std::chrono::time_point<std::chrono::high_resolution_clock> SearchNode<Puzzle>::LAST_RECORDED_T = std::chrono::high_resolution_clock::now();
+
+template <class Puzzle>
+class SearchNodeComparator {
+public:
+    bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
+        return n1.est_cost > n2.est_cost;
+    }
+};
+}
+
+template <class Puzzle>
+size_t get_node_counter() { return details::SearchNode<Puzzle>::NODE_COUNTER; }
+
+template <class Puzzle>
+void reset_node_counter() { details::SearchNode<Puzzle>::NODE_COUNTER = 0; }
 
 namespace path_remembering {
 template <class Puzzle, class Action>
@@ -327,6 +378,7 @@ int iterative_deepening_a_star(const Puzzle &p) {
     int cost_limit = HeuristicFunc()(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
     while(true) {
+        std::cout << "New cost limit: " << cost_limit << std::endl;
         int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit);
         if(result <= cost_limit) 
             return result;
