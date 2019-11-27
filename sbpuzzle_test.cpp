@@ -11,8 +11,8 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 100;
-constexpr int H = 3, W = 3;
+constexpr int N = 10;
+constexpr int H = 4, W = 3;
 
 using namespace std;
 using Dir = Direction;
@@ -106,6 +106,7 @@ int main() {
         // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();
         cout << '\r' << i << "/" << N << flush;
     }

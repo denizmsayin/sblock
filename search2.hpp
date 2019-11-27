@@ -333,5 +333,59 @@ int iterative_deepening_a_star(const Puzzle &p) {
     return 0;
 }
 
+namespace details {
+const int INT_INF = std::numeric_limits<int>::max();
+
+template <class Puzzle, class Action, class HeuristicFunc>
+std::pair<bool, int> rbfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
+    const Puzzle &p = node.puzzle;
+    if(p.is_solved())
+        return std::make_pair(true, node.path_cost);
+    std::vector<AStarNodeSimple<Puzzle>> successors;
+    for(auto action : p.possible_actions()) {
+        Puzzle new_p = p;
+        int new_path_cost = node.path_cost + new_p.apply_action(action);
+        int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+        successors.emplace_back(new_p, new_path_cost, new_est_cost);
+    }
+    if(successors.empty())
+        return std::make_pair(false, INT_INF); // failure
+    for(auto &s : successors) // re-propagate cost if the path was previously found
+        s.est_cost = std::max(s.est_cost, node.est_cost);
+    // now, we need to find the best/second best etc. multiple times, so I thought
+    // it best to use a heap for the general case
+    std::make_heap(successors.begin(), successors.end(), AStarNodeSimpleComparator<Puzzle>());
+    while(true) {
+        // the best node is simply the first in the heap
+        const AStarNodeSimple<Puzzle> &best = successors[0];
+        if(best.est_cost > cost_limit)
+            return std::make_pair(false, best.est_cost);
+        // to find the alternative, pop the first and place it at the back
+        std::pop_heap(successors.begin(), successors.end(), AStarNodeSimpleComparator<Puzzle>());
+        int alt_cost = successors[0].est_cost;
+        // get a new reference for the best node, which is now at the back
+        AStarNodeSimple<Puzzle> &best2 = successors.back();
+        bool success = false;
+        std::tie(success, best2.est_cost) = rbfs<Puzzle, Action, HeuristicFunc>(best2, std::min(cost_limit, alt_cost));
+        if(success)
+            return std::make_pair(true, best2.est_cost);
+        // since the cost of the best was modified, reinsert it into successors
+        std::push_heap(successors.begin(), successors.end(), AStarNodeSimpleComparator<Puzzle>());
+    }
+}
+}
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int recursive_best_first_search(const Puzzle &p) {
+    AStarNodeSimple<Puzzle> start_node(p, 0, HeuristicFunc()(p));
+    bool success;
+    int cost;
+    std::tie(success, cost) = details::rbfs<Puzzle, Action, HeuristicFunc>(start_node, details::INT_INF);
+    if(!success)
+        details::throw_unreachable();
+    return cost;
+}
+
+
 }
 #endif
