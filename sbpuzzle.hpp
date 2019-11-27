@@ -172,13 +172,13 @@ template <int H, int W>
 std::vector<Direction> SBPuzzle<H, W>::possible_actions() const {
     std::vector<Direction> actions;
     if(hole_pos >= W) // not upper edge, can move UP
-        actions.push_back(Direction::UP);
+        actions.emplace_back(Direction::UP);
     if(hole_pos % W < W - 1) // not right edge, can move RIGHT
-        actions.push_back(Direction::RIGHT);
+        actions.emplace_back(Direction::RIGHT);
     if(hole_pos < SIZE - W) // not lower edge, can move DOWN
-        actions.push_back(Direction::DOWN);
+        actions.emplace_back(Direction::DOWN);
     if(hole_pos % W > 0) // not left edge, can move LEFT
-        actions.push_back(Direction::LEFT);
+        actions.emplace_back(Direction::LEFT);
     return actions;
 }
 
@@ -319,9 +319,16 @@ size_t SBPuzzle<H, W>::hash() const {
     // return calculate_lexindex(tiles, tiles + SIZE);
     // copied from the  boost implementation
     size_t seed = 0;
-    std::hash<uint8_t> hasher;
-    for(int i = 0; i < SIZE; i++)
-        seed ^= hasher(tiles[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    constexpr std::hash<uint64_t> hasher64;
+    constexpr int view_size = SIZE >> 3;
+    const uint64_t *tiles_view = reinterpret_cast<const uint64_t *>(tiles);
+    for(int i = 0; i < view_size; i++)
+        seed ^= hasher64(tiles_view[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    constexpr std::hash<uint8_t> hasher8;
+    constexpr int rem_start = view_size << 3;
+    constexpr int rem_end = rem_start + SIZE - (view_size << 3);
+    for(int i = rem_start; i < rem_end; i++)
+        seed ^= hasher8(tiles[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
     return seed;
 }
 

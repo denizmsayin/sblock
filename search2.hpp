@@ -478,6 +478,7 @@ int iterative_deepening_a_star_noloop(const Puzzle &p) {
     int cost_limit = HeuristicFunc()(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
     while(true) {
+        std::cout << "New cost limit: " << cost_limit << std::endl;
         std::unordered_map<Puzzle, int> visited;
         int result = details::cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(start_node, visited, cost_limit);
         if(result <= cost_limit) 
