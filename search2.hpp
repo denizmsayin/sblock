@@ -130,7 +130,7 @@ struct SearchNode {
         if(NODE_COUNTER == 1) {
             record();
         }
-        if(NODE_COUNTER % 100000000 == 0) {
+        if(NODE_COUNTER % 10000000 == 0) {
             display();
             record();
         }
@@ -169,6 +169,14 @@ class SearchNodeComparator {
 public:
     bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
         return n1.est_cost > n2.est_cost;
+    }
+};
+
+template <class Puzzle>
+class RevSearchNodeComparator {
+public:
+    bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
+        return n1.est_cost < n2.est_cost;
     }
 };
 }
@@ -273,7 +281,7 @@ int iterative_deepening_dfs(const Puzzle &p) {
 
 namespace details {
 template <class Puzzle, class Action>
-int step_single_direction(std::queue<details::SearchNode<Puzzle>> &queue,
+int step_single_direction(std::queue<SearchNode<Puzzle>> &queue,
                           std::unordered_map<Puzzle, int> &visited, 
                           std::unordered_map<Puzzle, int> &other_visited)
 {
@@ -378,7 +386,6 @@ int iterative_deepening_a_star(const Puzzle &p) {
     int cost_limit = HeuristicFunc()(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
     while(true) {
-        std::cout << "New cost limit: " << cost_limit << std::endl;
         int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit);
         if(result <= cost_limit) 
             return result;
@@ -432,6 +439,54 @@ std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit) {
 }
 }
 
+namespace details {
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int cost_limited_dfs_nl(const SearchNode<Puzzle> &node, 
+                     std::unordered_map<Puzzle, int> visited,
+                     int cost_limit) {
+    visited.emplace(node.puzzle, node.path_cost);
+    if(node.est_cost > cost_limit)
+        return node.est_cost;
+    else if(node.puzzle.is_solved()) {
+        return node.path_cost;;
+    } else {
+        int min_exceeding_cost = std::numeric_limits<int>::max();
+        for(auto action : node.puzzle.possible_actions()) {
+            Puzzle new_p = node.puzzle; 
+            int new_path_cost = node.path_cost + new_p.apply_action(action);
+            auto lookup = visited.find(new_p);
+            if(lookup == visited.end() || new_path_cost < lookup->second) {
+                int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+                SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
+                int result = cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(new_node, visited, cost_limit);
+                if(result <= cost_limit) // found
+                    return result;
+                else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
+                    min_exceeding_cost = result;
+            }
+        }
+        return min_exceeding_cost;
+    }
+}
+}
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int iterative_deepening_a_star_noloop(const Puzzle &p) {
+    using details::SearchNode;
+    using details::cost_limited_dfs;
+    int cost_limit = HeuristicFunc()(p);
+    SearchNode<Puzzle> start_node(p, 0, cost_limit);
+    while(true) {
+        std::unordered_map<Puzzle, int> visited;
+        int result = details::cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(start_node, visited, cost_limit);
+        if(result <= cost_limit) 
+            return result;
+        cost_limit = result;
+    }
+    return 0;
+}
+
 template <class Puzzle, class Action, class HeuristicFunc>
 int recursive_best_first_search(const Puzzle &p) {
     using details::SearchNode;
@@ -445,6 +500,62 @@ int recursive_best_first_search(const Puzzle &p) {
         details::throw_unreachable();
     return cost;
 }
+
+namespace details {
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int cost_limited_dfs_improved(const SearchNode<Puzzle> &node, 
+                              std::unordered_map<Puzzle, int> &visited,
+                              int cost_limit) 
+{
+    visited.emplace(node.puzzle, node.path_cost);
+    if(node.est_cost > cost_limit)
+        return node.est_cost;
+    else if(node.puzzle.is_solved()) {
+        return node.path_cost;;
+    } else {
+        int min_exceeding_cost = std::numeric_limits<int>::max();
+        std::vector<SearchNode<Puzzle>> new_nodes;
+        for(auto action : node.puzzle.possible_actions()) {
+            Puzzle new_p = node.puzzle; 
+            int new_path_cost = node.path_cost + new_p.apply_action(action);
+            auto lookup = visited.find(new_p);
+            if(lookup == visited.end() || new_path_cost < lookup->second) {
+                int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+                new_nodes.emplace_back(new_p, new_path_cost, new_est_cost);
+            }
+        }
+        // heapify the new nodes and try them one by one starting from the best first
+        std::sort(new_nodes.begin(), new_nodes.end(), RevSearchNodeComparator<Puzzle>());
+        for(const auto &new_node : new_nodes) {
+            int result = cost_limited_dfs_improved<Puzzle, Action, HeuristicFunc>(new_node, visited, cost_limit);
+            if(result <= cost_limit) // found
+                return result;
+            else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
+                min_exceeding_cost = result;
+        }
+        return min_exceeding_cost;
+    }
+}
+
+}
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int iterative_deepening_a_star_improved(const Puzzle &p) {
+    using details::SearchNode;
+    using details::cost_limited_dfs;
+    int cost_limit = HeuristicFunc()(p);
+    SearchNode<Puzzle> start_node(p, 0, cost_limit);
+    while(true) {
+        std::unordered_map<Puzzle, int> visited;
+        int result = details::cost_limited_dfs_improved<Puzzle, Action, HeuristicFunc>(start_node, visited, cost_limit);
+        if(result <= cost_limit) 
+            return result;
+        cost_limit = result;
+    }
+    return 0;
+}
+
 
 
 }

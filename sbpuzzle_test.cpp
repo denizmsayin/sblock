@@ -12,7 +12,7 @@
 unsigned SEED = 42;
 
 constexpr int N = 1;
-constexpr int H = 3, W = 4;
+constexpr int H = 4, W = 4;
 
 using namespace std;
 using Dir = Direction;
@@ -106,7 +106,8 @@ int main() {
         // num_moves += search2::iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
-        num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        // num_moves += search2::iterative_deepening_a_star_noloop<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::iterative_deepening_a_star_improved<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();
         num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();
