@@ -90,85 +90,32 @@ static size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterato
 }
 
 
-// We require two different iterators over tiles, one for finding a comb
-// index and another for finding a lexicographical index. Since
-// both iterators will have quite similar functions, we can gather their
-// common parts in a base class
+// Now, since our function that determines a combination index does so
+// 'generically' over an iterator that returns booleans, we need to
+// create a custom iterator class constructed over a set of tiles
+// that presents a 'boolean' view of them
 template <int H, int W>
-class TileBaseIterator {
+class TileCombIterator {
 public:
     // IMPORTANT: the iterator does not perform a copy of the input
     // tiles and simply uses the raw interpreted pointer. This is
-    // why the tiles shouldn't change during the lifetime of a single iterator
+    // why the tiles shouldn't change during the lifetime of a single
+    // TileCombIterator
     // inp_tiles is simply the tile configuration as per sbpuzzle.hpp
     // in_group is an array, which shows true if a given tile is in the group
     // e.g. if we have a 3x3 puzzle and out group is {0 2 3 5}
     // in_group = [t f t t f t f f f]
     // Also, equality checks only compare the index, so it's up to the
     // user to ensure that tiles are the same
-    TileBaseIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
+    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
         in_group(inp_in_group), tiles(inp_tiles), i(index) {}
 
-    TileBaseIterator(const TileBaseIterator &other) = default;
-    TileBaseIterator(TileBaseIterator &&other) = default;
-    TileBaseIterator& operator=(const TileBaseIterator &other) = default;
-    TileBaseIterator& operator=(TileBaseIterator &&other) = default;
-
-    bool operator==(const TileBaseIterator &other) const {
-        return i == other.i;
-    }
-
-    bool operator!=(const TileBaseIterator &other) const {
-        return i != other.i;
-    }
-
-protected:
-    const uint8_t *tiles;
-    const bool *in_group;
-    size_t i;
-};
-
-
-// The function that finds a combination index takes boolean iterators as input,
-// and this is why we need this custom iterator to form a 'view' over a tile
-// array, returning true for a tile in the group and false otherwise. According
-// to the calculate_combindex function, this iterator only needs to implement
-// !=, prefix ++ and *
-template <int H, int W>
-class TileCombIterator : public TileBaseIterator<H, W>
-{
-public:
-    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
-        TileBaseIterator<H, W>(inp_in_group, inp_tiles, index) {}
+    TileCombIterator(const TileCombIterator &other) = default;
+    TileCombIterator(TileCombIterator &&other) = default;
+    TileCombIterator& operator=(const TileCombIterator &other) = default;
+    TileCombIterator& operator=(TileCombIterator &&other) = default;
 
     const TileCombIterator &operator++() { // prefix ++
-        TileBaseIterator<H, W>::i++;
-        return *this;
-    }
-
-    bool operator*() const {
-        return TileBaseIterator<H, W>::in_group[TileBaseIterator<H, W>::tiles[TileBaseIterator<H, W>::i]];
-    }
-};
-
-// Similarly, our function that finds a lexicographical index does
-// so over a contiguous array of comparable values. However, in our
-// case the tiles that form each group are separated. This is why
-// we need another custom iterator which 'shows' tiles in the
-// same group as if they were together in a single array
-// This iterator needs to implement a bunch of operations, including
-// addition, subtraction, prefix increment/decrement and dereferencing
-template <int H, int W>
-class TileGroupIterator : public TileBaseIterator<H, W> 
-{
-public:
-    TileGroupIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
-        TileBaseIterator<H, W>(inp_in_group, inp_tiles, index) 
-    {
-
-    }
-
-    const TileGroupIterator &operator++() { // prefix ++
         i++;
         return *this;
     }
@@ -176,8 +123,19 @@ public:
     bool operator*() const {
         return in_group[tiles[i]];
     }
+
+    bool operator==(const TileCombIterator &other) const {
+        return i == other.i;
+    }
+
+    bool operator!=(const TileCombIterator &other) const {
+        return i != other.i;
+    }
+
 private:
-    uint8_t *group_tiles;
+    const uint8_t *tiles;
+    const bool *in_group;
+    size_t i;
 };
 
 template <int H, int W>
@@ -211,6 +169,9 @@ public:
     TileCombIterator<H, W> boolview_end(int group_num, const uint8_t *tiles) const {
         return TileCombIterator<H, W>(in_groups[group_num], tiles, SIZE);
     }
+
+    template <class OutputIterator>
+    void fill_group(int group_num, const uint8_t *tiles, OutputIterator itr) const;
 };
 
 // How are the tables laid out? 
@@ -236,7 +197,7 @@ DPDB<H, W>::DPDB(Iterator groups_begin, Iterator groups_end, Args&&... filenames
     for(int i = 0; i < HOLE; ++i) {
         group_counts[groups[i]]++;
         in_groups[groups[i]][i] = true;
-    }
+    } // NOTE: the hole is not in any group
     // TODO: tables have to be read from each file
 }
 
@@ -248,26 +209,45 @@ DPDB<H, W>::~DPDB() {
     delete[] in_groups;
 }
 
+// This function is necessary for easy use of the calculate_lexindex
+// function. As all tiles in a group have to be in a contiguous array
+// for their index to be calculated, this function simply fills
+// the output iterator with consecutive tiles from the same group
+template <int H, int W>
+template <class OutputIterator>
+void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator itr) const {
+    for(int i = 0; i < SIZE; ++i)
+        if(in_groups[group_num][tiles[i]])
+            *itr++ = tiles[i];
+}
+
 #include <iostream>
 template <int H, int W>
 int DPDB<H, W>::lookup(const uint8_t *tiles) const {
+    int total = 0;
     // for each group
     for(uint8_t i = 0; i < num_groups; ++i) {
         // first, find the combination index
         auto s = boolview_begin(i, tiles);
         auto e = boolview_end(i, tiles);
-        for(auto x = s; x != e; ++x)
-            std::cout << *x << " ";
-        std::cout << "\n";
         size_t comb_i = calculate_combindex(s, e, SIZE, group_counts[i]);
-
+        // then the lexicographical index of the group elements
+        uint8_t group_size = group_counts[i];
+        uint8_t group_tiles[group_size];
+        fill_group(i, tiles, group_tiles);
+        size_t lex_i = calculate_lexindex(group_tiles, group_tiles + group_size);
+        // calculate the total index and lookup the table
+        size_t index = comb_i * factorial(group_size) + lex_i;
+        total += tables[i][index];
     }
+    return total;
 }
 
 
 int main() {
     uint8_t groups[] = {0, 0, 1, /**/ 0, 1, 1, /**/ 0, 1, 0};
-    uint8_t tiles[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    // uint8_t tiles[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    uint8_t tiles[] = {1, 8, 2, 3, 6, 5, 4, 7, 0};
     DPDB<3, 3> db(groups, groups + 9);
     db.lookup(tiles);
     return 0;
