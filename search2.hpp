@@ -94,11 +94,21 @@ struct BfsNode {
 };
 
 template <class Puzzle>
-struct BfsNodeSimple {
+struct SearchNode {
     Puzzle puzzle;
-    int cost;
+    int path_cost;
+    int est_cost;
 
-    BfsNodeSimple(const Puzzle &p, int c) : puzzle(p), cost(c) {}
+    SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) {}
+    SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) {}
+};
+
+template <class Puzzle>
+class SearchNodeComparator {
+public:
+    bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
+        return n1.est_cost > n2.est_cost;
+    }
 };
 
 template <class Puzzle, class Action>
@@ -143,21 +153,22 @@ std::vector<Action> breadth_first_search(const Puzzle &p) {
 
 template <class Puzzle, class Action>
 int breadth_first_search(const Puzzle &p) {
+    using details::SearchNode;
     std::unordered_set<Puzzle> visited;
-    std::queue<details::BfsNodeSimple<Puzzle>> q;
+    std::queue<SearchNode<Puzzle>> q;
     q.emplace(p, 0);
     while(!q.empty()) {
         auto node = q.front(); q.pop(); // remove the top state
         const auto &p = node.puzzle;
         visited.insert(p);
         if(p.is_solved()) // if the puzzle is solved, return
-            return node.cost;
+            return node.path_cost;
         // otherwise, we have to expand each action into a new node
         for(auto action : p.possible_actions()) {
             Puzzle new_p = p; 
             int path_cost = new_p.apply_action(action);
             if(visited.find(new_p) == visited.end()) // not visited
-                q.emplace(new_p, node.cost + path_cost);
+                q.emplace(new_p, node.path_cost + path_cost);
         }
     }
     details::throw_unreachable();
@@ -209,9 +220,9 @@ int iterative_deepening_dfs(const Puzzle &p) {
 }
 
 
-
+namespace details {
 template <class Puzzle, class Action>
-int step_single_direction(std::queue<details::BfsNodeSimple<Puzzle>> &queue,
+int step_single_direction(std::queue<details::SearchNode<Puzzle>> &queue,
                           std::unordered_map<Puzzle, int> &visited, 
                           std::unordered_map<Puzzle, int> &other_visited)
 {
@@ -221,23 +232,26 @@ int step_single_direction(std::queue<details::BfsNodeSimple<Puzzle>> &queue,
         // check if the node has been visited the other way
         auto lookup = other_visited.find(p);
         if(lookup != other_visited.end())
-            return node.cost + lookup->second;
+            return node.path_cost + lookup->second;
         // otherwise insert and generate new nodes like bfs
-        visited.emplace(p, node.cost);
+        visited.emplace(p, node.path_cost);
         for(auto action : p.possible_actions()) {
             Puzzle new_p = p; 
             int path_cost = new_p.apply_action(action);
             if(visited.find(new_p) == visited.end()) // not visited
-                queue.emplace(new_p, node.cost + path_cost);
+                queue.emplace(new_p, node.path_cost + path_cost);
         }
     }
     return -1;
 }
+}
 
 template <class Puzzle, class Action>
 int bidirectional_bfs(const Puzzle &p) {
+    using details::SearchNode;
+    using details::step_single_direction;
     std::unordered_map<Puzzle, int> f_visited, b_visited;
-    std::queue<details::BfsNodeSimple<Puzzle>> fq, bq;
+    std::queue<SearchNode<Puzzle>> fq, bq;
     fq.emplace(p, 0);
     bq.emplace(p.goal_state(), 0);
     while(!fq.empty() || !bq.empty()) {
@@ -252,26 +266,12 @@ int bidirectional_bfs(const Puzzle &p) {
     return 0;
 }
 
-template <class Puzzle>
-struct AStarNodeSimple {
-    Puzzle puzzle;
-    int path_cost;
-    int est_cost;
-
-    AStarNodeSimple(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) {}
-};
-
-template <class Puzzle>
-class AStarNodeSimpleComparator {
-public:
-    bool operator()(const AStarNodeSimple<Puzzle> &n1, const AStarNodeSimple<Puzzle> &n2) {
-        return n1.est_cost > n2.est_cost;
-    }
-};
 template <class Puzzle, class Action, class HeuristicFunc>
 int a_star_search(const Puzzle &p) {
+    using details::SearchNode;
+    using details::SearchNodeComparator;
     std::unordered_set<Puzzle> visited;
-    std::priority_queue<AStarNodeSimple<Puzzle>, std::vector<AStarNodeSimple<Puzzle>>, AStarNodeSimpleComparator<Puzzle>> pq;
+    std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
     pq.emplace(p, 0, HeuristicFunc()(p));
     while(!pq.empty()) {
         auto node = pq.top(); pq.pop();
@@ -297,7 +297,7 @@ namespace details {
 
 // TODO: this implementation of IDA* cannot decide on NOT_FOUND
 template <class Puzzle, class Action, class HeuristicFunc>
-int cost_limited_dfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
+int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit) {
     if(node.est_cost > cost_limit)
         return node.est_cost;
     else if(node.puzzle.is_solved()) {
@@ -308,7 +308,7 @@ int cost_limited_dfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
             Puzzle new_p = node.puzzle; 
             int new_path_cost = node.path_cost + new_p.apply_action(action);
             int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
-            AStarNodeSimple<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
+            SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
             int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit);
             if(result <= cost_limit) // found
                 return result;
@@ -322,8 +322,10 @@ int cost_limited_dfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int iterative_deepening_a_star(const Puzzle &p) {
+    using details::SearchNode;
+    using details::cost_limited_dfs;
     int cost_limit = HeuristicFunc()(p);
-    AStarNodeSimple<Puzzle> start_node(p, 0, cost_limit);
+    SearchNode<Puzzle> start_node(p, 0, cost_limit);
     while(true) {
         int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit);
         if(result <= cost_limit) 
@@ -340,11 +342,11 @@ const int INT_INF = std::numeric_limits<int>::max();
 // but in my sliding block puzzle case RBFS contains so many more complex 
 // basic operations that IDA* wins out 
 template <class Puzzle, class Action, class HeuristicFunc>
-std::pair<bool, int> rbfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
+std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit) {
     const Puzzle &p = node.puzzle;
     if(p.is_solved())
         return std::make_pair(true, node.path_cost);
-    std::vector<AStarNodeSimple<Puzzle>> successors;
+    std::vector<SearchNode<Puzzle>> successors;
     for(auto action : p.possible_actions()) {
         Puzzle new_p = p;
         int new_path_cost = node.path_cost + new_p.apply_action(action);
@@ -357,33 +359,36 @@ std::pair<bool, int> rbfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
         s.est_cost = std::max(s.est_cost, node.est_cost);
     // now, we need to find the best/second best etc. multiple times, so I thought
     // it best to use a heap for the general case
-    std::make_heap(successors.begin(), successors.end(), AStarNodeSimpleComparator<Puzzle>());
+    std::make_heap(successors.begin(), successors.end(), SearchNodeComparator<Puzzle>());
     while(true) {
         // the best node is simply the first in the heap
-        const AStarNodeSimple<Puzzle> &best = successors[0];
+        const SearchNode<Puzzle> &best = successors[0];
         if(best.est_cost > cost_limit)
             return std::make_pair(false, best.est_cost);
         // to find the alternative, pop the first and place it at the back
-        std::pop_heap(successors.begin(), successors.end(), AStarNodeSimpleComparator<Puzzle>());
+        std::pop_heap(successors.begin(), successors.end(), SearchNodeComparator<Puzzle>());
         int alt_cost = successors[0].est_cost;
         // get a new reference for the best node, which is now at the back
-        AStarNodeSimple<Puzzle> &best2 = successors.back();
+        SearchNode<Puzzle> &best2 = successors.back();
         bool success = false;
         std::tie(success, best2.est_cost) = rbfs<Puzzle, Action, HeuristicFunc>(best2, std::min(cost_limit, alt_cost));
         if(success)
             return std::make_pair(true, best2.est_cost);
         // since the cost of the best was modified, reinsert it into successors
-        std::push_heap(successors.begin(), successors.end(), AStarNodeSimpleComparator<Puzzle>());
+        std::push_heap(successors.begin(), successors.end(), SearchNodeComparator<Puzzle>());
     }
 }
 }
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int recursive_best_first_search(const Puzzle &p) {
-    AStarNodeSimple<Puzzle> start_node(p, 0, HeuristicFunc()(p));
+    using details::SearchNode;
+    using details::rbfs;
+    using details::INT_INF;
+    SearchNode<Puzzle> start_node(p, 0, HeuristicFunc()(p));
     bool success;
     int cost;
-    std::tie(success, cost) = details::rbfs<Puzzle, Action, HeuristicFunc>(start_node, details::INT_INF);
+    std::tie(success, cost) = rbfs<Puzzle, Action, HeuristicFunc>(start_node, INT_INF);
     if(!success)
         details::throw_unreachable();
     return cost;
