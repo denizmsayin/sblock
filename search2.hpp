@@ -11,6 +11,7 @@
 #include <limits>
 #include <queue>
 #include <stack>
+#include <iostream>
 
 #include "search_queues.hpp"
 
@@ -267,7 +268,6 @@ public:
         return n1.est_cost > n2.est_cost;
     }
 };
-
 template <class Puzzle, class Action, class HeuristicFunc>
 int a_star_search(const Puzzle &p) {
     std::unordered_set<Puzzle> visited;
@@ -322,11 +322,11 @@ int cost_limited_dfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int iterative_deepening_a_star(const Puzzle &p) {
-    AStarNodeSimple<Puzzle> start_node(p, 0, HeuristicFunc()(p));
-    int cost_limit = 0;
+    int cost_limit = HeuristicFunc()(p);
+    AStarNodeSimple<Puzzle> start_node(p, 0, cost_limit);
     while(true) {
         int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit);
-        if(result <= cost_limit)
+        if(result <= cost_limit) 
             return result;
         cost_limit = result;
     }
@@ -336,6 +336,9 @@ int iterative_deepening_a_star(const Puzzle &p) {
 namespace details {
 const int INT_INF = std::numeric_limits<int>::max();
 
+// TODO: examine this function. Ideally, RBFS should work better than IDA*,
+// but in my sliding block puzzle case RBFS contains so many more complex 
+// basic operations that IDA* wins out 
 template <class Puzzle, class Action, class HeuristicFunc>
 std::pair<bool, int> rbfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
     const Puzzle &p = node.puzzle;
