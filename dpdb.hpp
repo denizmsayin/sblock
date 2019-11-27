@@ -4,6 +4,10 @@
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
+#include <string>
+
+#include "sbpuzzle.hpp"
+#include "search2.hpp"
 
 // An implementation of disjoint pattern databases for the sliding block puzzle
 
@@ -142,14 +146,19 @@ template <int H, int W>
 class DPDB {
 public:
     DPDB() = default;
-    template <typename Iterator, typename... Args>
 
     // groups is supposed to contain a group for each tile
     // e.g. for 3x3 and 2 groups : {0, 0, 0, 1, 1, 1, 2, 2, 0}
     // Note that the group of the last element (hole) is ignored,
     // and that the groups MUST be enumerated from 0 to N-1
-    DPDB(Iterator groups_begin, Iterator groups_end, Args&&... filenames);
+    template <typename GIterator>
+    DPDB(GIterator groups_begin, GIterator groups_end);
+    template <typename GIterator, typename FIterator>
+    DPDB(GIterator groups_begin, GIterator groups_end, FIterator filenames_begin, FIterator filenames_end);
     ~DPDB();
+
+    template <typename GIterator, typename FIterator>
+    static void generate_and_save(GIterator groups_begin, GIterator groups_end, filenames_begin, Iterator filenames_end);
 
     int lookup(const uint8_t *tiles) const;
 //private:
@@ -172,6 +181,9 @@ public:
 
     template <class OutputIterator>
     void fill_group(int group_num, const uint8_t *tiles, OutputIterator itr) const;
+    
+    template <typename GIterator>
+    void init(GIterator groups_begin, GIterator groups_end);
 };
 
 // How are the tables laid out? 
@@ -183,29 +195,56 @@ public:
 // of the members of the group (the Ngroup! part)
 
 template <int H, int W>
-template <typename Iterator, typename... Args>
-DPDB<H, W>::DPDB(Iterator groups_begin, Iterator groups_end, Args&&... filenames) {
-    // copy the group number of each tile
+template <typename GIterator>
+void DPDB<H, W>::init(GIterator groups_begin, GIterator groups_end) {
+// copy the group number of each tile
     std::copy(groups_begin, groups_end, groups);
     // find the number of groups, assuming the largest element is it
     num_groups = *std::max_element(groups, groups + SIZE - 1) + 1;
     // count each group's elements and mark them
+    // also allocate empty tables
     group_counts = new uint8_t[num_groups]();
-    in_groups = new bool *[num_groups]();
+    in_groups = new bool *[num_groups];
     for(uint8_t i = 0; i < num_groups; ++i)
         in_groups[i] = new bool [SIZE]();
     for(int i = 0; i < HOLE; ++i) {
         group_counts[groups[i]]++;
         in_groups[groups[i]][i] = true;
     } // NOTE: the hole is not in any group
+    // initialize empty tables
+    tables = new uint8_t *[num_groups];
+    for(uint8_t i = 0; i < num_groups; ++i) {
+        size_t db_size = combination(SIZE, group_counts[i]) * factorial(group_counts[i]);
+        tables[i] = new uint8_t[db_size];
+    }
+}
+
+template <int H, int W>
+template <typename GIterator>
+DPDB<H, W>::DPDB(GIterator groups_begin, GIterator groups_end) {
+    init(groups_begin, groups_end);
+}
+
+template <int H, int W>
+template <typename GIterator, typename FIterator>
+DPDB<H, W>::DPDB(
+        GIterator groups_begin, 
+        GIterator groups_end, 
+        FIterator filenames_begin, 
+        FIterator filenames_end) 
+{
+    init(groups_begin, groups_end);
     // TODO: tables have to be read from each file
 }
 
 template <int H, int W>
 DPDB<H, W>::~DPDB() {
     delete[] group_counts;
-    for(uint8_t i = 0; i < num_groups; ++i)
+    for(uint8_t i = 0; i < num_groups; ++i) {
+        delete[] tables[i];
         delete[] in_groups[i];
+    }
+    delete[] tables;
     delete[] in_groups;
 }
 
@@ -219,6 +258,34 @@ void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator 
     for(int i = 0; i < SIZE; ++i)
         if(in_groups[group_num][tiles[i]])
             *itr++ = tiles[i];
+}
+
+template <int H, int W, int G>
+struct DpdbBfsNode {
+    SBPuzzle<H, W> puzzle;
+    int costs[G];
+
+    DpdbBfsNode(const SBPuzzle<H, W> &p, int c[]) : puzzle(p)
+    {
+        for(int i = 0; i < G; ++i)
+            costs[i] = c[i];
+    }
+};
+
+template <int H, int W>
+template <typename GIterator, typename FIterator>
+void DPDB<H, W>::generate_and_save(
+        GIterator groups_begin, 
+        GIterator groups_end, 
+        FIterator filenames_begin, 
+        FIterator filenames_end) 
+{
+    // what needs to be done? perform bfs, and keep track of how many moves
+    // have been done in each group, save the result at each step
+    DPDB<H, W> db(groups_begin, groups_end);
+    SBPuzzle<H, W> p = SBPuzzle<H, W>::goal_state();
+    // perform breadth first search
+    
 }
 
 #include <iostream>

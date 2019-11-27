@@ -33,7 +33,7 @@ public:
     SBPuzzle &operator=(SBPuzzle &&other) = default;
 
     // return the goal state for this puzzle
-    SBPuzzle goal_state() const;
+    static SBPuzzle goal_state();
 
     // returns True if the puzzle is in a solved state
     bool is_solved() const;
@@ -156,9 +156,10 @@ SBPuzzle<H, W>::SBPuzzle(Iterator begin, Iterator end)
 }
 
 template <int H, int W>
-SBPuzzle<H, W> SBPuzzle<H, W>::goal_state() const {
+SBPuzzle<H, W> SBPuzzle<H, W>::goal_state() {
     return SBPuzzle<H, W>();
 }
+
 
 template <int H, int W>
 bool SBPuzzle<H, W>::is_solved() const {
