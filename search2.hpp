@@ -293,48 +293,45 @@ int a_star_search(const Puzzle &p) {
     return 0;
 }
 
+namespace details {
+
+// TODO: this implementation of IDA* cannot decide on NOT_FOUND
 template <class Puzzle, class Action, class HeuristicFunc>
-int cost_limited_a_star_search(const Puzzle &p, int cost_limit) {
-    std::unordered_set<Puzzle> visited;
-    std::priority_queue<AStarNodeSimple<Puzzle>, std::vector<AStarNodeSimple<Puzzle>>, AStarNodeSimpleComparator<Puzzle>> pq;
-    pq.emplace(p, 0, HeuristicFunc()(p));
-    int min_exceeding_cost = std::numeric_limits<int>::max();
-    while(!pq.empty()) {
-        auto node = pq.top(); pq.pop();
-        const auto &p = node.puzzle;
-        if(p.is_solved())
-            return node.path_cost;
-        visited.insert(p);
-        for(auto action : p.possible_actions()) {
-            Puzzle new_p = p;
-            int step_cost = new_p.apply_action(action);
-            if(visited.find(new_p) == visited.end()) {
-                int new_path_cost = node.path_cost + step_cost;
-                int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
-                if(new_est_cost <= cost_limit)
-                    pq.emplace(new_p, new_path_cost, new_est_cost);
-                else if(new_est_cost < min_exceeding_cost)
-                    min_exceeding_cost = new_est_cost;
-            }
+int cost_limited_dfs(const AStarNodeSimple<Puzzle> &node, int cost_limit) {
+    if(node.est_cost > cost_limit)
+        return node.est_cost;
+    else if(node.puzzle.is_solved()) {
+        return node.path_cost;;
+    } else {
+        int min_exceeding_cost = std::numeric_limits<int>::max();
+        for(auto action : node.puzzle.possible_actions()) {
+            Puzzle new_p = node.puzzle; 
+            int new_path_cost = node.path_cost + new_p.apply_action(action);
+            int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+            AStarNodeSimple<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
+            int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit);
+            if(result <= cost_limit) // found
+                return result;
+            else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
+                min_exceeding_cost = result;
         }
-    }
-    if(min_exceeding_cost < std::numeric_limits<int>::max()) // cost exceeded
         return min_exceeding_cost;
-    details::throw_unreachable();
+    }
+}
+}
+
+template <class Puzzle, class Action, class HeuristicFunc>
+int iterative_deepening_a_star(const Puzzle &p) {
+    AStarNodeSimple<Puzzle> start_node(p, 0, HeuristicFunc()(p));
+    int cost_limit = 0;
+    while(true) {
+        int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit);
+        if(result <= cost_limit)
+            return result;
+        cost_limit = result;
+    }
     return 0;
 }
-
-template <class Puzzle, class Action, class HeuristicFunc>
-int iterative_deepening_a_star_search(const Puzzle &p) {
-    int cost_limit = -1, result = 0;
-    while(result > cost_limit) {
-        cost_limit = result;
-        result = cost_limited_a_star_search<Puzzle, Action, HeuristicFunc>(p, cost_limit);
-    }
-    return result;
-}
-
-
 
 }
 #endif
