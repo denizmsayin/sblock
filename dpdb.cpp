@@ -90,32 +90,85 @@ static size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterato
 }
 
 
-// Now, since our function that determines a combination index does so
-// 'generically' over an iterator that returns booleans, we need to
-// create a custom iterator class constructed over a set of tiles
-// that presents a 'boolean' view of them
+// We require two different iterators over tiles, one for finding a comb
+// index and another for finding a lexicographical index. Since
+// both iterators will have quite similar functions, we can gather their
+// common parts in a base class
 template <int H, int W>
-class TileCombIterator {
+class TileBaseIterator {
 public:
     // IMPORTANT: the iterator does not perform a copy of the input
     // tiles and simply uses the raw interpreted pointer. This is
-    // why the tiles shouldn't change during the lifetime of a single
-    // TileCombIterator
+    // why the tiles shouldn't change during the lifetime of a single iterator
     // inp_tiles is simply the tile configuration as per sbpuzzle.hpp
     // in_group is an array, which shows true if a given tile is in the group
     // e.g. if we have a 3x3 puzzle and out group is {0 2 3 5}
     // in_group = [t f t t f t f f f]
     // Also, equality checks only compare the index, so it's up to the
     // user to ensure that tiles are the same
-    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
+    TileBaseIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
         in_group(inp_in_group), tiles(inp_tiles), i(index) {}
 
-    TileCombIterator(const TileCombIterator &other) = default;
-    TileCombIterator(TileCombIterator &&other) = default;
-    TileCombIterator& operator=(const TileCombIterator &other) = default;
-    TileCombIterator& operator=(TileCombIterator &&other) = default;
+    TileBaseIterator(const TileBaseIterator &other) = default;
+    TileBaseIterator(TileBaseIterator &&other) = default;
+    TileBaseIterator& operator=(const TileBaseIterator &other) = default;
+    TileBaseIterator& operator=(TileBaseIterator &&other) = default;
+
+    bool operator==(const TileBaseIterator &other) const {
+        return i == other.i;
+    }
+
+    bool operator!=(const TileBaseIterator &other) const {
+        return i != other.i;
+    }
+
+protected:
+    const uint8_t *tiles;
+    const bool *in_group;
+    size_t i;
+};
+
+
+// The function that finds a combination index takes boolean iterators as input,
+// and this is why we need this custom iterator to form a 'view' over a tile
+// array, returning true for a tile in the group and false otherwise. According
+// to the calculate_combindex function, this iterator only needs to implement
+// !=, prefix ++ and *
+template <int H, int W>
+class TileCombIterator : public TileBaseIterator<H, W>
+{
+public:
+    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
+        TileBaseIterator<H, W>(inp_in_group, inp_tiles, index) {}
 
     const TileCombIterator &operator++() { // prefix ++
+        TileBaseIterator<H, W>::i++;
+        return *this;
+    }
+
+    bool operator*() const {
+        return TileBaseIterator<H, W>::in_group[TileBaseIterator<H, W>::tiles[TileBaseIterator<H, W>::i]];
+    }
+};
+
+// Similarly, our function that finds a lexicographical index does
+// so over a contiguous array of comparable values. However, in our
+// case the tiles that form each group are separated. This is why
+// we need another custom iterator which 'shows' tiles in the
+// same group as if they were together in a single array
+// This iterator needs to implement a bunch of operations, including
+// addition, subtraction, prefix increment/decrement and dereferencing
+template <int H, int W>
+class TileGroupIterator : public TileBaseIterator<H, W> 
+{
+public:
+    TileGroupIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
+        TileBaseIterator<H, W>(inp_in_group, inp_tiles, index) 
+    {
+
+    }
+
+    const TileGroupIterator &operator++() { // prefix ++
         i++;
         return *this;
     }
@@ -123,19 +176,8 @@ public:
     bool operator*() const {
         return in_group[tiles[i]];
     }
-
-    bool operator==(const TileCombIterator &other) const {
-        return i == other.i;
-    }
-
-    bool operator!=(const TileCombIterator &other) const {
-        return i != other.i;
-    }
-
 private:
-    const uint8_t *tiles;
-    const bool *in_group;
-    size_t i;
+    uint8_t *group_tiles;
 };
 
 template <int H, int W>
