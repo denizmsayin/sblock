@@ -148,6 +148,7 @@ public:
     friend class DPDB<H, W>;
 
 private:
+public:
     static const uint8_t _X = 255;
 
     uint8_t tiles[H*W];
@@ -157,7 +158,7 @@ private:
 
     constexpr static int SIZE = H * W;
     constexpr static int HOLE = H * W - 1;
-    constexpr static int OFFSETS[] = {-W, +1, +W, -1}; // UP, RIGHT, DOWN, LEFT
+    static int OFFSETS[]; // UP, RIGHT, DOWN, LEFT
 
     int get_switch_pos(Direction move) const;
     void move_tile(int switch_pos);
@@ -180,12 +181,21 @@ private:
 };
 
 template <int H, int W>
-void SBPuzzle<H, W>::mark_valid_moves(bool directions[]) const {
-    int rem = hole_pos % W;
-    directions[0] = hole_pos >= W; // up
+int SBPuzzle<H, W>::OFFSETS[] = {-W, +1, +W, -1};
+
+template <int H, int W>
+static void _mark_valid_moves(int p, bool directions[]) {
+    static constexpr int SIZE = H*W;
+    int rem = p % W;
+    directions[0] = p >= W; // up
     directions[1] = rem < W-1; // right
-    directions[2] = hole_pos < SIZE-W; // down
+    directions[2] = p < SIZE-W; // down
     directions[3] = rem > 0; // left
+}
+
+template <int H, int W>
+void SBPuzzle<H, W>::mark_valid_moves(bool directions[]) const {
+    _mark_valid_moves<H, W>(hole_pos, directions);
 }
 
 template <int H, int W>
@@ -207,13 +217,14 @@ struct SBPuzzle<H, W>::PADelegate<Direction, Dummy> {
 // is only intended as a helper private function
 template <int H, int W>
 void SBPuzzle<H, W>::propagate_hole(uint8_t hp) {
-    int rem = hp % W;
-    bool conds[] = {hp >= W, rem < W-1, hp < SIZE-W, rem > 0};
-    int offsets[] = {-W, +1, +W, -1};
+    bool conds[4];
+    _mark_valid_moves<H, W>(hp, conds);
     for(int i = 0; i < 4; ++i) {
-        int nhp = hp + offsets[i];
-        if(conds[i] && tiles[nhp] == _X)
+        int nhp = hp + OFFSETS[i];
+        if(conds[i] && tiles[nhp] == _X) {
+            tiles[nhp] = HOLE;
             propagate_hole(nhp);
+        }
     }
 }
 
@@ -233,9 +244,24 @@ struct SBPuzzle<H, W>::PADelegate<MaskedAction, Dummy> {
         cp.propagate_hole();
         // now, go over tiles reachable from holes and add them as actions
         for(int i = 0; i < SBPuzzle<H, W>::SIZE; ++i) {
-            if(cp.tiles[i])
-                return actions;
+            if(cp.tiles[i] == SBPuzzle<H, W>::HOLE) {
+                // loop through possible directions
+                bool conds[4];
+                _mark_valid_moves<H, W>(i, conds);
+                for(int j = 0; j < 4; ++j) {
+                    if(conds[j]) {
+                        // if the position is not a hole or X, add it to actions
+                        int pos = i + SBPuzzle<H, W>::OFFSETS[j];
+                        if(cp.tiles[pos] != SBPuzzle<H, W>::_X 
+                           && cp.tiles[pos] != SBPuzzle<H, W>::HOLE) 
+                        {
+                            actions.emplace_back(pos, i);
+                        }
+                    }
+                }
+            }
         }
+        return actions;
     }
 };
 
