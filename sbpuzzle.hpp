@@ -22,6 +22,47 @@ enum class Direction : uint8_t {
 template <int H, int W>
 class DPDB;
 
+// NOTE: the derivative masked class has been included inside the main SBPuzzle class
+// a derivative class for generating disjoint pattern databases,
+// where part of the puzzle remains indistinguishable
+// the class is exactly the same apart from the apply_action function,
+// since moving a tile which is not in the group is zero cost
+
+// one significant issue for the disjoint pattern database implementation
+// is that moves of the blank tile are not counted. This means that we would
+// want to return a cost of 0 for moves where a tile from the group is not
+// moved. Unfortunately, this renders BFS unoptimal due to not being a unit
+// cost step, which hinders the construction of the database. Since it would
+// be much more costly to run A* from each state to the puzzle solution,
+// the only answer I could come up with is greatly extending the amount of
+// actions possible so that each action contains all possible unit cost moves
+// from the current state, which may imply multiple moves of the empty tile. 
+// e.g. :
+// ------------- Four possible unit cost moves:
+// | 0 | 1 | X | ... 0 8 1 . 0 8 X . 0 1 X . 0 1 X
+// ------------- ... 3 X X . 3 1 X . 8 3 X . 3 X X
+// | 3 | X | 8 | ... 6 X X . 6 X X . 6 X X . 8 6 X
+// -------------
+// | 6 | X | X |
+// -------------
+// Another unfortunate consequence is that changing the signature of the possible
+// actions function requires breaking inheritance and replacing it with composition.
+// This is nice, but not very nice in the way that it requires forwarding of all functions
+
+// A final observation of mine is that the classic SBPuzzle is a specific instance
+// of the masked puzzle where all the tiles are in a single group. The only
+// missing part now is that we want to be able to request using different sets of
+// actions. To allow this, we simply need to make the possible_actions() member
+// function templated, so that it can return different action types depending
+// on the template argument type.
+
+struct MaskedAction {
+    uint8_t new_hole_pos, new_tile_pos;
+
+    MaskedAction(uint8_t a, uint8_t b) : new_hole_pos(a), new_tile_pos(b) {}
+};
+
+
 template <int H, int W>
 class SBPuzzle {
 public:
@@ -32,6 +73,11 @@ public:
     explicit SBPuzzle(const int tiles[]);
     template <class Iterator>
     explicit SBPuzzle(Iterator begin, Iterator end);
+
+    // for initializing with a mask
+    explicit SBPuzzle(const bool mask[]);
+    explicit SBPuzzle(const int tiles[], const bool mask[]);
+    explicit SBPuzzle(const SBPuzzle<H, W> &p, const bool mask[]);
 
     SBPuzzle(const SBPuzzle &other) = default;
     SBPuzzle(SBPuzzle &&other) = default;
@@ -88,10 +134,6 @@ public:
     template <int HH, int WW>
     friend std::ostream &operator<<(std::ostream &s, const SBPuzzle<HH, WW> &p);
 
-    // encode the puzzle into a string for hashing, not as good as making your own hash,
-    // but a shortcut. Will have to try the alternative...
-    std::string encode() const;
-
     size_t hash() const;
 
     // heuristic for misplaced tiles
@@ -102,7 +144,9 @@ public:
 
     friend class DPDB<H, W>;
 
-protected:
+private:
+    static const uint8_t _X = 255;
+
     uint8_t tiles[H*W];
     uint8_t hole_pos; // cached
 
@@ -113,15 +157,56 @@ protected:
 
     int get_switch_pos(Direction move) const;
     void move_tile(int switch_pos);
+    void overwrite_tiles(const bool mask[]);
 };
 
-// add hashability
-namespace std {
-    template <int H, int W>
-    struct hash<SBPuzzle<H, W>> {
-        size_t operator()(SBPuzzle<H, W> const &p) const noexcept;
-    };
+template <int H, int W>
+void SBPuzzle<H, W>::overwrite_tiles(const bool mask[]) {
+    for(int i = 0; i < SIZE; ++i)
+        if(tiles[i] != HOLE && !mask[tiles[i]])
+            tiles[i] = _X;
 }
+
+template <int H, int W>
+SBPuzzle<H, W>::SBPuzzle(const bool imask[]) : SBPuzzle<H, W>() {
+    overwrite_tiles(imask);
+}
+
+template <int H, int W>
+SBPuzzle<H, W>::SBPuzzle(const int tiles[], const bool imask[]) : SBPuzzle<H, W>(tiles) 
+{
+    overwrite_tiles(imask);
+}
+
+template <int H, int W>
+SBPuzzle<H, W>::SBPuzzle(const SBPuzzle<H, W> &p, const bool imask[]) : SBPuzzle<H, W>(p) 
+{
+    overwrite_tiles(imask);
+}
+
+template <int H, int W>
+std::ostream &operator<<(std::ostream &s, const SBPuzzle<H, W> &p) {
+    const uint8_t *max = std::max_element(p.tiles, p.tiles + SBPuzzle<H, W>::SIZE);
+    uint8_t num_digits = (*max > 99) ? 3 : ((*max > 9) ? 2 : 1); 
+    int num_dashes = W * (num_digits + 3) + 1;
+    std::string dash_str(num_dashes, '-');
+    std::string empty_str(num_digits - 1, ' ');
+    for(size_t i = 0, k = 0; i < H; i++) {
+        s << dash_str << std::endl;
+        for(size_t j = 0; j < W; j++) {
+            s << "| "; 
+            if(p.tiles[k] == SBPuzzle<H, W>::_X) // marks masked tiles, big dep issue!
+                s << empty_str << "X ";
+            else 
+                s << std::setw(num_digits) << static_cast<int>(p.tiles[k]) << " ";
+            ++k;
+        }
+        s << "|" << std::endl;
+    }
+    s << dash_str;
+    return s;
+}
+
 
 Direction inverse(Direction d) {
     using Dir = Direction;
@@ -163,11 +248,10 @@ SBPuzzle<H, W> SBPuzzle<H, W>::goal_state() {
     return SBPuzzle<H, W>();
 }
 
-
 template <int H, int W>
 bool SBPuzzle<H, W>::is_solved() const {
-    for(int i = 0; i < SIZE; i++)
-        if(tiles[i] != i)
+    for(int i = 0; i < SBPuzzle<H, W>::SIZE; i++)
+        if(SBPuzzle<H, W>::tiles[i] != _X && SBPuzzle<H, W>::tiles[i] != i)
             return false;
     return true;
 }
@@ -208,9 +292,10 @@ void SBPuzzle<H, W>::move_tile(int switch_pos) {
 
 template <int H, int W>
 int SBPuzzle<H, W>::apply_action(Direction move) {
-    int switch_pos = get_switch_pos(move);
-    move_tile(switch_pos);
-    return 1; // the path cost
+    int switch_pos = SBPuzzle<H, W>::get_switch_pos(move);
+    int cost = SBPuzzle<H, W>::tiles[switch_pos] == _X ? 0 : 1;
+    SBPuzzle<H, W>::move_tile(switch_pos);
+    return cost;
 }
 
 template <int H, int W>
@@ -236,11 +321,6 @@ std::ostream &operator<<(std::ostream &s, Direction dir) {
         default:            s << "X"; break;
     }
     return s;
-}
-
-template <int H, int W>
-std::ostream &operator<<(std::ostream &s, const SBPuzzle<H, W> &p) {
-    return stream_tiles(s, p.tiles, H, W, H*W);
 }
 
 template <typename RandomAccessIterator>
@@ -291,7 +371,14 @@ int SBPuzzle<H, W>::find_hole() const {
     return 0;
 }
 
-// TODO: figure out a nice index calculation
+// add hashability
+namespace std {
+    template <int H, int W>
+    struct hash<SBPuzzle<H, W>> {
+        size_t operator()(SBPuzzle<H, W> const &p) const noexcept;
+    };
+}
+
 template <int H, int W>
 size_t std::hash<SBPuzzle<H, W>>::operator()(SBPuzzle<H, W> const &p) const noexcept {
     return p.hash();
@@ -299,13 +386,15 @@ size_t std::hash<SBPuzzle<H, W>>::operator()(SBPuzzle<H, W> const &p) const noex
 
 template <int H, int W>
 size_t SBPuzzle<H, W>::hash() const {
-    // copied from the  boost implementation
+    // copied hash combination from the  boost implementation
+    // first, perform a loop using 8 bytes every time
     size_t seed = 0;
     constexpr std::hash<uint64_t> hasher64;
     constexpr int view_size = SIZE >> 3;
     const uint64_t *tiles_view = reinterpret_cast<const uint64_t *>(tiles);
     for(int i = 0; i < view_size; i++)
         seed ^= hasher64(tiles_view[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    // and then do the rest 1 byte at a time
     constexpr std::hash<uint8_t> hasher8;
     constexpr int rem_start = view_size << 3;
     constexpr int rem_end = rem_start + SIZE - (view_size << 3);
@@ -315,21 +404,10 @@ size_t SBPuzzle<H, W>::hash() const {
 }
 
 template <int H, int W>
-std::string SBPuzzle<H, W>::encode() const {
-    // an important assumption here is that the puzzle has less than 256 tiles, which is a given
-    // since we cannot solve puzzles larger than 5x5
-    std::string encoded;
-    encoded.reserve(SIZE);
-    for(int i = 0; i < SIZE; i++)
-        encoded.push_back(tiles[i]);
-    return encoded;
-}
-
-template <int H, int W>
 int SBPuzzle<H, W>::manhattan_distance_to_solution() const {
     int dist = 0;
     for(int i = 0; i < SIZE; i++) {
-        if(tiles[i] != HOLE) {
+        if(tiles[i] != _X && tiles[i] != HOLE) {
             int row = i / W, col = i % W;
             int actual_row = tiles[i] / W, actual_col = tiles[i] % W;
             dist += abs(row - actual_row) + abs(col - actual_col);
@@ -342,7 +420,7 @@ template <int H, int W>
 int SBPuzzle<H, W>::num_misplaced_tiles() const {
     int n = 0;
     for(int i = 0; i < SIZE; i++)
-        if(tiles[i] != HOLE && tiles[i] != i)
+        if(tiles[i] != _X && tiles[i] != HOLE && tiles[i] != i)
             n++;
     return n;
 }

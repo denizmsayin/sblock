@@ -7,8 +7,8 @@
 #include <string>
 #include <cstring>
 
+#include "sbpuzzle.hpp"
 #include "sblock_utils.hpp"
-#include "masked_sbpuzzle.hpp"
 #include "search2.hpp"
 
 // Now, since our function that determines a combination index does so
@@ -28,8 +28,8 @@ public:
     // in_group = [t f t t f t f f f]
     // Also, equality checks only compare the index, so it's up to the
     // user to ensure that tiles are the same
-    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index) : 
-        in_group(inp_in_group), tiles(inp_tiles), i(index) {}
+    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, uint8_t x, size_t index) : 
+        in_group(inp_in_group), tiles(inp_tiles), i(index), xv(x) {}
 
     TileCombIterator(const TileCombIterator &other) = default;
     TileCombIterator(TileCombIterator &&other) = default;
@@ -42,7 +42,7 @@ public:
     }
 
     bool operator*() const {
-        return tiles[i] != MaskedSBPuzzle<H, W>::_X && in_group[tiles[i]];
+        return tiles[i] != xv && in_group[tiles[i]];
     }
 
     bool operator==(const TileCombIterator &other) const {
@@ -57,6 +57,7 @@ private:
     const bool *in_group;
     const uint8_t *tiles;
     size_t i;
+    uint8_t xv; // blank value, 255
 };
 
 template <int H, int W>
@@ -97,11 +98,11 @@ public:
     constexpr static int HOLE = H * W - 1;
 
     TileCombIterator<H, W> boolview_begin(int group_num, const uint8_t *tiles) const {
-        return TileCombIterator<H, W>(in_groups[group_num], tiles, 0);
+        return TileCombIterator<H, W>(in_groups[group_num], tiles, 0, SBPuzzle<H, W>::_X);
     }
 
     TileCombIterator<H, W> boolview_end(int group_num, const uint8_t *tiles) const {
-        return TileCombIterator<H, W>(in_groups[group_num], tiles, SIZE);
+        return TileCombIterator<H, W>(in_groups[group_num], tiles, SIZE, SBPuzzle<H, W>::_X);
     }
 
     template <class OutputIterator>
@@ -189,7 +190,7 @@ template <int H, int W>
 template <class OutputIterator>
 void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator itr) const {
     for(int i = 0; i < SIZE; ++i)
-        if(tiles[i] != MaskedSBPuzzle<H, W>::_X && in_groups[group_num][tiles[i]])
+        if(tiles[i] != SBPuzzle<H, W>::_X && in_groups[group_num][tiles[i]])
             *itr++ = tiles[i];
 }
 
@@ -210,7 +211,7 @@ void DPDB<H, W>::generate_and_save(
 template <int H, int W>
 class ZH {
 public:
-    constexpr int operator()(const MaskedSBPuzzle<H, W> &p) {
+    constexpr int operator()(const SBPuzzle<H, W> &p) {
         return 0;
     }
 };
@@ -225,11 +226,11 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
     std::cout << "Filename: " << filename << std::endl;
     // we simply need to apply bfs, but only add a cost when a tile
     // from the group is moved, otherwise the moves do not cost anything
-    MaskedSBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), in_groups[i]);
+    SBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), in_groups[i]);
     // perform breadth first search
-    BreadthFirstIterator<MaskedSBPuzzle<H, W>, Dir> itr(p);
+    BreadthFirstIterator<SBPuzzle<H, W>, Dir> itr(p);
     while(!itr.done()) {
-        SearchNode<MaskedSBPuzzle<H, W>> node = itr.next(); // get the next node
+        SearchNode<SBPuzzle<H, W>> node = itr.next(); // get the next node
         // find the table index of the node's state
         size_t index = calculate_table_index(i, node.puzzle.tiles);
         std::cout << "Index: " << index << ", cost: " << node.path_cost << std::endl
@@ -242,8 +243,8 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
             tables[i][index] = node.path_cost; // insert the path cost so far
         // I believe BFS fails for some problem instances. Therefore,
         // for each problem I want to solve it using A* and compare the path cost
-        MaskedSBPuzzle<H, W> p2 = node.puzzle;
-        int cost = search2::a_star_search<MaskedSBPuzzle<H, W>, Dir, ZH<H, W>>(p2);
+        SBPuzzle<H, W> p2 = node.puzzle;
+        int cost = search2::a_star_search<SBPuzzle<H, W>, Dir, ZH<H, W>>(p2);
         if(cost != node.path_cost) {
             std::cout << "Found cost: " << node.path_cost << ", A*: " << cost << std::endl;
         }

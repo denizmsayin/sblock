@@ -2,8 +2,6 @@
 #include "search2.hpp"
 #include "search_queues.hpp"
 #include "sbpuzzle.hpp"
-#include "masked_sbpuzzle.hpp"
-#include "dpdb.hpp"
 
 #include <iostream>
 #include <queue>
@@ -17,9 +15,13 @@ unsigned SEED = 42;
 constexpr int N = 100;
 constexpr int H = 3, W = 3;
 
-#define USEDB
+// #define USEDB
+
+//-------------------------------------------------------------------------------
 
 #ifdef USEDB
+#include "dpdb.hpp"
+
 uint8_t DBGROUPS[] = {0, 0, 1, 0, 1, 1, 0, 1, 0};
 std::vector<const char *> DBFILES {"g1.db", "g2.db"};
 // uint8_t DBGROUPS[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -32,8 +34,6 @@ DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
 using namespace std;
 using Dir = Direction;
 
-
-
 template <int H, int W, class URNG>
 SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
     SBPuzzle<H, W> puzzle;
@@ -44,7 +44,7 @@ SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
 }
 
 template <int H, int W, class URNG>
-MaskedSBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
+SBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
     SBPuzzle<H, W> puzzle;
     bool mask[H*W];
     for(int i = 0, size = H*W; i < size; ++i)
@@ -53,7 +53,7 @@ MaskedSBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
     do {
         puzzle.shuffle(rng);
     } while(!puzzle.is_solvable());
-    return MaskedSBPuzzle<H, W>(puzzle, mask);
+    return SBPuzzle<H, W>(puzzle, mask);
 }
 
 template <int H, int W>
@@ -150,13 +150,13 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
-        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
-        num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, 
-                                            ZeroHeuristic<H, W>>(puzzles[i]);
+        // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, 
+        //                                    ZeroHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();
