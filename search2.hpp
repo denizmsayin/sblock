@@ -14,6 +14,7 @@
 #include <iostream>
 #include <chrono>
 
+#include "sblock_utils.hpp"
 #include "search_queues.hpp"
 
 // While the goal of achieving maximal code reuse was accomplished in the previous version
@@ -83,8 +84,7 @@ namespace details {
 template <class Puzzle>
 struct SearchNode {
     static size_t NODE_COUNTER;
-    static size_t LAST_RECORDED_NC;
-    static std::chrono::time_point<std::chrono::high_resolution_clock> LAST_RECORDED_T;
+    static SeriesTracker<size_t> COUNTER_TRACKER;
 
     Puzzle puzzle;
     int path_cost;
@@ -93,47 +93,23 @@ struct SearchNode {
     SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) 
     {
         NODE_COUNTER++;
-        handle_counter();
+        COUNTER_TRACKER.track();
     }
 
     SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) 
     {
         NODE_COUNTER++;
-        handle_counter();
-    }
-
-private:
-    void record() {
-        LAST_RECORDED_NC = NODE_COUNTER;
-        LAST_RECORDED_T = std::chrono::high_resolution_clock::now();
-    }
-
-    void display() {
-        auto current_t = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> fp_ms = current_t - LAST_RECORDED_T;
-        size_t nps = static_cast<size_t>(1000.0 * (NODE_COUNTER - LAST_RECORDED_NC) / fp_ms.count());
-        std::cout << "Node count: " << NODE_COUNTER/1000000 << "M, nps: " << nps << std::endl;
-    }
-
-    void handle_counter() {
-        if(NODE_COUNTER == 1) {
-            record();
-        }
-        if(NODE_COUNTER % 10000000 == 0) {
-            display();
-            record();
-        }
+        COUNTER_TRACKER.track();
     }
 };
 
 template <class Puzzle>
 size_t SearchNode<Puzzle>::NODE_COUNTER = 0;
 
-template <class Puzzle>
-size_t SearchNode<Puzzle>::LAST_RECORDED_NC = 0;
+SeriesTracker<size_t>::Options NT_OPTS(10000000);
 
 template <class Puzzle>
-std::chrono::time_point<std::chrono::high_resolution_clock> SearchNode<Puzzle>::LAST_RECORDED_T = std::chrono::high_resolution_clock::now();
+SeriesTracker<size_t> SearchNode<Puzzle>::COUNTER_TRACKER(&SearchNode<Puzzle>::NODE_COUNTER, NT_OPTS);
 
 template <class Puzzle>
 class SearchNodeComparator {

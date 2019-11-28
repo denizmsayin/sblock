@@ -11,8 +11,8 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 100;
-constexpr int H = 3, W = 3;
+constexpr int N = 1;
+constexpr int H = 4, W = 4;
 
 using namespace std;
 using Dir = Direction;

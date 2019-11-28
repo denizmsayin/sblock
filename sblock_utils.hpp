@@ -14,11 +14,10 @@ public:
         std::ostream *stream;
         double alpha;
         Arithmetic print_every;
-        bool output;
         bool show_speed;
 
-        Options() : print_every(1000), output(true), stream(&std::cout), show_speed(true),
-            alpha(0.0) {}
+        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream *s=&std::cout) 
+            : stream(s), alpha(a), print_every(pe), show_speed(ss) {}
     };
 
     SeriesTracker(const Arithmetic *to_track);
