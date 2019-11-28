@@ -1,6 +1,10 @@
 #include "sblock_utils.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
 #include <stdexcept>
+#include <string>
 
 // TODO: add proper error checking other than at file opening
 void write_byte_array(const uint8_t *table, size_t size, const char *filename) {
@@ -38,5 +42,28 @@ size_t factorial(size_t n) {
     else if(table[n] == 0)
         table[n] = n * factorial(n-1);
     return table[n];
+}
+
+std::ostream& stream_tiles(std::ostream &s, const uint8_t *tiles, size_t h, size_t w, uint8_t x) {
+    const uint8_t *max = std::max_element(tiles, tiles + h*w);
+    uint8_t num_digits = (*max > 99) ? 3 : ((*max > 9) ? 2 : 1); 
+    int num_dashes = w * (num_digits + 3) + 1;
+    std::string dash_str(num_dashes, '-');
+    std::string empty_str(num_digits - 1, ' ');
+    for(size_t i = 0, k = 0; i < h; i++) {
+        s << dash_str << std::endl;
+        
+        for(size_t j = 0; j < w; j++) {
+            s << "| "; 
+            if(tiles[k] == x) // marks masked tiles, big dep issue!
+                s << empty_str << "X ";
+            else 
+                s << std::setw(num_digits) << static_cast<int>(tiles[k]) << " ";
+            ++k;
+        }
+        s << "|" << std::endl;
+    }
+    s << dash_str;
+    return s;
 }
 

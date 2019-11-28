@@ -17,13 +17,22 @@ unsigned SEED = 42;
 constexpr int N = 100;
 constexpr int H = 3, W = 3;
 
-bool USEDB = true;
+#define USEDB
+
+#ifdef USEDB
 uint8_t DBGROUPS[] = {0, 0, 1, 0, 1, 1, 0, 1, 0};
 std::vector<const char *> DBFILES {"g1.db", "g2.db"};
-DPDB<H, W> DB(DBGROUPS, DBGROUPS + H*W, DBFILES.begin(), DBFILES.end());
+// uint8_t DBGROUPS[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+// std::vector<const char *> DBFILES {"gmax.db"};
+// uint8_t DBGROUPS[] = {0, 1, 2, 3, 4, 5, 6, 7, 0};
+// std::vector<const char *> DBFILES {"m0.db", "m1.db", "m2.db", "m3.db", "m4.db", "m5.db", "m6.db", "m7.db"};
+DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
+#endif
 
 using namespace std;
 using Dir = Direction;
+
+
 
 template <int H, int W, class URNG>
 SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
@@ -48,6 +57,14 @@ MaskedSBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
 }
 
 template <int H, int W>
+class ZeroHeuristic {
+public:
+    constexpr int operator()(const SBPuzzle<H, W> &p) {
+        return 0;
+    }
+};
+
+template <int H, int W>
 class MisplacedTilesHeuristic {
 public:
     int operator()(const SBPuzzle<H, W> &p) {
@@ -63,6 +80,7 @@ public:
     }
 };
 
+#ifdef USEDB
 template <int H, int W>
 class DPDBHeuristic {
 public:
@@ -70,6 +88,7 @@ public:
         return DB.lookup(p);
     }
 };
+#endif
 
 bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
     bool eq = false;
@@ -136,7 +155,8 @@ int main() {
         // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
-        num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, 
+                                            ZeroHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();

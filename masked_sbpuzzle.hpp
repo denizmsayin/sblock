@@ -11,6 +11,8 @@ template <int H, int W>
 class MaskedSBPuzzle : public SBPuzzle<H, W> 
 {
 public:
+    static const uint8_t _X = 255; // don't care tiles
+
     explicit MaskedSBPuzzle(const bool mask[]);
     explicit MaskedSBPuzzle(const int tiles[], const bool mask[]);
     explicit MaskedSBPuzzle(const SBPuzzle<H, W> &p, const bool mask[]);
@@ -18,8 +20,10 @@ public:
     int apply_action(Direction move);
     bool is_solved() const;
 
+    template <int HH, int WW>
+    friend std::ostream &operator<<(std::ostream &s, const MaskedSBPuzzle<HH, WW> &p);
+
 private:
-    static const uint8_t _X = 255;
     void overwrite_tiles(const bool mask[]);
 };
 
@@ -64,6 +68,11 @@ int MaskedSBPuzzle<H, W>::apply_action(Direction move) {
     int cost = SBPuzzle<H, W>::tiles[switch_pos] == _X ? 0 : 1;
     SBPuzzle<H, W>::move_tile(switch_pos);
     return cost;
+}
+
+template <int H, int W>
+std::ostream &operator<<(std::ostream &s, const MaskedSBPuzzle<H, W> &p) {
+    return stream_tiles(s, p.tiles, H, W, MaskedSBPuzzle<H, W>::_X);
 }
 
 // add hashability

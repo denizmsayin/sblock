@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <fstream>
 #include <string>
+#include <cstring>
 
 #include "sblock_utils.hpp"
 #include "masked_sbpuzzle.hpp"
@@ -41,7 +42,7 @@ public:
     }
 
     bool operator*() const {
-        return in_group[tiles[i]];
+        return tiles[i] != MaskedSBPuzzle<H, W>::_X && in_group[tiles[i]];
     }
 
     bool operator==(const TileCombIterator &other) const {
@@ -144,6 +145,7 @@ void DPDB<H, W>::init(GIterator groups_begin, GIterator groups_end) {
         size_t db_size = combination(SIZE, group_counts[i]) * factorial(group_counts[i]);
         table_sizes[i] = db_size;
         tables[i] = new uint8_t[db_size];
+        memset(tables[i], 255, db_size); // set the distances to max value
     }
 }
 
@@ -187,7 +189,7 @@ template <int H, int W>
 template <class OutputIterator>
 void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator itr) const {
     for(int i = 0; i < SIZE; ++i)
-        if(in_groups[group_num][tiles[i]])
+        if(tiles[i] != MaskedSBPuzzle<H, W>::_X && in_groups[group_num][tiles[i]])
             *itr++ = tiles[i];
 }
 
@@ -206,12 +208,21 @@ void DPDB<H, W>::generate_and_save(
 }
 
 template <int H, int W>
+class ZH {
+public:
+    constexpr int operator()(const MaskedSBPuzzle<H, W> &p) {
+        return 0;
+    }
+};
+
+template <int H, int W>
 template <typename GIterator>
 void DPDB<H, W>::_generate_and_save(int i, const char *filename) 
 {
     using Dir = Direction;
     using search2::BreadthFirstIterator;
     using search2::SearchNode;
+    std::cout << "Filename: " << filename << std::endl;
     // we simply need to apply bfs, but only add a cost when a tile
     // from the group is moved, otherwise the moves do not cost anything
     MaskedSBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), in_groups[i]);
@@ -221,7 +232,21 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
         SearchNode<MaskedSBPuzzle<H, W>> node = itr.next(); // get the next node
         // find the table index of the node's state
         size_t index = calculate_table_index(i, node.puzzle.tiles);
-        tables[i][index] = node.path_cost; // insert the path cost so far
+        std::cout << "Index: " << index << ", cost: " << node.path_cost << std::endl
+                  << node.puzzle << std::endl
+                  << "----------------------" << std::endl;
+        // insert the path cost only if it is less than one found so far
+        // this is necessary because the hole position is not accounted for,
+        // and multiple states & paths can lead to the same index
+        if(node.path_cost < tables[i][index])
+            tables[i][index] = node.path_cost; // insert the path cost so far
+        // I believe BFS fails for some problem instances. Therefore,
+        // for each problem I want to solve it using A* and compare the path cost
+        MaskedSBPuzzle<H, W> p2 = node.puzzle;
+        int cost = search2::a_star_search<MaskedSBPuzzle<H, W>, Dir, ZH<H, W>>(p2);
+        if(cost != node.path_cost) {
+            std::cout << "Found cost: " << node.path_cost << ", A*: " << cost << std::endl;
+        }
     }
     // write the table to the file
     write_byte_array(tables[i], table_sizes[i], filename);
@@ -237,6 +262,16 @@ size_t DPDB<H, W>::calculate_table_index(int i, const uint8_t *tiles) const {
     uint8_t group_size = group_counts[i];
     uint8_t group_tiles[group_size];
     fill_group(i, tiles, group_tiles);
+    /*
+    std::cout << "Comb view: ";
+    for(auto x = s; x != e; ++x)
+        std::cout << *x << " ";
+    std::cout << std::endl;
+    std::cout << "Lex view: ";
+    for(int i = 0; i < group_size; ++i)
+        std::cout << static_cast<int>(group_tiles[i]) << " ";
+    std::cout << std::endl;
+    */
     size_t lex_i = calculate_lexindex(group_tiles, group_tiles + group_size);
     // calculate the total index and lookup the table
     return comb_i * factorial(group_size) + lex_i;

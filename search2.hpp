@@ -149,6 +149,7 @@ BreadthFirstIterator<Puzzle, Action>::BreadthFirstIterator(const Puzzle &p)
     : visited(), q()
 {
     q.emplace(p, 0);
+    visited.emplace(p);
 }
 
 template <class Puzzle, class Action>
@@ -160,12 +161,13 @@ template <class Puzzle, class Action>
 SearchNode<Puzzle> BreadthFirstIterator<Puzzle, Action>::next() {
     auto node = q.front(); q.pop();
     const Puzzle &p = node.puzzle;
-    visited.insert(p);
     for(auto action : p.possible_actions()) {
         Puzzle new_p = p;
         int new_path_cost = node.path_cost + new_p.apply_action(action);
-        if(visited.find(new_p) == visited.end())
+        if(visited.find(new_p) == visited.end()) {
+            visited.emplace(new_p);
             q.emplace(new_p, new_path_cost);
+        }
     }
     return node;
 }

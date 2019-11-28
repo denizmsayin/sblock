@@ -7,6 +7,8 @@
 #include <string>
 #include <cstdint>
 
+#include "sblock_utils.hpp"
+
 // an enumeration for specifying actions on the puzzle
 enum class Direction : uint8_t {
     UP,
@@ -238,16 +240,7 @@ std::ostream &operator<<(std::ostream &s, Direction dir) {
 
 template <int H, int W>
 std::ostream &operator<<(std::ostream &s, const SBPuzzle<H, W> &p) {
-    int num_dashes = W * 4 + 1;
-    std::string dash_str(num_dashes, '-');
-    for(int i = 0, k = 0; i < H; i++) {
-        s << dash_str << std::endl;
-        for(int j = 0; j < W; j++)
-            s << "| " << static_cast<int>(p.tiles[k++]) << " ";
-        s << "|" << std::endl;
-    }
-    s << dash_str;
-    return s;
+    return stream_tiles(s, p.tiles, H, W, H*W);
 }
 
 template <typename RandomAccessIterator>

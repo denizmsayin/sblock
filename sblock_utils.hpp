@@ -12,6 +12,7 @@ void write_byte_array(const uint8_t *byte_array, size_t size, const char *filena
 void read_byte_array(uint8_t *byte_array, size_t size, const char *filename);
 size_t combination(size_t x, size_t n);
 size_t factorial(size_t n);
+std::ostream& stream_tiles(std::ostream &s, const uint8_t *tiles, size_t h, size_t w, uint8_t x);
 
 template <typename Iterator>
 size_t calculate_combindex(Iterator begin, Iterator end, int x, int n);
