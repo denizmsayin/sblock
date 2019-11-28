@@ -2,6 +2,7 @@
 #include "search2.hpp"
 #include "search_queues.hpp"
 #include "sbpuzzle.hpp"
+#include "masked_sbpuzzle.hpp"
 
 #include <iostream>
 #include <queue>
@@ -11,8 +12,8 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 1;
-constexpr int H = 4, W = 4;
+constexpr int N = 100;
+constexpr int H = 3, W = 3;
 
 using namespace std;
 using Dir = Direction;
@@ -24,6 +25,19 @@ SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
         puzzle.shuffle(rng);
     } while(!puzzle.is_solvable());
     return puzzle;
+}
+
+template <int H, int W, class URNG>
+MaskedSBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
+    SBPuzzle<H, W> puzzle;
+    bool mask[H*W];
+    for(int i = 0, size = H*W; i < size; ++i)
+        mask[i] = true;
+    mask[H*W-1] = false;
+    do {
+        puzzle.shuffle(rng);
+    } while(!puzzle.is_solvable());
+    return MaskedSBPuzzle<H, W>(puzzle, mask);
 }
 
 template <int H, int W>

@@ -98,9 +98,7 @@ public:
     // heuristic for manhattan distance
     int manhattan_distance_to_solution() const;
 
-
-
-private:
+protected:
     uint8_t tiles[H*W];
     uint8_t hole_pos; // cached
 
@@ -108,6 +106,9 @@ private:
 
     constexpr static int SIZE = H * W;
     constexpr static int HOLE = H * W - 1;
+
+    int get_switch_pos(Direction move) const;
+    void move_tile(int switch_pos);
 };
 
 // add hashability
@@ -150,9 +151,7 @@ template <int H, int W>
 template <typename Iterator>
 SBPuzzle<H, W>::SBPuzzle(Iterator begin, Iterator end)
 {
-    int *itr = tiles;
-    while(begin != end)
-        *itr++ = *begin++;
+    std::copy(begin, end, tiles);
 }
 
 template <int H, int W>
@@ -184,7 +183,7 @@ std::vector<Direction> SBPuzzle<H, W>::possible_actions() const {
 }
 
 template <int H, int W>
-int SBPuzzle<H, W>::apply_action(Direction move) {
+int SBPuzzle<H, W>::get_switch_pos(Direction move) const {
     int switch_pos;
     switch(move) {
         case Direction::UP:    switch_pos = hole_pos - W; break;
@@ -193,9 +192,20 @@ int SBPuzzle<H, W>::apply_action(Direction move) {
         case Direction::LEFT:  switch_pos = hole_pos - 1; break;
         default:               throw std::invalid_argument("Invalid move in move vector");
     }
+    return switch_pos; // the path cost
+}
+
+template <int H, int W>
+void SBPuzzle<H, W>::move_tile(int switch_pos) {
     tiles[hole_pos] = tiles[switch_pos];
     tiles[switch_pos] = HOLE;
     hole_pos = switch_pos; // the new hole position
+}
+
+template <int H, int W>
+int SBPuzzle<H, W>::apply_action(Direction move) {
+    int switch_pos = get_switch_pos(move);
+    move_tile(switch_pos);
     return 1; // the path cost
 }
 
