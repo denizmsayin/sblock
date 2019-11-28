@@ -80,7 +80,6 @@ void throw_unreachable() {
 // SEARCH NODE, the class that defines a search node, a record structure that keeps
 // both a puzzle state and extra book-keeping information about it. Also holds some
 // static variables such as a counter for the number of created nodes.
-namespace details {
 template <class Puzzle>
 struct SearchNode {
     static size_t NODE_COUNTER;
@@ -126,34 +125,58 @@ public:
         return n1.est_cost < n2.est_cost;
     }
 };
+
+template <class Puzzle>
+size_t get_node_counter() { return SearchNode<Puzzle>::NODE_COUNTER; }
+
+template <class Puzzle>
+void reset_node_counter() { SearchNode<Puzzle>::NODE_COUNTER = 0; }
+
+template <class Puzzle, class Action>
+class BreadthFirstIterator {
+public:
+    BreadthFirstIterator(const Puzzle &p);
+    bool done() const;
+    SearchNode<Puzzle> next();
+
+private:
+    std::unordered_set<Puzzle> visited;
+    std::queue<SearchNode<Puzzle>> q;
+};
+
+template <class Puzzle, class Action>
+BreadthFirstIterator<Puzzle, Action>::BreadthFirstIterator(const Puzzle &p)
+    : visited(), q()
+{
+    q.emplace(p, 0);
 }
 
-template <class Puzzle>
-size_t get_node_counter() { return details::SearchNode<Puzzle>::NODE_COUNTER; }
+template <class Puzzle, class Action>
+bool BreadthFirstIterator<Puzzle, Action>::done() const {
+    return q.empty();
+}
 
-template <class Puzzle>
-void reset_node_counter() { details::SearchNode<Puzzle>::NODE_COUNTER = 0; }
-
+template <class Puzzle, class Action>
+SearchNode<Puzzle> BreadthFirstIterator<Puzzle, Action>::next() {
+    auto node = q.front(); q.pop();
+    const Puzzle &p = node.puzzle;
+    visited.insert(p);
+    for(auto action : p.possible_actions()) {
+        Puzzle new_p = p;
+        int new_path_cost = node.path_cost + new_p.apply_action(action);
+        if(visited.find(new_p) == visited.end())
+            q.emplace(new_p, new_path_cost);
+    }
+    return node;
+}
 
 template <class Puzzle, class Action>
 int breadth_first_search(const Puzzle &p) {
-    using details::SearchNode;
-    std::unordered_set<Puzzle> visited;
-    std::queue<SearchNode<Puzzle>> q;
-    q.emplace(p, 0);
-    while(!q.empty()) {
-        auto node = q.front(); q.pop(); // remove the top state
-        const auto &p = node.puzzle;
-        visited.insert(p);
-        if(p.is_solved()) // if the puzzle is solved, return
+    BreadthFirstIterator<Puzzle, Action> itr(p);
+    while(!itr.done()) {
+        SearchNode<Puzzle> node = itr.next();
+        if(node.puzzle.is_solved())
             return node.path_cost;
-        // otherwise, we have to expand each action into a new node
-        for(auto action : p.possible_actions()) {
-            Puzzle new_p = p; 
-            int path_cost = new_p.apply_action(action);
-            if(visited.find(new_p) == visited.end()) // not visited
-                q.emplace(new_p, node.path_cost + path_cost);
-        }
     }
     details::throw_unreachable();
     return 0;
@@ -232,7 +255,6 @@ int step_single_direction(std::queue<SearchNode<Puzzle>> &queue,
 
 template <class Puzzle, class Action>
 int bidirectional_bfs(const Puzzle &p) {
-    using details::SearchNode;
     using details::step_single_direction;
     std::unordered_map<Puzzle, int> f_visited, b_visited;
     std::queue<SearchNode<Puzzle>> fq, bq;
@@ -252,8 +274,6 @@ int bidirectional_bfs(const Puzzle &p) {
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int a_star_search(const Puzzle &p) {
-    using details::SearchNode;
-    using details::SearchNodeComparator;
     std::unordered_set<Puzzle> visited;
     std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
     pq.emplace(p, 0, HeuristicFunc()(p));
@@ -306,7 +326,6 @@ int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit) {
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int iterative_deepening_a_star(const Puzzle &p) {
-    using details::SearchNode;
     using details::cost_limited_dfs;
     int cost_limit = HeuristicFunc()(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
@@ -398,7 +417,6 @@ int cost_limited_dfs_nl(const SearchNode<Puzzle> &node,
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int iterative_deepening_a_star_noloop(const Puzzle &p) {
-    using details::SearchNode;
     using details::cost_limited_dfs;
     int cost_limit = HeuristicFunc()(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
@@ -415,7 +433,6 @@ int iterative_deepening_a_star_noloop(const Puzzle &p) {
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int recursive_best_first_search(const Puzzle &p) {
-    using details::SearchNode;
     using details::rbfs;
     using details::INT_INF;
     SearchNode<Puzzle> start_node(p, 0, HeuristicFunc()(p));
@@ -468,7 +485,6 @@ int cost_limited_dfs_improved(const SearchNode<Puzzle> &node,
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int iterative_deepening_a_star_improved(const Puzzle &p) {
-    using details::SearchNode;
     using details::cost_limited_dfs;
     int cost_limit = HeuristicFunc()(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
