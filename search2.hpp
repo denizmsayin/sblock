@@ -73,42 +73,8 @@ namespace details {
 void throw_unreachable() {
     throw std::invalid_argument("The goal state is not reachable from the provided initial state");
 }
-
-template <class Action>
-struct BfsActionRecord {
-    std::shared_ptr<BfsActionRecord> prev;
-    Action action;
-
-    BfsActionRecord(const std::shared_ptr<BfsActionRecord> &pp, const Action &a) : 
-        prev(pp), action(a) {}
-};
-
-template <class Puzzle, class Action>
-struct BfsNode {
-    std::shared_ptr<BfsActionRecord<Action>> prev;
-    Puzzle puzzle;
-
-    BfsNode(const std::shared_ptr<BfsActionRecord<Action>> &pp, const Puzzle &p) : 
-        prev(pp), puzzle(p) {}
-    BfsNode(BfsActionRecord<Action> *pp, const Puzzle &p) : 
-        prev(pp), puzzle(p) {}
-};
-
-template <class Puzzle, class Action>
-std::vector<Action> reconstruct_action_chain(const BfsNode<Puzzle, Action> &node) {
-    // first put all of the actions in a stack for reversing
-    std::stack<Action> s;
-    for(const BfsActionRecord<Action> *rec = node.prev.get(); rec != nullptr; rec = rec->prev.get())
-        s.push(rec->action);
-    // then pop them from the stack and write to output iterator
-    std::vector<Action> v;
-    while(!s.empty()) {
-        v.push_back(s.top());
-        s.pop();
-    }
-    return v;
 }
-}
+
 
 // SEARCH NODE, the class that defines a search node, a record structure that keeps
 // both a puzzle state and extra book-keeping information about it. Also holds some
@@ -127,18 +93,13 @@ struct SearchNode {
     SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) 
     {
         NODE_COUNTER++;
-        if(NODE_COUNTER == 1) {
-            record();
-        }
-        if(NODE_COUNTER % 10000000 == 0) {
-            display();
-            record();
-        }
+        handle_counter();
     }
 
     SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) 
     {
         NODE_COUNTER++;
+        handle_counter();
     }
 
 private:
@@ -152,6 +113,16 @@ private:
         std::chrono::duration<double, std::milli> fp_ms = current_t - LAST_RECORDED_T;
         size_t nps = static_cast<size_t>(1000.0 * (NODE_COUNTER - LAST_RECORDED_NC) / fp_ms.count());
         std::cout << "Node count: " << NODE_COUNTER/1000000 << "M, nps: " << nps << std::endl;
+    }
+
+    void handle_counter() {
+        if(NODE_COUNTER == 1) {
+            record();
+        }
+        if(NODE_COUNTER % 10000000 == 0) {
+            display();
+            record();
+        }
     }
 };
 
@@ -187,28 +158,6 @@ size_t get_node_counter() { return details::SearchNode<Puzzle>::NODE_COUNTER; }
 template <class Puzzle>
 void reset_node_counter() { details::SearchNode<Puzzle>::NODE_COUNTER = 0; }
 
-namespace path_remembering {
-template <class Puzzle, class Action>
-std::vector<Action> breadth_first_search(const Puzzle &p) {
-    std::unordered_set<Puzzle> visited;
-    std::queue<details::BfsNode<Puzzle, Action>> q;
-    q.emplace(nullptr, p);
-    while(!q.empty()) {
-        auto node = q.front(); q.pop(); // remove the top state
-        const auto &p = node.puzzle;
-        visited.insert(p);
-        if(p.is_solved()) // if the puzzle is solved, return
-            return reconstruct_action_chain(node);
-        // otherwise, we have to expand each action into a new node
-        for(auto action : p.possible_actions()) {
-            Puzzle new_p = p; new_p.apply_action(action);
-            if(visited.find(new_p) == visited.end()) // not visited
-                q.emplace(new details::BfsActionRecord<Action>(node.prev, action), new_p);
-        }
-    }
-    details::throw_unreachable();
-}
-}
 
 template <class Puzzle, class Action>
 int breadth_first_search(const Puzzle &p) {
