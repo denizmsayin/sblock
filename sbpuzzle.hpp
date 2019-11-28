@@ -71,10 +71,6 @@ public:
     template <typename Iterator>
     void apply_moves(Iterator begin, Iterator end);
 
-    // Optimally solves the puzzle using breadth first search. Returns the ordered list
-    // of moves to be done to reach the solution, without modifying the original
-    std::vector<Direction> solution_bfs() const;
-
     // Operator overload for output streams. Example output for a solved 3x3 puzzle:
     // -------------
     // | 0 | 1 | 2 |
@@ -241,7 +237,7 @@ std::ostream &operator<<(std::ostream &s, const SBPuzzle<H, W> &p) {
     for(int i = 0, k = 0; i < H; i++) {
         s << dash_str << std::endl;
         for(int j = 0; j < W; j++)
-            s << "| " << p.tiles[k++] << " ";
+            s << "| " << static_cast<int>(p.tiles[k++]) << " ";
         s << "|" << std::endl;
     }
     s << dash_str;

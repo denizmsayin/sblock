@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string>
 
-#include "sbpuzzle.hpp"
+#include "masked_sbpuzzle.hpp"
 #include "search2.hpp"
 
 // An implementation of disjoint pattern databases for the sliding block puzzle
@@ -157,8 +157,13 @@ public:
     DPDB(GIterator groups_begin, GIterator groups_end, FIterator filenames_begin, FIterator filenames_end);
     ~DPDB();
 
+    // function for a set of groups
     template <typename GIterator, typename FIterator>
     static void generate_and_save(GIterator groups_begin, GIterator groups_end, filenames_begin, Iterator filenames_end);
+    
+    // function for a single group given by a mask
+    template <typename GIterator>
+    static void _generate_and_save(GIterator mask_begin, GIterator mask_end, const char *filename);
 
     int lookup(const uint8_t *tiles) const;
 //private:
@@ -260,32 +265,24 @@ void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator 
             *itr++ = tiles[i];
 }
 
-template <int H, int W, int G>
-struct DpdbBfsNode {
-    SBPuzzle<H, W> puzzle;
-    int costs[G];
-
-    DpdbBfsNode(const SBPuzzle<H, W> &p, int c[]) : puzzle(p)
-    {
-        for(int i = 0; i < G; ++i)
-            costs[i] = c[i];
-    }
-};
-
 template <int H, int W>
 template <typename GIterator, typename FIterator>
-void DPDB<H, W>::generate_and_save(
-        GIterator groups_begin, 
-        GIterator groups_end, 
-        FIterator filenames_begin, 
-        FIterator filenames_end) 
+void DPDB<H, W>::_generate_and_save(
+        GIterator mask_begin, 
+        GIterator mask_end, 
+        const char *filename) 
 {
-    // what needs to be done? perform bfs, and keep track of how many moves
-    // have been done in each group, save the result at each step
-    DPDB<H, W> db(groups_begin, groups_end);
-    SBPuzzle<H, W> p = SBPuzzle<H, W>::goal_state();
+    using Dir = Direction;
+    // we simply need to apply bfs, but only add a cost when a tile
+    // from the group is moved, otherwise the moves do not cost anything
+    bool mask[H*W];
+    std::copy(mask_begin, mask_end, mask);
+    MaskedSBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), mask);
     // perform breadth first search
-    
+    search2::BreadthFirstIterator<MaskedSBPuzzle<H, W>, Dir> itr(p);
+    while(!itr.done()) {
+        ;
+    }
 }
 
 #include <iostream>

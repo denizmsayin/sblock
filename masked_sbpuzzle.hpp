@@ -16,35 +16,52 @@ public:
     explicit MaskedSBPuzzle(const SBPuzzle<H, W> &p, const bool mask[]);
 
     int apply_action(Direction move);
+    bool is_solved() const;
 
 private:
-    static const uint8_t X = 255;
-    bool mask[SBPuzzle<H, W>::SIZE]; // true if in group, false if not
+    static const uint8_t _X = 255;
+    void overwrite_tiles(const bool mask[]);
 };
 
 template <int H, int W>
+void MaskedSBPuzzle<H, W>::overwrite_tiles(const bool mask[]) {
+    auto &t = SBPuzzle<H, W>::tiles;
+    for(int i = 0; i < SBPuzzle<H, W>::SIZE; ++i)
+        if(t[i] != SBPuzzle<H, W>::HOLE && !mask[t[i]])
+            t[i] = _X;
+}
+
+template <int H, int W>
 MaskedSBPuzzle<H, W>::MaskedSBPuzzle(const bool imask[]) : SBPuzzle<H, W>() {
-    std::copy(imask, imask + SBPuzzle<H, W>::SIZE, mask);
+    overwrite_tiles(imask);
 }
 
 template <int H, int W>
 MaskedSBPuzzle<H, W>::MaskedSBPuzzle(const int tiles[], const bool imask[]) 
     : SBPuzzle<H, W>(tiles) 
 {
-    std::copy(imask, imask + SBPuzzle<H, W>::SIZE, mask);
+    overwrite_tiles(imask);
 }
 
 template <int H, int W>
 MaskedSBPuzzle<H, W>::MaskedSBPuzzle(const SBPuzzle<H, W> &p, const bool imask[]) 
     : SBPuzzle<H, W>(p) 
 {
-    std::copy(imask, imask + SBPuzzle<H, W>::SIZE, mask);
+    overwrite_tiles(imask);
+}
+
+template <int H, int W>
+bool MaskedSBPuzzle<H, W>::is_solved() const {
+    for(int i = 0; i < SBPuzzle<H, W>::SIZE; i++)
+        if(SBPuzzle<H, W>::tiles[i] != _X && SBPuzzle<H, W>::tiles[i] != i)
+            return false;
+    return true;
 }
 
 template <int H, int W>
 int MaskedSBPuzzle<H, W>::apply_action(Direction move) {
     int switch_pos = SBPuzzle<H, W>::get_switch_pos(move);
-    int cost = mask[SBPuzzle<H, W>::tiles[switch_pos]] ? 1 : 0;
+    int cost = SBPuzzle<H, W>::tiles[switch_pos] == _X ? 0 : 1;
     SBPuzzle<H, W>::move_tile(switch_pos);
     return cost;
 }
