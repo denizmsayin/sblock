@@ -98,6 +98,7 @@ public:
     // apply the move in the given direction using the cached hole position
     // return the path cost, which is 1 for our case for any choice
     int apply_action(Direction move);
+    int apply_action(MaskedAction ma);
 
     // return true if the puzzle is part of the solvable permutations
     bool is_solvable() const;
@@ -319,6 +320,15 @@ int SBPuzzle<H, W>::apply_action(Direction move) {
     int cost = SBPuzzle<H, W>::tiles[switch_pos] == _X ? 0 : 1;
     SBPuzzle<H, W>::move_tile(switch_pos);
     return cost;
+}
+
+template <int H, int W>
+int SBPuzzle<H, W>::apply_action(MaskedAction ma) {
+    if(ma.new_tile_pos != hole_pos) // moving through multiple don't care tiles
+        tiles[hole_pos] = _X;
+    tiles[ma.new_tile_pos] = tiles[ma.new_hole_pos];
+    tiles[ma.new_hole_pos] = HOLE;
+    hole_pos = ma.new_hole_pos;
 }
 
 template <int H, int W>
