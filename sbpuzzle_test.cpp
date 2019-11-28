@@ -32,7 +32,8 @@ DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
 #endif
 
 using namespace std;
-using Dir = Direction;
+using Dir = typename SBPuzzle<H, W>::Direction;
+using EA = typename SBPuzzle<H, W>::ExpandedAction;
 
 template <int H, int W, class URNG>
 SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
@@ -150,7 +151,7 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
-        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, MaskedAction>(puzzles[i]);
+        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, EA>(puzzles[i]);
         // num_moves += search2::iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);

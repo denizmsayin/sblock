@@ -9,15 +9,6 @@
 
 #include "sblock_utils.hpp"
 
-// an enumeration for specifying actions on the puzzle
-enum class Direction : uint8_t {
-    UP,
-    RIGHT,
-    DOWN,
-    LEFT,
-    INVALID
-};
-
 // forward declare disjoint pattern db for friend-classing
 template <int H, int W>
 class DPDB;
@@ -56,16 +47,26 @@ class DPDB;
 // function templated, so that it can return different action types depending
 // on the template argument type.
 
-struct MaskedAction {
-    uint8_t new_hole_pos, new_tile_pos;
-
-    MaskedAction(uint8_t a, uint8_t b) : new_hole_pos(a), new_tile_pos(b) {}
-};
-
 
 template <int H, int W>
 class SBPuzzle {
 public:
+    
+    // an enumeration for specifying actions on the puzzle
+    enum class Direction : uint8_t {
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT,
+        INVALID
+    };
+
+    // a more complicated action class for masked puzzles
+    struct ExpandedAction {
+        uint8_t new_hole_pos, new_tile_pos;
+
+        ExpandedAction(uint8_t a, uint8_t b) : new_hole_pos(a), new_tile_pos(b) {}
+    };
 
     // Initializes an hxw sliding block puzzle with a solved configuration
     explicit SBPuzzle();
@@ -98,7 +99,7 @@ public:
     // apply the move in the given direction using the cached hole position
     // return the path cost, which is 1 for our case for any choice
     int apply_action(Direction move);
-    int apply_action(MaskedAction ma);
+    int apply_action(ExpandedAction ma);
 
     // return true if the puzzle is part of the solvable permutations
     bool is_solvable() const;
@@ -200,14 +201,14 @@ void SBPuzzle<H, W>::mark_valid_moves(bool directions[]) const {
 
 template <int H, int W>
 template <typename Dummy>
-struct SBPuzzle<H, W>::PADelegate<Direction, Dummy> {
-    static std::vector<Direction> f(const SBPuzzle<H, W> &p) {
-        std::vector<Direction> actions;
+struct SBPuzzle<H, W>::PADelegate<typename SBPuzzle<H, W>::Direction, Dummy> {
+    static auto f(const SBPuzzle<H, W> &p) {
+        std::vector<SBPuzzle<H, W>::Direction> actions;
         bool conds[4];
         p.mark_valid_moves(conds);
         for(int i = 0; i < 4; i++)
             if(conds[i])
-                actions.emplace_back(static_cast<Direction>(i));
+                actions.emplace_back(static_cast<SBPuzzle<H, W>::Direction>(i));
         return actions;
     }
 };
@@ -235,23 +236,23 @@ void SBPuzzle<H, W>::propagate_hole() {
 
 template <int H, int W>
 template <typename Dummy>
-struct SBPuzzle<H, W>::PADelegate<MaskedAction, Dummy> {
-    static std::vector<MaskedAction> f(const SBPuzzle<H, W> &p) {
-        std::vector<MaskedAction> actions;
+struct SBPuzzle<H, W>::PADelegate<typename SBPuzzle<H, W>::ExpandedAction, Dummy> {
+    static auto f(const SBPuzzle<H, W> &puzzle) {
+        std::vector<SBPuzzle<H, W>::ExpandedAction> actions;
         // explore X states around the hole, all tiles reachable from those are a possibility
         // create a dummy copy puzzle
-        SBPuzzle<H, W> cp = p;
+        auto cp = puzzle;
         cp.propagate_hole();
         // now, go over tiles reachable from holes and add them as actions
-        for(int i = 0; i < SBPuzzle<H, W>::SIZE; ++i) {
+        for(auto i = 0; i < SBPuzzle<H, W>::SIZE; ++i) {
             if(cp.tiles[i] == SBPuzzle<H, W>::HOLE) {
                 // loop through possible directions
                 bool conds[4];
                 _mark_valid_moves<H, W>(i, conds);
-                for(int j = 0; j < 4; ++j) {
+                for(auto j = 0; j < 4; ++j) {
                     if(conds[j]) {
                         // if the position is not a hole or X, add it to actions
-                        int pos = i + SBPuzzle<H, W>::OFFSETS[j];
+                        auto pos = i + SBPuzzle<H, W>::OFFSETS[j];
                         if(cp.tiles[pos] != SBPuzzle<H, W>::_X 
                            && cp.tiles[pos] != SBPuzzle<H, W>::HOLE) 
                         {
@@ -312,9 +313,9 @@ std::ostream &operator<<(std::ostream &s, const SBPuzzle<H, W> &p) {
     return s;
 }
 
-
-Direction inverse(Direction d) {
-    using Dir = Direction;
+template <int H, int W>
+typename SBPuzzle<H, W>::Direction inverse(typename SBPuzzle<H, W>::Direction d) {
+    using Dir = typename SBPuzzle<H, W>::Direction;
     switch(d) {
         case Dir::UP:       return Dir::DOWN;
         case Dir::RIGHT:    return Dir::LEFT;
@@ -388,7 +389,7 @@ int SBPuzzle<H, W>::apply_action(Direction move) {
 }
 
 template <int H, int W>
-int SBPuzzle<H, W>::apply_action(MaskedAction ma) {
+int SBPuzzle<H, W>::apply_action(ExpandedAction ma) {
     if(ma.new_tile_pos != hole_pos) // moving through multiple don't care tiles
         tiles[hole_pos] = _X;
     tiles[ma.new_tile_pos] = tiles[ma.new_hole_pos];
@@ -410,8 +411,8 @@ bool SBPuzzle<H, W>::operator==(const SBPuzzle<H, W> &other) const {
 }
 
 template <int H, int W>
-std::ostream &operator<<(std::ostream &s, Direction dir) {
-    using Dir = Direction;
+std::ostream &operator<<(std::ostream &s, typename SBPuzzle<H, W>::Direction dir) {
+    using Dir = typename SBPuzzle<H, W>::Direction;
     switch(dir) {
         case Dir::UP:       s << "U"; break;
         case Dir::RIGHT:    s << "R"; break;
