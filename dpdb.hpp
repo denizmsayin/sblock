@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 
+#include "sblock_utils.hpp"
 #include "masked_sbpuzzle.hpp"
 #include "search2.hpp"
 
@@ -137,8 +138,8 @@ public:
     }
 
 private:
-    const uint8_t *tiles;
     const bool *in_group;
+    const uint8_t *tiles;
     size_t i;
 };
 
@@ -159,11 +160,11 @@ public:
 
     // function for a set of groups
     template <typename GIterator, typename FIterator>
-    static void generate_and_save(GIterator groups_begin, GIterator groups_end, filenames_begin, Iterator filenames_end);
+    static void generate_and_save(GIterator groups_begin, GIterator groups_end, FIterator filenames_begin, FIterator filenames_end);
     
-    // function for a single group given by a mask
+    // function for a single group, with a dpdb object prepared
     template <typename GIterator>
-    static void _generate_and_save(GIterator mask_begin, GIterator mask_end, const char *filename);
+    void _generate_and_save(int group_num, const char *filename);
 
     int lookup(const uint8_t *tiles) const;
 //private:
@@ -171,6 +172,7 @@ public:
     uint8_t groups[H*W];
     uint8_t num_groups;
     uint8_t *group_counts;
+    size_t *table_sizes;
     bool **in_groups;
 
     constexpr static int SIZE = H * W;
@@ -189,6 +191,8 @@ public:
     
     template <typename GIterator>
     void init(GIterator groups_begin, GIterator groups_end);
+
+    size_t calculate_table_index(int group_num, const uint8_t *tiles) const;
 };
 
 // How are the tables laid out? 
@@ -218,8 +222,10 @@ void DPDB<H, W>::init(GIterator groups_begin, GIterator groups_end) {
     } // NOTE: the hole is not in any group
     // initialize empty tables
     tables = new uint8_t *[num_groups];
+    table_sizes = new size_t[num_groups];
     for(uint8_t i = 0; i < num_groups; ++i) {
         size_t db_size = combination(SIZE, group_counts[i]) * factorial(group_counts[i]);
+        table_sizes[i] = db_size;
         tables[i] = new uint8_t[db_size];
     }
 }
@@ -239,7 +245,9 @@ DPDB<H, W>::DPDB(
         FIterator filenames_end) 
 {
     init(groups_begin, groups_end);
-    // TODO: tables have to be read from each file
+    FIterator fname = filenames_begin;
+    for(uint8_t i = 0; i < num_groups; ++i) 
+        read_byte_array(tables[i], table_sizes[i], fname++);
 }
 
 template <int H, int W>
@@ -250,6 +258,7 @@ DPDB<H, W>::~DPDB() {
         delete[] in_groups[i];
     }
     delete[] tables;
+    delete[] table_sizes;
     delete[] in_groups;
 }
 
@@ -267,22 +276,53 @@ void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator 
 
 template <int H, int W>
 template <typename GIterator, typename FIterator>
-void DPDB<H, W>::_generate_and_save(
-        GIterator mask_begin, 
-        GIterator mask_end, 
-        const char *filename) 
+void DPDB<H, W>::generate_and_save(
+        GIterator groups_begin, 
+        GIterator groups_end,
+        FIterator filenames_begin,
+        FIterator filenames_end) 
+{
+    DPDB<H, W> db(groups_begin, groups_end);
+    FIterator fname = filenames_begin;
+    for(uint8_t i = 0; i < db.num_groups; ++i) 
+        db._generate_and_save<GIterator>(i, *fname++);
+}
+
+template <int H, int W>
+template <typename GIterator>
+void DPDB<H, W>::_generate_and_save(int i, const char *filename) 
 {
     using Dir = Direction;
+    using search2::BreadthFirstIterator;
+    using search2::SearchNode;
     // we simply need to apply bfs, but only add a cost when a tile
     // from the group is moved, otherwise the moves do not cost anything
-    bool mask[H*W];
-    std::copy(mask_begin, mask_end, mask);
-    MaskedSBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), mask);
+    MaskedSBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), in_groups[i]);
     // perform breadth first search
-    search2::BreadthFirstIterator<MaskedSBPuzzle<H, W>, Dir> itr(p);
+    BreadthFirstIterator<MaskedSBPuzzle<H, W>, Dir> itr(p);
     while(!itr.done()) {
-        ;
+        SearchNode<MaskedSBPuzzle<H, W>> node = itr.next(); // get the next node
+        // find the table index of the node's state
+        size_t index = calculate_table_index(i, node.puzzle.tiles);
+        tables[i][index] = node.path_cost; // insert the path cost so far
     }
+    // write the table to the file
+    write_byte_array(tables[i], table_sizes[i], filename);
+}
+
+template <int H, int W>
+size_t DPDB<H, W>::calculate_table_index(int i, const uint8_t *tiles) const {
+    // first, find the combination index
+    auto s = boolview_begin(i, tiles);
+    auto e = boolview_end(i, tiles);
+    size_t comb_i = calculate_combindex(s, e, SIZE, group_counts[i]);
+    // then the lexicographical index of the group elements
+    uint8_t group_size = group_counts[i];
+    uint8_t group_tiles[group_size];
+    fill_group(i, tiles, group_tiles);
+    size_t lex_i = calculate_lexindex(group_tiles, group_tiles + group_size);
+    // calculate the total index and lookup the table
+    return comb_i * factorial(group_size) + lex_i;
 }
 
 #include <iostream>
@@ -291,30 +331,10 @@ int DPDB<H, W>::lookup(const uint8_t *tiles) const {
     int total = 0;
     // for each group
     for(uint8_t i = 0; i < num_groups; ++i) {
-        // first, find the combination index
-        auto s = boolview_begin(i, tiles);
-        auto e = boolview_end(i, tiles);
-        size_t comb_i = calculate_combindex(s, e, SIZE, group_counts[i]);
-        // then the lexicographical index of the group elements
-        uint8_t group_size = group_counts[i];
-        uint8_t group_tiles[group_size];
-        fill_group(i, tiles, group_tiles);
-        size_t lex_i = calculate_lexindex(group_tiles, group_tiles + group_size);
-        // calculate the total index and lookup the table
-        size_t index = comb_i * factorial(group_size) + lex_i;
+        size_t index = calculate_table_index(i, tiles);
         total += tables[i][index];
     }
     return total;
-}
-
-
-int main() {
-    uint8_t groups[] = {0, 0, 1, /**/ 0, 1, 1, /**/ 0, 1, 0};
-    // uint8_t tiles[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-    uint8_t tiles[] = {1, 8, 2, 3, 6, 5, 4, 7, 0};
-    DPDB<3, 3> db(groups, groups + 9);
-    db.lookup(tiles);
-    return 0;
 }
 
 #endif

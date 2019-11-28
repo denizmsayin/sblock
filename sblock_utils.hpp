@@ -7,6 +7,10 @@
 #include <string>
 #include <cstdint>
 
+// first, non-templated functions 
+void write_byte_array(const uint8_t *byte_array, size_t size, const char *filename);
+void read_byte_array(uint8_t *byte_array, size_t size, const char *filename);
+
 template <typename Arithmetic>
 class SeriesTracker {
 public:

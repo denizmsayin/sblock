@@ -16,6 +16,10 @@ enum class Direction : uint8_t {
     INVALID
 };
 
+// forward declare disjoint pattern db for friend-classing
+template <int H, int W>
+class DPDB;
+
 template <int H, int W>
 class SBPuzzle {
 public:
@@ -93,6 +97,8 @@ public:
 
     // heuristic for manhattan distance
     int manhattan_distance_to_solution() const;
+
+    friend class DPDB<H, W>;
 
 protected:
     uint8_t tiles[H*W];
@@ -263,29 +269,6 @@ static int count_inversions(RandomAccessIterator begin, RandomAccessIterator end
     return inversions;
 }
 
-// Calculates the lexicographical index of a permutation
-// e.g. reference 0 1 2 3
-//      0 1 2 3 -> 0
-//      0 1 3 2 -> 1
-//      1 0 2 3 -> 6 etc.
-//      3 2 1 0 -> 23
-template <typename RandomAccessIterator>
-static size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end) {
-    // Once again, we use the O(n^2) approach since it is faster for the small arrays
-    // that we intend to deal with
-    if(end - begin <= 1LL) // arrays with 0 or 1 size
-        return 0;
-    size_t counter = 0;
-    size_t mult = 1;
-    for(RandomAccessIterator i = end - 2; i >= begin; i--) {
-        for(RandomAccessIterator j = i + 1; j != end; j++)
-            if(*i > *j)
-                counter += mult;
-        mult *= (end - i); // mult starts from 1!, becomes 2!, 3!, 4! etc.
-    }
-    return counter;
-}
-
 template <int H, int W>
 bool SBPuzzle<H, W>::is_solvable() const {
     // see https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
@@ -323,7 +306,6 @@ size_t std::hash<SBPuzzle<H, W>>::operator()(SBPuzzle<H, W> const &p) const noex
 
 template <int H, int W>
 size_t SBPuzzle<H, W>::hash() const {
-    // return calculate_lexindex(tiles, tiles + SIZE);
     // copied from the  boost implementation
     size_t seed = 0;
     constexpr std::hash<uint64_t> hasher64;
