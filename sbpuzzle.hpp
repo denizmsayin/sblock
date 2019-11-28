@@ -36,9 +36,9 @@ class DPDB;
 // -------------
 // | 6 | X | X |
 // -------------
-// Another unfortunate consequence is that changing the signature of the possible
-// actions function requires breaking inheritance and replacing it with composition.
-// This is nice, but not very nice in the way that it requires forwarding of all functions
+// Another consequence of this application is that since all positions of the hole are
+// equivalent, they should be undistinguishable state-wise. This means that a slight
+// change is necessary for equality checking and hashing.
 
 // A final observation of mine is that the classic SBPuzzle is a specific instance
 // of the masked puzzle where all the tiles are in a single group. The only

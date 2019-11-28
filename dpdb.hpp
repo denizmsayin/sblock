@@ -220,7 +220,7 @@ template <int H, int W>
 template <typename GIterator>
 void DPDB<H, W>::_generate_and_save(int i, const char *filename) 
 {
-    using Dir = Direction;
+    using EA = typename SBPuzzle<H, W>::ExpandedAction;
     using search2::BreadthFirstIterator;
     using search2::SearchNode;
     std::cout << "Filename: " << filename << std::endl;
@@ -228,11 +228,11 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
     // from the group is moved, otherwise the moves do not cost anything
     SBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), in_groups[i]);
     // perform breadth first search
-    BreadthFirstIterator<SBPuzzle<H, W>, Dir> itr(p);
-    while(!itr.done()) {
-        SearchNode<SBPuzzle<H, W>> node = itr.next(); // get the next node
+    BreadthFirstIterator<SBPuzzle<H, W>, EA> bfs_itr(p);
+    while(!bfs_itr.done()) {
+        auto node = bfs_itr.next(); // get the next node
         // find the table index of the node's state
-        size_t index = calculate_table_index(i, node.puzzle.tiles);
+        auto index = calculate_table_index(i, node.puzzle.tiles);
         std::cout << "Index: " << index << ", cost: " << node.path_cost << std::endl
                   << node.puzzle << std::endl
                   << "----------------------" << std::endl;
@@ -241,6 +241,7 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
         // and multiple states & paths can lead to the same index
         if(node.path_cost < tables[i][index])
             tables[i][index] = node.path_cost; // insert the path cost so far
+        /*
         // I believe BFS fails for some problem instances. Therefore,
         // for each problem I want to solve it using A* and compare the path cost
         SBPuzzle<H, W> p2 = node.puzzle;
@@ -248,6 +249,7 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
         if(cost != node.path_cost) {
             std::cout << "Found cost: " << node.path_cost << ", A*: " << cost << std::endl;
         }
+        */
     }
     // write the table to the file
     write_byte_array(tables[i], table_sizes[i], filename);
