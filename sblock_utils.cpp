@@ -11,7 +11,7 @@ void write_byte_array(const uint8_t *table, size_t size, const char *filename) {
 }
 
 void read_byte_array(uint8_t *table, size_t size, const char *filename) {
-    FILE *f = fopen(filename, "w");
+    FILE *f = fopen(filename, "r");
     if(!f) throw std::runtime_error("Could not open file to read byte array");
     size_t rb = fread(table, sizeof(*table), size, f);
     if(rb != size) throw std::runtime_error("Could not read as many bytes as expected");

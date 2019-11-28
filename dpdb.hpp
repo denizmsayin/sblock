@@ -81,6 +81,8 @@ public:
     template <typename GIterator>
     void _generate_and_save(int group_num, const char *filename);
 
+    int lookup(const SBPuzzle<H, W> &p) const;
+
     int lookup(const uint8_t *tiles) const;
 //private:
     uint8_t **tables;
@@ -162,7 +164,7 @@ DPDB<H, W>::DPDB(
     init(groups_begin, groups_end);
     FIterator fname = filenames_begin;
     for(uint8_t i = 0; i < num_groups; ++i) 
-        read_byte_array(tables[i], table_sizes[i], fname++);
+        read_byte_array(tables[i], table_sizes[i], *fname++);
 }
 
 template <int H, int W>
@@ -240,7 +242,11 @@ size_t DPDB<H, W>::calculate_table_index(int i, const uint8_t *tiles) const {
     return comb_i * factorial(group_size) + lex_i;
 }
 
-#include <iostream>
+template <int H, int W>
+int DPDB<H, W>::lookup(const SBPuzzle<H, W> &p) const {
+    return lookup(p.tiles);
+}
+
 template <int H, int W>
 int DPDB<H, W>::lookup(const uint8_t *tiles) const {
     int total = 0;

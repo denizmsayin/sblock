@@ -98,9 +98,6 @@ public:
     // heuristic for manhattan distance
     int manhattan_distance_to_solution() const;
 
-    // disjoint pattern database heuristic
-    int dpdb_lookup(const DPDB<H, W> &db) const;
-
     friend class DPDB<H, W>;
 
 protected:

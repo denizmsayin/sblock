@@ -87,7 +87,7 @@ std::ostream& operator<<(std::ostream &os, const NumWrapper<A, false> &w);
 //18: OOXOXX
 //19: OOOXXX
 template <typename Iterator>
-static size_t calculate_combindex(Iterator begin, Iterator end, int x, int n) {
+size_t calculate_combindex(Iterator begin, Iterator end, int x, int n) {
     // x and n are required to know which combinations to use beforehand
     // the iterator should be for booleans, true means full (X), false means empty (Y)
     size_t counter = 0;
@@ -109,7 +109,7 @@ static size_t calculate_combindex(Iterator begin, Iterator end, int x, int n) {
 //      1 0 2 3 -> 6 etc.
 //      3 2 1 0 -> 23
 template <typename RandomAccessIterator>
-static size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end) {
+size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end) {
     // Once again, we use the O(n^2) approach since it is faster for the small arrays
     // that we intend to deal with
     if(end - begin <= 1LL) // arrays with 0 or 1 size

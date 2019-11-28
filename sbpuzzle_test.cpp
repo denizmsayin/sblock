@@ -3,17 +3,24 @@
 #include "search_queues.hpp"
 #include "sbpuzzle.hpp"
 #include "masked_sbpuzzle.hpp"
+#include "dpdb.hpp"
 
 #include <iostream>
 #include <queue>
 #include <vector>
 #include <random>
 #include <chrono>
+#include <string>
 
 unsigned SEED = 42;
 
 constexpr int N = 100;
 constexpr int H = 3, W = 3;
+
+bool USEDB = true;
+uint8_t DBGROUPS[] = {0, 0, 1, 0, 1, 1, 0, 1, 0};
+std::vector<const char *> DBFILES {"g1.db", "g2.db"};
+DPDB<H, W> DB(DBGROUPS, DBGROUPS + H*W, DBFILES.begin(), DBFILES.end());
 
 using namespace std;
 using Dir = Direction;
@@ -53,6 +60,14 @@ class ManhattanHeuristic {
 public:
     int operator()(const SBPuzzle<H, W> &p) {
         return p.manhattan_distance_to_solution();
+    }
+};
+
+template <int H, int W>
+class DPDBHeuristic {
+public:
+    int operator()(const SBPuzzle<H, W> &p) {
+        return DB.lookup(p);
     }
 };
 
@@ -116,11 +131,12 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
-        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
+        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         num_moves += moves.size();
