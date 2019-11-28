@@ -157,10 +157,15 @@ private:
 
     constexpr static int SIZE = H * W;
     constexpr static int HOLE = H * W - 1;
+    constexpr static int OFFSETS[] = {-W, +1, +W, -1}; // UP, RIGHT, DOWN, LEFT
 
     int get_switch_pos(Direction move) const;
     void move_tile(int switch_pos);
     void overwrite_tiles(const bool mask[]);
+    void propagate_hole(uint8_t hole_pos);
+    void propagate_hole();
+
+    void mark_valid_moves(bool directions[]) const;
 
     // since it is not possible to specialize a templated function of an unspecialized
     // templated class, in our case the possible_actions() function, we need a dummy
@@ -175,20 +180,62 @@ private:
 };
 
 template <int H, int W>
+void SBPuzzle<H, W>::mark_valid_moves(bool directions[]) const {
+    int rem = hole_pos % W;
+    directions[0] = hole_pos >= W; // up
+    directions[1] = rem < W-1; // right
+    directions[2] = hole_pos < SIZE-W; // down
+    directions[3] = rem > 0; // left
+}
+
+template <int H, int W>
 template <typename Dummy>
 struct SBPuzzle<H, W>::PADelegate<Direction, Dummy> {
     static std::vector<Direction> f(const SBPuzzle<H, W> &p) {
         std::vector<Direction> actions;
-        uint8_t hole_pos = p.hole_pos;
-        if(hole_pos >= W) // not upper edge, can move UP
-            actions.emplace_back(Direction::UP);
-        if(hole_pos % W < W - 1) // not right edge, can move RIGHT
-            actions.emplace_back(Direction::RIGHT);
-        if(hole_pos < SBPuzzle<H, W>::SIZE - W) // not lower edge, can move DOWN
-            actions.emplace_back(Direction::DOWN);
-        if(hole_pos % W > 0) // not left edge, can move LEFT
-            actions.emplace_back(Direction::LEFT);
+        bool conds[4];
+        p.mark_valid_moves(conds);
+        for(int i = 0; i < 4; i++)
+            if(conds[i])
+                actions.emplace_back(static_cast<Direction>(i));
         return actions;
+    }
+};
+
+// a helper function for the masked action generator, kind of a simplified dfs
+// note that this leaves the puzzle in an invalid state for further use and
+// is only intended as a helper private function
+template <int H, int W>
+void SBPuzzle<H, W>::propagate_hole(uint8_t hp) {
+    int rem = hp % W;
+    bool conds[] = {hp >= W, rem < W-1, hp < SIZE-W, rem > 0};
+    int offsets[] = {-W, +1, +W, -1};
+    for(int i = 0; i < 4; ++i) {
+        int nhp = hp + offsets[i];
+        if(conds[i] && tiles[nhp] == _X)
+            propagate_hole(nhp);
+    }
+}
+
+template <int H, int W>
+void SBPuzzle<H, W>::propagate_hole() {
+    propagate_hole(hole_pos);
+}
+
+template <int H, int W>
+template <typename Dummy>
+struct SBPuzzle<H, W>::PADelegate<MaskedAction, Dummy> {
+    static std::vector<MaskedAction> f(const SBPuzzle<H, W> &p) {
+        std::vector<MaskedAction> actions;
+        // explore X states around the hole, all tiles reachable from those are a possibility
+        // create a dummy copy puzzle
+        SBPuzzle<H, W> cp = p;
+        cp.propagate_hole();
+        // now, go over tiles reachable from holes and add them as actions
+        for(int i = 0; i < SBPuzzle<H, W>::SIZE; ++i) {
+            if(cp.tiles[i])
+                return actions;
+        }
     }
 };
 
@@ -296,15 +343,7 @@ std::vector<Action> SBPuzzle<H, W>::possible_actions() const {
 
 template <int H, int W>
 int SBPuzzle<H, W>::get_switch_pos(Direction move) const {
-    int switch_pos;
-    switch(move) {
-        case Direction::UP:    switch_pos = hole_pos - W; break;
-        case Direction::RIGHT: switch_pos = hole_pos + 1; break;
-        case Direction::DOWN:  switch_pos = hole_pos + W; break;
-        case Direction::LEFT:  switch_pos = hole_pos - 1; break;
-        default:               throw std::invalid_argument("Invalid move in move vector");
-    }
-    return switch_pos; // the path cost
+    return hole_pos + OFFSETS[static_cast<int>(move)];
 }
 
 template <int H, int W>
@@ -329,6 +368,7 @@ int SBPuzzle<H, W>::apply_action(MaskedAction ma) {
     tiles[ma.new_tile_pos] = tiles[ma.new_hole_pos];
     tiles[ma.new_hole_pos] = HOLE;
     hole_pos = ma.new_hole_pos;
+    return 1;
 }
 
 template <int H, int W>
