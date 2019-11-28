@@ -91,7 +91,9 @@ public:
     bool is_solved() const;
 
     // returns the possible actions on the puzzle
-    std::vector<Direction> possible_actions() const;
+    template <class Action>
+    std::vector<Action> possible_actions() const;
+
 
     // apply the move in the given direction using the cached hole position
     // return the path cost, which is 1 for our case for any choice
@@ -158,6 +160,35 @@ private:
     int get_switch_pos(Direction move) const;
     void move_tile(int switch_pos);
     void overwrite_tiles(const bool mask[]);
+
+    // since it is not possible to specialize a templated function of an unspecialized
+    // templated class, in our case the possible_actions() function, we need a dummy
+    // templated wrapper struct to which we can delegate possible_actions(). However,
+    // it is not possible to FULLY specialize the wrapper struct either, only partially.
+    // Which is why we need a struct with the actual template parameter and a dummy one.
+    // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
+    template <typename Action, typename Dummy = void>
+    struct PADelegate {
+        static std::vector<Action> f(const SBPuzzle &p);
+    };
+};
+
+template <int H, int W>
+template <typename Dummy>
+struct SBPuzzle<H, W>::PADelegate<Direction, Dummy> {
+    static std::vector<Direction> f(const SBPuzzle<H, W> &p) {
+        std::vector<Direction> actions;
+        uint8_t hole_pos = p.hole_pos;
+        if(hole_pos >= W) // not upper edge, can move UP
+            actions.emplace_back(Direction::UP);
+        if(hole_pos % W < W - 1) // not right edge, can move RIGHT
+            actions.emplace_back(Direction::RIGHT);
+        if(hole_pos < SBPuzzle<H, W>::SIZE - W) // not lower edge, can move DOWN
+            actions.emplace_back(Direction::DOWN);
+        if(hole_pos % W > 0) // not left edge, can move LEFT
+            actions.emplace_back(Direction::LEFT);
+        return actions;
+    }
 };
 
 template <int H, int W>
@@ -257,17 +288,9 @@ bool SBPuzzle<H, W>::is_solved() const {
 }
 
 template <int H, int W>
-std::vector<Direction> SBPuzzle<H, W>::possible_actions() const {
-    std::vector<Direction> actions;
-    if(hole_pos >= W) // not upper edge, can move UP
-        actions.emplace_back(Direction::UP);
-    if(hole_pos % W < W - 1) // not right edge, can move RIGHT
-        actions.emplace_back(Direction::RIGHT);
-    if(hole_pos < SIZE - W) // not lower edge, can move DOWN
-        actions.emplace_back(Direction::DOWN);
-    if(hole_pos % W > 0) // not left edge, can move LEFT
-        actions.emplace_back(Direction::LEFT);
-    return actions;
+template <typename Action>
+std::vector<Action> SBPuzzle<H, W>::possible_actions() const {
+    return PADelegate<Action>::f(*this);
 }
 
 template <int H, int W>

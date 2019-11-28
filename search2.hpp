@@ -26,7 +26,10 @@
 // A base class for both tree and graph search classes
 // The class Puzzle has to implement the following functions:
 //     bool is_solved() const { returns true if the Puzzle is in a goal state, false o.w. }
-//     Container possible_actions() const { returns possible actions for the current puzzle }
+//     Container possible_actions<Action>() const { 
+//         returns possible actions for the current puzzle 
+//         templated to allow multiple action sets for a puzzle
+//     }
 //     int apply_action(Action a) { applies 'a' to the puzzle and returns the cost of the action }
 // the class must also define a hash function so that it can be stored in unordered_set.
 // As an alternative for Container possible_actions() const, we will have a function returning
@@ -161,7 +164,7 @@ template <class Puzzle, class Action>
 SearchNode<Puzzle> BreadthFirstIterator<Puzzle, Action>::next() {
     auto node = q.front(); q.pop();
     const Puzzle &p = node.puzzle;
-    for(auto action : p.possible_actions()) {
+    for(auto action : p.template possible_actions<Action>()) {
         Puzzle new_p = p;
         int new_path_cost = node.path_cost + new_p.apply_action(action);
         if(visited.find(new_p) == visited.end()) {
@@ -198,7 +201,7 @@ IDFSResult depth_limited_dfs(const Puzzle &p, int depth) {
         return IDFSResult::CUTOFF;
     } else {
         bool cutoff = false;
-        for(auto action : p.possible_actions()) {
+        for(auto action : p.template possible_actions<Action>()) {
             Puzzle new_p = p; new_p.apply_action(action);
             IDFSResult result = depth_limited_dfs<Puzzle, Action>(new_p, depth-1);
             if(result == IDFSResult::CUTOFF)
@@ -244,7 +247,7 @@ int step_single_direction(std::queue<SearchNode<Puzzle>> &queue,
             return node.path_cost + lookup->second;
         // otherwise insert and generate new nodes like bfs
         visited.emplace(p, node.path_cost);
-        for(auto action : p.possible_actions()) {
+        for(auto action : p.template possible_actions<Action>()) {
             Puzzle new_p = p; 
             int path_cost = new_p.apply_action(action);
             if(visited.find(new_p) == visited.end()) // not visited
@@ -285,7 +288,7 @@ int a_star_search(const Puzzle &p) {
         if(p.is_solved())
             return node.path_cost;
         visited.insert(p);
-        for(auto action : p.possible_actions()) {
+        for(auto action : p.template possible_actions<Action>()) {
             Puzzle new_p = p;
             int step_cost = new_p.apply_action(action);
             if(visited.find(new_p) == visited.end()) {
@@ -310,7 +313,7 @@ int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit) {
         return node.path_cost;;
     } else {
         int min_exceeding_cost = std::numeric_limits<int>::max();
-        for(auto action : node.puzzle.possible_actions()) {
+        for(auto action : node.puzzle.template possible_actions<Action>()) {
             Puzzle new_p = node.puzzle; 
             int new_path_cost = node.path_cost + new_p.apply_action(action);
             int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
@@ -352,7 +355,7 @@ std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit) {
     if(p.is_solved())
         return std::make_pair(true, node.path_cost);
     std::vector<SearchNode<Puzzle>> successors;
-    for(auto action : p.possible_actions()) {
+    for(auto action : p.template possible_actions<Action>()) {
         Puzzle new_p = p;
         int new_path_cost = node.path_cost + new_p.apply_action(action);
         int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
@@ -398,7 +401,7 @@ int cost_limited_dfs_nl(const SearchNode<Puzzle> &node,
         return node.path_cost;;
     } else {
         int min_exceeding_cost = std::numeric_limits<int>::max();
-        for(auto action : node.puzzle.possible_actions()) {
+        for(auto action : node.puzzle.template possible_actions<Action>()) {
             Puzzle new_p = node.puzzle; 
             int new_path_cost = node.path_cost + new_p.apply_action(action);
             auto lookup = visited.find(new_p);
@@ -461,7 +464,7 @@ int cost_limited_dfs_improved(const SearchNode<Puzzle> &node,
     } else {
         int min_exceeding_cost = std::numeric_limits<int>::max();
         std::vector<SearchNode<Puzzle>> new_nodes;
-        for(auto action : node.puzzle.possible_actions()) {
+        for(auto action : node.puzzle.template possible_actions<Action>()) {
             Puzzle new_p = node.puzzle; 
             int new_path_cost = node.path_cost + new_p.apply_action(action);
             auto lookup = visited.find(new_p);
