@@ -7,50 +7,68 @@
 #include <string>
 #include <cstdint>
 
-// first, non-templated functions 
-void write_byte_array(const uint8_t *byte_array, size_t size, const char *filename);
-void read_byte_array(uint8_t *byte_array, size_t size, const char *filename);
+#include "sblock_utils.h"
 
-template <typename Arithmetic>
-class SeriesTracker {
-public:
-    struct Options {
-        std::ostream *stream;
-        double alpha;
-        Arithmetic print_every;
-        bool show_speed;
+// Now, we need a function to calculate the index of combination. Examples:
+// 0: XXXOOO XXXOO XXOOO XXXXO XOOOO XXXXX OOOOO
+// 1: XXOXOO XXOXO XOXOO XXXOX OXOOO
+// 2: XXOOXO XXOOX XOOXO XXOXX OOXOO
+// 3: XXOOOX XOXXO XOOOX XOXXX OOOXO
+// 4: XOXXOO XOXOX OXXOO OXXXX OOOOX
+// 5: XOXOXO XOOXX OXOXO
+// 6: XOXOOX OXXXO OXOOX
+// 7: XOOXXO OXXOX OOXXO
+// 8: XOOXOX OXOXX OOXOX
+// 9: XOOOXX OOXXX OOOXX
+//10: OXXXOO
+//11: OXXOXO
+//12: OXXOOX
+//13: OXOXXO
+//14: OXOXOX
+//15: OXOOXX
+//16: OOXXXO
+//17: OOXXOX
+//18: OOXOXX
+//19: OOOXXX
+template <typename Iterator>
+static size_t calculate_combindex(Iterator begin, Iterator end, int x, int n) {
+    // x and n are required to know which combinations to use beforehand
+    // the iterator should be for booleans, true means full (X), false means empty (Y)
+    size_t counter = 0;
+    while(begin != end) {
+        if(*begin) // X
+            --n;
+        else if(n > 0) // O, and some X yet remain 
+            counter += combination(x-1, n-1);
+        ++begin;
+        --x;
+    }
+    return counter;
+}
 
-        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream *s=&std::cout) 
-            : stream(s), alpha(a), print_every(pe), show_speed(ss) {}
-    };
+// Calculates the lexicographical index of a permutation
+// e.g. reference 0 1 2 3
+//      0 1 2 3 -> 0
+//      0 1 3 2 -> 1
+//      1 0 2 3 -> 6 etc.
+//      3 2 1 0 -> 23
+template <typename RandomAccessIterator>
+static size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end) {
+    // Once again, we use the O(n^2) approach since it is faster for the small arrays
+    // that we intend to deal with
+    if(end - begin <= 1LL) // arrays with 0 or 1 size
+        return 0;
+    size_t counter = 0;
+    size_t mult = 1;
+    for(RandomAccessIterator i = end - 2; i >= begin; --i) {
+        for(RandomAccessIterator j = i + 1; j != end; ++j)
+            if(*i > *j)
+                counter += mult;
+        mult *= (end - i); // mult starts from 1!, becomes 2!, 3!, 4! etc.
+    }
+    return counter;
+}
 
-    SeriesTracker(const Arithmetic *to_track);
-    SeriesTracker(const Arithmetic *to_track, const Options &opts);
-
-    void track();
-
-
-private:
-    const Arithmetic *tracked;
-    Arithmetic rec_value;
-    std::chrono::time_point<std::chrono::high_resolution_clock> rec_time;
-    Options options;
-    double running_avg;
-    static constexpr size_t STRING_BUF_SIZE = 100;
-
-    void record();
-
-public:
-};
-
-// thin wrapper around integral types to allow for different printing 
-template <typename A, bool = std::is_integral<A>::value>
-struct NumWrapper {
-    A x;
-
-    NumWrapper(A y) : x(y) {}
-
-};
 
 // aims to add a single comma between each 3 digit:
 // e.g. x = 1842532 -> 1,842,532

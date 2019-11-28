@@ -51,6 +51,10 @@ int main(int argc, char *argv[]) {
         std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,0 f1 f2\n";
         return 0;
     }
+
+    // I wanted to create the files given a directory, but my current version
+    // of g++ does not yet have the standard <filesystem> header
+
     uint8_t groups[SIZE];
     parse_group_string(argv[1], groups, SIZE);
     uint8_t num_groups = validate_groups(groups);
