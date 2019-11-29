@@ -71,13 +71,13 @@ public:
     // Initializes an hxw sliding block puzzle with a solved configuration
     explicit SBPuzzle();
     // Initializes an hxw sliding block puzzle with the provided configuration
-    explicit SBPuzzle(const int tiles[]);
+    explicit SBPuzzle(const uint8_t tiles[]);
     template <class Iterator>
     explicit SBPuzzle(Iterator begin, Iterator end);
 
     // for initializing with a mask
     explicit SBPuzzle(const bool mask[]);
-    explicit SBPuzzle(const int tiles[], const bool mask[]);
+    explicit SBPuzzle(const uint8_t tiles[], const bool mask[]);
     explicit SBPuzzle(const SBPuzzle<H, W> &p, const bool mask[]);
 
     SBPuzzle(const SBPuzzle &other) = default;
@@ -154,6 +154,7 @@ public:
 
     uint8_t tiles[H*W];
     uint8_t hole_pos; // cached
+    bool hole_masked; // hole is in the given group or not?
 
     int find_hole() const;
 
@@ -166,8 +167,14 @@ public:
     void overwrite_tiles(const bool mask[]);
     void propagate_hole(uint8_t hole_pos);
     void propagate_hole();
+    void unpropagate_hole();
 
     void mark_valid_moves(bool directions[]) const;
+    void add_expanded_actions(int pos, std::vector<ExpandedAction> &v);
+
+    // hacky helpers for equality & hashing when the hole is not in the group
+    void propagate_hole() const;
+    void unpropagate_hole() const;
 
     // since it is not possible to specialize a templated function of an unspecialized
     // templated class, in our case the possible_actions() function, we need a dummy
@@ -235,6 +242,34 @@ void SBPuzzle<H, W>::propagate_hole() {
 }
 
 template <int H, int W>
+void SBPuzzle<H, W>::unpropagate_hole() {
+    for(auto i = 0; i < SIZE; ++i)
+        if(tiles[i] == HOLE)
+            tiles[i] = _X;
+    tiles[hole_pos] = HOLE;
+}
+
+
+template <int H, int W>
+void SBPuzzle<H, W>::add_expanded_actions(int i, std::vector<SBPuzzle<H, W>::ExpandedAction> &v) 
+{
+    // add possible actions around a position to the vector v
+    // loop through possible directions
+    bool conds[4];
+    _mark_valid_moves<H, W>(i, conds);
+    for(auto j = 0; j < 4; ++j) {
+        if(conds[j]) {
+            // if the position is not a hole or X, add it to actions
+            auto pos = i + SBPuzzle<H, W>::OFFSETS[j];
+            if(tiles[pos] != _X && tiles[pos] != HOLE) 
+            {
+                v.emplace_back(pos, i);
+            }
+        }
+    }
+}
+
+template <int H, int W>
 template <typename Dummy>
 struct SBPuzzle<H, W>::PADelegate<typename SBPuzzle<H, W>::ExpandedAction, Dummy> {
     static auto f(const SBPuzzle<H, W> &puzzle) {
@@ -242,25 +277,14 @@ struct SBPuzzle<H, W>::PADelegate<typename SBPuzzle<H, W>::ExpandedAction, Dummy
         // explore X states around the hole, all tiles reachable from those are a possibility
         // create a dummy copy puzzle
         auto cp = puzzle;
-        cp.propagate_hole();
-        // now, go over tiles reachable from holes and add them as actions
-        for(auto i = 0; i < SBPuzzle<H, W>::SIZE; ++i) {
-            if(cp.tiles[i] == SBPuzzle<H, W>::HOLE) {
-                // loop through possible directions
-                bool conds[4];
-                _mark_valid_moves<H, W>(i, conds);
-                for(auto j = 0; j < 4; ++j) {
-                    if(conds[j]) {
-                        // if the position is not a hole or X, add it to actions
-                        auto pos = i + SBPuzzle<H, W>::OFFSETS[j];
-                        if(cp.tiles[pos] != SBPuzzle<H, W>::_X 
-                           && cp.tiles[pos] != SBPuzzle<H, W>::HOLE) 
-                        {
-                            actions.emplace_back(pos, i);
-                        }
-                    }
-                }
-            }
+        if(cp.hole_masked) { // hole is in the group, no need to propagate, EA is useless
+            cp.add_expanded_actions(cp.hole_pos, actions);
+        } else {
+            cp.propagate_hole();
+            // now, go over tiles reachable from holes and add them as actions
+            for(auto i = 0; i < SBPuzzle<H, W>::SIZE; ++i) 
+                if(cp.tiles[i] == SBPuzzle<H, W>::HOLE) 
+                    cp.add_expanded_actions(i, actions);
         }
         return actions;
     }
@@ -271,6 +295,7 @@ void SBPuzzle<H, W>::overwrite_tiles(const bool mask[]) {
     for(int i = 0; i < SIZE; ++i)
         if(tiles[i] != HOLE && !mask[tiles[i]])
             tiles[i] = _X;
+    hole_masked = mask[HOLE];
 }
 
 template <int H, int W>
@@ -279,7 +304,7 @@ SBPuzzle<H, W>::SBPuzzle(const bool imask[]) : SBPuzzle<H, W>() {
 }
 
 template <int H, int W>
-SBPuzzle<H, W>::SBPuzzle(const int tiles[], const bool imask[]) : SBPuzzle<H, W>(tiles) 
+SBPuzzle<H, W>::SBPuzzle(const uint8_t tiles[], const bool imask[]) : SBPuzzle<H, W>(tiles) 
 {
     overwrite_tiles(imask);
 }
@@ -326,14 +351,14 @@ typename SBPuzzle<H, W>::Direction inverse(typename SBPuzzle<H, W>::Direction d)
 }
 
 template <int H, int W>
-SBPuzzle<H, W>::SBPuzzle() : hole_pos(HOLE)
+SBPuzzle<H, W>::SBPuzzle() : hole_pos(HOLE), hole_masked(true)
 {
     for(int i = 0; i < SIZE; i++)
         tiles[i] = i;
 }
 
 template <int H, int W>
-SBPuzzle<H, W>::SBPuzzle(const int o_tiles[])
+SBPuzzle<H, W>::SBPuzzle(const uint8_t o_tiles[]) : hole_masked(true)
 {
     for(int i = 0; i < SIZE; i++) {
         if(o_tiles[i] == HOLE)
@@ -344,7 +369,7 @@ SBPuzzle<H, W>::SBPuzzle(const int o_tiles[])
 
 template <int H, int W>
 template <typename Iterator>
-SBPuzzle<H, W>::SBPuzzle(Iterator begin, Iterator end)
+SBPuzzle<H, W>::SBPuzzle(Iterator begin, Iterator end) : hole_masked(true)
 {
     std::copy(begin, end, tiles);
 }
@@ -357,8 +382,12 @@ SBPuzzle<H, W> SBPuzzle<H, W>::goal_state() {
 template <int H, int W>
 bool SBPuzzle<H, W>::is_solved() const {
     for(int i = 0; i < SBPuzzle<H, W>::SIZE; i++)
-        if(SBPuzzle<H, W>::tiles[i] != _X && SBPuzzle<H, W>::tiles[i] != i)
-            return false;
+        if(tiles[i] != _X && tiles[i] != i) {
+            if(tiles[i] != HOLE)
+                return false;
+            else if(hole_masked)
+                return false;
+        }
     return true;
 }
 
@@ -383,7 +412,7 @@ void SBPuzzle<H, W>::move_tile(int switch_pos) {
 template <int H, int W>
 int SBPuzzle<H, W>::apply_action(Direction move) {
     int switch_pos = SBPuzzle<H, W>::get_switch_pos(move);
-    int cost = SBPuzzle<H, W>::tiles[switch_pos] == _X ? 0 : 1;
+    int cost = (SBPuzzle<H, W>::tiles[switch_pos] != _X || hole_masked) ? 1 : 0;
     SBPuzzle<H, W>::move_tile(switch_pos);
     return cost;
 }
@@ -400,14 +429,21 @@ int SBPuzzle<H, W>::apply_action(ExpandedAction ma) {
 
 template <int H, int W>
 bool SBPuzzle<H, W>::operator==(const SBPuzzle<H, W> &other) const {
-    if(hole_pos == other.hole_pos) {
-        for(int i = 0; i < SIZE; i++) {
-            if(tiles[i] != other.tiles[i])
-                return false;
+    // a little hack here, if the hole is not in the group, all its adjacent
+    // positions are equivalent, so we need to propagate the hole before
+    // checking equality and then undo it
+    bool equal = true;
+    propagate_hole();
+    other.propagate_hole();
+    for(int i = 0; i < SIZE; i++) {
+        if(tiles[i] != other.tiles[i]) {
+            equal = false;
+            break;
         }
-        return true;
     }
-    return false;
+    unpropagate_hole();
+    other.unpropagate_hole();
+    return equal;
 }
 
 template <int H, int W>
@@ -486,6 +522,8 @@ size_t std::hash<SBPuzzle<H, W>>::operator()(SBPuzzle<H, W> const &p) const noex
 
 template <int H, int W>
 size_t SBPuzzle<H, W>::hash() const {
+    // a little hack here, just like equality check 
+    propagate_hole();
     // copied hash combination from the  boost implementation
     // first, perform a loop using 8 bytes every time
     size_t seed = 0;
@@ -500,6 +538,8 @@ size_t SBPuzzle<H, W>::hash() const {
     constexpr int rem_end = rem_start + SIZE - (view_size << 3);
     for(int i = rem_start; i < rem_end; i++)
         seed ^= hasher8(tiles[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    // of course, unmask before returning if necessary
+    unpropagate_hole();
     return seed;
 }
 
@@ -517,12 +557,15 @@ int SBPuzzle<H, W>::manhattan_distance_to_solution() const {
 }
 
 template <int H, int W>
-int SBPuzzle<H, W>::num_misplaced_tiles() const {
-    int n = 0;
-    for(int i = 0; i < SIZE; i++)
-        if(tiles[i] != _X && tiles[i] != HOLE && tiles[i] != i)
-            n++;
-    return n;
+void SBPuzzle<H, W>::propagate_hole() const {
+    SBPuzzle<H, W> &mutable_this = const_cast<SBPuzzle &>(*this);
+    mutable_this.propagate_hole();
+}
+
+template <int H, int W>
+void SBPuzzle<H, W>::unpropagate_hole() const {
+    SBPuzzle<H, W> &mutable_this = const_cast<SBPuzzle &>(*this);
+    mutable_this.unpropagate_hole();
 }
 
 #endif

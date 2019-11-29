@@ -28,8 +28,25 @@ public:
     // in_group = [t f t t f t f f f]
     // Also, equality checks only compare the index, so it's up to the
     // user to ensure that tiles are the same
-    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, uint8_t x, size_t index) : 
-        in_group(inp_in_group), tiles(inp_tiles), i(index), xv(x) {}
+    TileCombIterator(const bool *inp_in_group, const uint8_t *inp_tiles, size_t index, uint8_t x) : 
+        in_group(inp_in_group), tiles(inp_tiles), i(index), xv(x) 
+    {
+        /*
+        using std::cout;
+        using std::endl;
+        std::cout << "Combitrcreated" << std::endl;
+        for(auto i = 0; i < H*W; ++i)
+            cout << static_cast<int>(inp_tiles[i]) << " ";
+        cout << endl;
+        for(auto i = 0; i < H*W; ++i)
+            cout << inp_in_group[i] << " ";
+        cout << endl;
+        cout << static_cast<int>(xv) << endl;
+        for(auto i = 0; i < H*W; ++i)
+            cout << (inp_tiles[i] != xv && inp_in_group[inp_tiles[i]]) << " ";
+        cout << endl;
+        */
+    }
 
     TileCombIterator(const TileCombIterator &other) = default;
     TileCombIterator(TileCombIterator &&other) = default;
@@ -217,6 +234,14 @@ public:
 };
 
 template <int H, int W>
+class MH {
+public:
+    constexpr int operator()(const SBPuzzle<H, W> &p) {
+        return p.manhattan_distance_to_solution();
+    }
+};
+
+template <int H, int W>
 template <typename GIterator>
 void DPDB<H, W>::_generate_and_save(int i, const char *filename) 
 {
@@ -234,22 +259,23 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
         // find the table index of the node's state
         auto index = calculate_table_index(i, node.puzzle.tiles);
         std::cout << "Index: " << index << ", cost: " << node.path_cost << std::endl
-                  << node.puzzle << std::endl
-                  << "----------------------" << std::endl;
+                  << node.puzzle << std::endl;
         // insert the path cost only if it is less than one found so far
         // this is necessary because the hole position is not accounted for,
         // and multiple states & paths can lead to the same index
         if(node.path_cost < tables[i][index])
             tables[i][index] = node.path_cost; // insert the path cost so far
-        /*
         // I believe BFS fails for some problem instances. Therefore,
         // for each problem I want to solve it using A* and compare the path cost
         SBPuzzle<H, W> p2 = node.puzzle;
-        int cost = search2::a_star_search<SBPuzzle<H, W>, Dir, ZH<H, W>>(p2);
+        int cost = search2::a_star_search<SBPuzzle<H, W>, EA, MH<H, W>>(p2);
+        for(auto a : p2.template possible_actions<EA>())
+            std::cout << static_cast<int>(a.new_hole_pos) << "," << static_cast<int>(a.new_tile_pos) << " ";
+        std::cout << std::endl;
         if(cost != node.path_cost) {
             std::cout << "Found cost: " << node.path_cost << ", A*: " << cost << std::endl;
         }
-        */
+        std::cout << "----------------------" << std::endl;
     }
     // write the table to the file
     write_byte_array(tables[i], table_sizes[i], filename);
@@ -265,7 +291,6 @@ size_t DPDB<H, W>::calculate_table_index(int i, const uint8_t *tiles) const {
     uint8_t group_size = group_counts[i];
     uint8_t group_tiles[group_size];
     fill_group(i, tiles, group_tiles);
-    /*
     std::cout << "Comb view: ";
     for(auto x = s; x != e; ++x)
         std::cout << *x << " ";
@@ -274,7 +299,6 @@ size_t DPDB<H, W>::calculate_table_index(int i, const uint8_t *tiles) const {
     for(int i = 0; i < group_size; ++i)
         std::cout << static_cast<int>(group_tiles[i]) << " ";
     std::cout << std::endl;
-    */
     size_t lex_i = calculate_lexindex(group_tiles, group_tiles + group_size);
     // calculate the total index and lookup the table
     return comb_i * factorial(group_size) + lex_i;
