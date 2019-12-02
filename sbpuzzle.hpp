@@ -78,6 +78,15 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
+        inline void tiles_reconstruct_mask(const uint8_t tiles[], bool mask[]) {
+            constexpr auto size = H*W;
+            std::fill(mask, mask + size, false);
+            for(auto i = 0; i < size; ++i)
+                if(tiles[i] != _X)
+                    mask[tiles[i]] = true;
+        }
+
+        template <psize_t H, psize_t W>
         inline bool tiles_in_correct_places(const uint8_t tiles[]) {
             constexpr auto size = H*W;
             for(auto i = 0; i < size; ++i) 
@@ -270,12 +279,31 @@ namespace sbpuzzle {
             }
         }
 
+        explicit SBPuzzle(const uint8_t i_tiles[], const bool mask[]) {
+            for(auto i = 0; i < SIZE; ++i) {
+                if(mask[i]) {
+                    if(i_tiles[i] == HOLE)
+                        hole_pos = i;
+                    tiles[i] = i_tiles[i];
+                } else if(i_tiles[i] == HOLE) {
+                    throw std::invalid_argument("Constructing SBPuzzle with unmasked hole will give invalid results");
+                } else {
+                    tiles[i] = details::_X;
+                }
+            }
+        }
+
         SBPuzzle(const SBPuzzle &other) = default;
         SBPuzzle &operator=(const SBPuzzle &other) = default;
 
         SBPuzzle goal_state() const {
+            // this function should not be called often, so it seems
+            // to me it makes more sense to reconstruct the mask array
+            // here rather than store it in each puzzle instance
+            bool mask[SIZE];
+            details::tiles_reconstruct_mask(tiles, mask);
             SBPuzzle p;
-            details::tiles_correct_fill<H, W>(p.tiles);
+            details::tiles_correct_fill<H, W>(p.tiles, mask);
             return p;
         }
 
