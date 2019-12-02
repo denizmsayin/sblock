@@ -64,21 +64,21 @@ namespace sbpuzzle {
         constexpr uint8_t _X = 255;
 
         template <psize_t H, psize_t W>
-        void tiles_correct_fill(uint8_t tiles[]) {
+        inline void tiles_correct_fill(uint8_t tiles[]) {
             constexpr auto size = H*W;
             for(auto i = 0; i < size; ++i)
                 tiles[i] = i;
         }
 
         template <psize_t H, psize_t W>
-        void tiles_correct_fill(uint8_t tiles[], const bool mask[]) {
+        inline void tiles_correct_fill(uint8_t tiles[], const bool mask[]) {
             constexpr auto size = H*W;
             for(auto i = 0; i < size; ++i)
                 tiles[i] = mask[i] ? i : _X;
         }
 
         template <psize_t H, psize_t W>
-        bool tiles_in_correct_places(const uint8_t tiles[]) {
+        inline bool tiles_in_correct_places(const uint8_t tiles[]) {
             constexpr auto size = H*W;
             for(auto i = 0; i < size; ++i) 
                 if(tiles[i] != _X && tiles[i] != i)
@@ -87,24 +87,70 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
-        bool tiles_equal(const uint8_t t1[], const uint8_t t2[]) {
+        inline bool tiles_equal(const uint8_t t1[], const uint8_t t2[]) {
             constexpr auto size = H*W;
             return std::equal(t1, t1+size, t2);
         }
 
         // copied from the boost implementation
-        size_t hash_combine(size_t h1, size_t h2) {
+        inline size_t hash_combine(size_t h1, size_t h2) {
             return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+        }
+
+        template <typename P>
+        inline size_t cast_hash(const void *p) {
+            return std::hash<P>()(*static_cast<const P *>(p));
+        }
+
+        inline const void *offset_voidptr(const void *p, size_t x) {
+            return static_cast<const void *>(reinterpret_cast<const char *>(p) + x);
         }
 
         template <psize_t H, psize_t W>
         size_t tiles_hash(const uint8_t tiles[]) {
             constexpr auto size = H*W;
-            constexpr std::hash<uint8_t> hasher;
+            // first, do all you can using 8 bytes each time
             size_t seed = 0;
-            for(auto i = 0; i < size; ++i)
-                seed = hash_combine(seed, hasher(tiles[i]));
+            constexpr std::hash<uint64_t> hasher64;
+            auto n = size;
+            const uint64_t *itr = reinterpret_cast<const uint64_t *>(tiles);
+            while(n >= 8) {
+                seed = hash_combine(seed, hasher64(*itr++));
+                n -= 8;
+            }
+            // hash the remainder
+            const void *p = reinterpret_cast<const void *>(itr);
+            switch(size) {
+                case 1: 
+                    seed = hash_combine(seed, cast_hash<uint8_t>(p)); 
+                    break;
+                case 2: 
+                    seed = hash_combine(seed, cast_hash<uint16_t>(p)); 
+                    break;
+                case 3: 
+                    seed = hash_combine(hash_combine(seed, cast_hash<uint16_t>(p)),
+                                        cast_hash<uint8_t>(offset_voidptr(p, 2)));
+                    break;
+                case 4: 
+                    seed = hash_combine(seed, cast_hash<uint32_t>(p)); 
+                    break;
+                case 5: 
+                    seed = hash_combine(hash_combine(seed, cast_hash<uint32_t>(p)),
+                                        cast_hash<uint8_t>(offset_voidptr(p, 4)));
+                    break;
+                case 6:
+                    seed = hash_combine(hash_combine(seed, cast_hash<uint32_t>(p)),
+                                        cast_hash<uint16_t>(offset_voidptr(p, 4)));
+                    break;
+                case 7:
+                    seed = hash_combine(hash_combine(hash_combine(seed, cast_hash<uint32_t>(p)),
+                                                     cast_hash<uint16_t>(offset_voidptr(p, 4))),
+                                        cast_hash<uint8_t>(offset_voidptr(p, 6)));
+                    break;
+                default: ;
+            }
             return seed;
+            // brought form 34 ms to 28 ms compared to hashing one by one
         }
 
         template <psize_t H, psize_t W>
@@ -172,7 +218,7 @@ namespace sbpuzzle {
         // offset applied to moves allowed by tiles_mark_valid_moves
 
         template <typename RandomAccessIterator>
-        static int count_inversions(RandomAccessIterator begin, RandomAccessIterator end) {
+        int count_inversions(RandomAccessIterator begin, RandomAccessIterator end) {
             // count inversions with O(n^2) instead of mergesort style,
             // since the vectors are very small
             int inversions = 0;

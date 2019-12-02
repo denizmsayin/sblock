@@ -161,7 +161,7 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
-        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
+        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, EA, ManhattanHeuristic<H, W>>(puzzles[i]);
         //
         #ifdef USEDB
