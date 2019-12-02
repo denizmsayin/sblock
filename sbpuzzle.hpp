@@ -268,10 +268,10 @@ namespace sbpuzzle {
 
 
     template <details::psize_t H, details::psize_t W>
-    class SBPuzzle {
+    class SBPuzzleWHole {
     public:
 
-        explicit SBPuzzle(const uint8_t i_tiles[]) {
+        explicit SBPuzzleWHole(const uint8_t i_tiles[]) {
             for(auto i = 0; i < SIZE; ++i) {
                 if(i_tiles[i] == HOLE)
                     hole_pos = i;
@@ -279,30 +279,30 @@ namespace sbpuzzle {
             }
         }
 
-        explicit SBPuzzle(const uint8_t i_tiles[], const bool mask[]) {
+        explicit SBPuzzleWHole(const uint8_t i_tiles[], const bool mask[]) {
             for(auto i = 0; i < SIZE; ++i) {
                 if(mask[i]) {
                     if(i_tiles[i] == HOLE)
                         hole_pos = i;
                     tiles[i] = i_tiles[i];
                 } else if(i_tiles[i] == HOLE) {
-                    throw std::invalid_argument("Constructing SBPuzzle with unmasked hole will give invalid results");
+                    throw std::invalid_argument("Constructing SBPuzzleWHole with unmasked hole will give invalid results");
                 } else {
                     tiles[i] = details::_X;
                 }
             }
         }
 
-        SBPuzzle(const SBPuzzle &other) = default;
-        SBPuzzle &operator=(const SBPuzzle &other) = default;
+        SBPuzzleWHole(const SBPuzzleWHole &other) = default;
+        SBPuzzleWHole &operator=(const SBPuzzleWHole &other) = default;
 
-        SBPuzzle goal_state() const {
+        SBPuzzleWHole goal_state() const {
             // this function should not be called often, so it seems
             // to me it makes more sense to reconstruct the mask array
             // here rather than store it in each puzzle instance
             bool mask[SIZE];
             details::tiles_reconstruct_mask(tiles, mask);
-            SBPuzzle p;
+            SBPuzzleWHole p;
             details::tiles_correct_fill<H, W>(p.tiles, mask);
             return p;
         }
@@ -323,7 +323,7 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
 
-        bool operator==(const SBPuzzle &other) const {
+        bool operator==(const SBPuzzleWHole &other) const {
             return details::tiles_equal<H, W>(tiles, other.tiles);
         }
 
@@ -332,7 +332,7 @@ namespace sbpuzzle {
         }
 
         template <int HH, int WW>
-        friend std::ostream &operator<<(std::ostream &s, const SBPuzzle<HH, WW> &p) {
+        friend std::ostream &operator<<(std::ostream &s, const SBPuzzleWHole<HH, WW> &p) {
             return details::tiles_stream<HH, WW>(s, p.tiles);
         }
 
@@ -347,7 +347,7 @@ namespace sbpuzzle {
         uint8_t tiles[SIZE];
         details::psize_t hole_pos;
 
-        SBPuzzle() {} // empty initialization for in-place business
+        SBPuzzleWHole() {} // empty initialization for in-place business
 
         // since it is not possible to specialize a templated function of an unspecialized
         // templated class, in our case the possible_actions() function, we need a dummy
@@ -357,7 +357,7 @@ namespace sbpuzzle {
         // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
         template <typename Action, typename Dummy = void>
         struct PADelegate {
-            static std::vector<Action> f(const SBPuzzle &p);
+            static std::vector<Action> f(const SBPuzzleWHole &p);
         };
 
 
@@ -367,8 +367,8 @@ namespace sbpuzzle {
     // PADelegate specialization for the TileSwapAction class
     template <details::psize_t H, details::psize_t W>
     template <typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Dummy> {
-        static auto f(const SBPuzzle<H, W> &p) {
+    struct SBPuzzleWHole<H, W>::PADelegate<TileSwapAction, Dummy> {
+        static auto f(const SBPuzzleWHole<H, W> &p) {
             auto hp = p.hole_pos;
             std::vector<TileSwapAction> actions;
             bool valid[4];
@@ -388,13 +388,18 @@ namespace sbpuzzle {
         }
     };
 
+    // TODO: remove this after the switch to tagged union is done
+    template <details::psize_t H, details::psize_t W>
+    using SBPuzzle = SBPuzzleWHole<H, W>;
+
 }
+    
 
 // add hashability
 namespace std {
     template <int H, int W>
-    struct hash<sbpuzzle::SBPuzzle<H, W>> {
-        size_t operator()(sbpuzzle::SBPuzzle<H, W> const &p) const noexcept { 
+    struct hash<sbpuzzle::SBPuzzleWHole<H, W>> {
+        size_t operator()(sbpuzzle::SBPuzzleWHole<H, W> const &p) const noexcept { 
             return p.hash(); 
         }
     };
