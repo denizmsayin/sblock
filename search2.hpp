@@ -17,6 +17,10 @@
 #include "sblock_utils.hpp"
 #include "search_queues.hpp"
 
+// TODO: update all comments
+// add the option for path remembering, will require fast dynamic allocations
+// along with the previous update, consider adding backtracking search as an alternative
+
 // While the goal of achieving maximal code reuse was accomplished in the previous version
 // of search.hpp, some algorithms suffered due to search being a high performance task,
 // and lots of unnecessary operations being done. In this second header I will try to do a retake
