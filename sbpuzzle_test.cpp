@@ -1,21 +1,23 @@
-#include "search.hpp"
-#include "search2.hpp"
-#include "search_queues.hpp"
-#include "sbpuzzle.hpp"
-
+#include <algorithm>
 #include <iostream>
 #include <queue>
 #include <vector>
 #include <random>
 #include <chrono>
 #include <string>
+#include <numeric>
+
+#include "search.hpp"
+#include "search2.hpp"
+#include "search_queues.hpp"
+#include "sbpuzzle.hpp"
 
 unsigned SEED = 42;
 
 constexpr int N = 100;
 constexpr int H = 3, W = 3;
 
- #define USEDB
+// #define USEDB
 
 //-------------------------------------------------------------------------------
 
@@ -32,18 +34,21 @@ DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
 #endif
 
 using namespace std;
-using Dir = typename SBPuzzle<H, W>::Direction;
-using EA = typename SBPuzzle<H, W>::ExpandedAction;
+using sbpuzzle::SBPuzzle;
+using TSA = sbpuzzle::TileSwapAction;
 
 template <int H, int W, class URNG>
 SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
-    SBPuzzle<H, W> puzzle;
+    constexpr auto size = H*W;
+    uint8_t tiles[H*W];
+    std::iota(tiles, tiles + size, 0);
     do {
-        puzzle.shuffle(rng);
-    } while(!puzzle.is_solvable());
-    return puzzle;
+        std::shuffle(tiles, tiles + size, rng); 
+    } while(!sbpuzzle::tiles_solvable<H, W>(tiles));
+    return SBPuzzle<H, W>(tiles);
 }
 
+/*
 template <int H, int W, class URNG>
 SBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
     SBPuzzle<H, W> puzzle;
@@ -56,15 +61,17 @@ SBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
     } while(!puzzle.is_solvable());
     return SBPuzzle<H, W>(puzzle, mask);
 }
+*/
 
 template <int H, int W>
 class ZeroHeuristic {
 public:
-    constexpr int operator()(const SBPuzzle<H, W> &p) {
+    constexpr uint64_t operator()(const SBPuzzle<H, W> &p) {
         return 0;
     }
 };
 
+/*
 template <int H, int W>
 class MisplacedTilesHeuristic {
 public:
@@ -72,11 +79,12 @@ public:
         return p.num_misplaced_tiles();
     }
 };
+*/
 
 template <int H, int W>
 class ManhattanHeuristic {
 public:
-    int operator()(const SBPuzzle<H, W> &p) {
+    uint64_t operator()(const SBPuzzle<H, W> &p) {
         return p.manhattan_distance_to_solution();
     }
 };
@@ -91,6 +99,7 @@ public:
 };
 #endif
 
+/*
 bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
     bool eq = false;
     if(m1.size() == m2.size()) {
@@ -104,6 +113,7 @@ bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
     }
     return eq;
 }
+*/
 
 int main() {
     auto rng = default_random_engine(SEED);
@@ -139,7 +149,7 @@ int main() {
 
         }
         */
-        vector<Dir> moves;
+        // vector<Dir> moves;
         // vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
         // moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
         // moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
@@ -151,7 +161,7 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
-        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, EA>(puzzles[i]);
+        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, EA, ManhattanHeuristic<H, W>>(puzzles[i]);
         //
         #ifdef USEDB
@@ -160,7 +170,7 @@ int main() {
         #endif
         // num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
-        num_moves += moves.size();
+        // num_moves += moves.size();
         num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();
         search2::reset_node_counter<SBPuzzle<H, W>>();
         cout << '\r' << i << "/" << N << flush;
