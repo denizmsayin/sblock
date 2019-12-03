@@ -247,6 +247,16 @@ namespace sbpuzzle {
             }
             return inversions;
         }
+
+        // simple struct to inherit from while extending std::hash
+        // for our defined types, since they all have a hash() func
+        template <class P>
+        struct hash {
+            size_t operator()(P const &p) const noexcept { 
+                return p.hash(); 
+            }
+        };
+
     }
 
     // a utility function to decide if a set of tiles is solvable
@@ -400,11 +410,10 @@ namespace sbpuzzle {
 
         explicit SBPuzzleNoHole(const uint8_t i_tiles[], const bool mask[]) {
             for(auto i = 0; i < SIZE; ++i) {
-                if(mask[i]) {
+                if(mask[i_tiles[i]]) {
                     if(tiles[i] == HOLE)
+                        throw std::invalid_argument("Constructing SBPuzzleNoHole with a masked hole will give invalid results");
                     tiles[i] = i_tiles[i];
-                } else if(i_tiles[i] == HOLE) {
-                    throw std::invalid_argument("Constructing SBPuzzleNoHole with unmasked hole will give invalid results");
                 } else {
                     tiles[i] = details::_X;
                 }
@@ -419,7 +428,7 @@ namespace sbpuzzle {
             // to me it makes more sense to reconstruct the mask array
             // here rather than store it in each puzzle instance
             bool mask[SIZE];
-            details::tiles_reconstruct_mask(tiles, mask);
+            details::tiles_reconstruct_mask<H, W>(tiles, mask);
             SBPuzzleNoHole p;
             details::tiles_correct_fill<H, W>(p.tiles, mask);
             return p;
@@ -435,9 +444,8 @@ namespace sbpuzzle {
         }
 
         uint64_t apply_action(TileSwapAction a) {
-            tiles[a.hpos] = tiles[a.tpos]; // move tile over the hole
-            tiles[a.tpos] = HOLE; // tile is now the hole
-            hole_pos = a.tpos;
+            tiles[a.hpos] = tiles[a.tpos]; // move tile over X
+            tiles[a.tpos] = details::_X; // tile is now X
             return 1; // cost is always unit
         }
 
@@ -463,7 +471,6 @@ namespace sbpuzzle {
         constexpr static uint8_t HOLE = H*W-1;
         
         uint8_t tiles[SIZE];
-        details::psize_t hole_pos;
         // TODO: consider caching hole/tile positions for faster searching
 
         SBPuzzleNoHole() {} // empty initialization for in-place business
@@ -488,13 +495,23 @@ namespace sbpuzzle {
     template <typename Dummy>
     struct SBPuzzleNoHole<H, W>::PADelegate<TileSwapAction, Dummy> {
         static auto f(const SBPuzzleNoHole<H, W> &p) {
-            auto hp = p.hole_pos;
             std::vector<TileSwapAction> actions;
-            bool valid[4];
-            details::tiles_mark_valid_moves<H, W>(hp, valid);
-            for(auto dir = 0; dir < 4; ++dir)
-                if(valid[dir])
-                    actions.emplace_back(hp + details::OFFSETS<W>[dir], hp);
+            // while constructing disjoint pattern databases, usually there
+            // will be more X values than actual tiles, so it makes more
+            // sense to look around tiles rather than X values
+            for(auto i = 0; i < p.SIZE; ++i) {
+                if(p.tiles[i] != details::_X) { // only actual tiles
+                    bool valid[4];
+                    details::tiles_mark_valid_moves<H, W>(i, valid);
+                    for(auto dir = 0; dir < 4; ++dir) { // check the 4-neighborhood
+                        if(valid[dir]) {
+                            auto np = i + details::OFFSETS<W>[dir]; // candidate swap position
+                            if(p.tiles[np] == details::_X) // can swap if the neighbor is X
+                                actions.emplace_back(i, np);
+                        }
+                    }
+                }
+            }
             /*
             static int Q = 0;
             std::cout << p << std::endl;
@@ -511,17 +528,25 @@ namespace sbpuzzle {
     template <details::psize_t H, details::psize_t W>
     using SBPuzzle = SBPuzzleWHole<H, W>;
 
+    template <class P, details::psize_t H, details::psize_t W>
+    struct hash {
+        size_t operator()(P const &p) const noexcept { 
+            return p.hash(); 
+        }
+    };
+
 }
     
 
 // add hashability
 namespace std {
-    template <int H, int W>
-    struct hash<sbpuzzle::SBPuzzleWHole<H, W>> {
-        size_t operator()(sbpuzzle::SBPuzzleWHole<H, W> const &p) const noexcept { 
-            return p.hash(); 
-        }
-    };
+    template <sbpuzzle::details::psize_t H, sbpuzzle::details::psize_t W>
+    struct hash<sbpuzzle::SBPuzzleWHole<H, W>> 
+        : sbpuzzle::details::hash<sbpuzzle::SBPuzzleWHole<H, W>> {};
+
+    template <sbpuzzle::details::psize_t H, sbpuzzle::details::psize_t W>
+    struct hash<sbpuzzle::SBPuzzleNoHole<H, W>> 
+        : sbpuzzle::details::hash<sbpuzzle::SBPuzzleNoHole<H, W>> {};
 }
 
 #endif
