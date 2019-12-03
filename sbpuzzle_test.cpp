@@ -17,7 +17,7 @@ unsigned SEED = 42;
 constexpr int N = 100;
 constexpr int H = 3, W = 3;
 
-// #define USEDB
+#define USEDB
 
 //-------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
 #endif
 
 using namespace std;
-using sbpuzzle::SBPuzzle;
+// using sbpuzzle::SBPuzzle;
 using TSA = sbpuzzle::TileSwapAction;
 
 template <int H, int W, class URNG>
@@ -161,11 +161,11 @@ int main() {
         p.apply_moves(moves);
         cout << p << endl;
         */
-        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
+//        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, EA, ManhattanHeuristic<H, W>>(puzzles[i]);
         //
         #ifdef USEDB
-        num_moves += search2::a_star_search<SBPuzzle<H, W>, EA, 
+        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, 
                                             DPDBHeuristic<H, W>>(puzzles[i]); 
         #endif
         // num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);

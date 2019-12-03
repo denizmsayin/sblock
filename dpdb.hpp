@@ -11,7 +11,10 @@
 #include "sblock_utils.hpp"
 #include "search2.hpp"
 
-// Now, since our function that determines a combination index does so
+template <int H, int W>
+using SBPuzzle = sbpuzzle::SBPuzzle<H, W>;
+
+// Now, since our function that determine
 // 'generically' over an iterator that returns booleans, we need to
 // create a custom iterator class constructed over a set of tiles
 // that presents a 'boolean' view of them
@@ -112,14 +115,14 @@ public:
     bool **in_groups;
 
     constexpr static int SIZE = H * W;
-    constexpr static int HOLE = H * W - 1;
+    
 
     TileCombIterator<H, W> boolview_begin(int group_num, const uint8_t *tiles) const {
-        return TileCombIterator<H, W>(in_groups[group_num], tiles, 0, SBPuzzle<H, W>::_X);
+        return TileCombIterator<H, W>(in_groups[group_num], tiles, 0, sbpuzzle::details::_X);
     }
 
     TileCombIterator<H, W> boolview_end(int group_num, const uint8_t *tiles) const {
-        return TileCombIterator<H, W>(in_groups[group_num], tiles, SIZE, SBPuzzle<H, W>::_X);
+        return TileCombIterator<H, W>(in_groups[group_num], tiles, SIZE, sbpuzzle::details::_X);
     }
 
     template <class OutputIterator>
@@ -152,7 +155,7 @@ void DPDB<H, W>::init(GIterator groups_begin, GIterator groups_end) {
     in_groups = new bool *[num_groups];
     for(uint8_t i = 0; i < num_groups; ++i)
         in_groups[i] = new bool [SIZE]();
-    for(int i = 0; i < HOLE; ++i) {
+    for(int i = 0; i < SIZE; ++i) {
         group_counts[groups[i]]++;
         in_groups[groups[i]][i] = true;
     } // NOTE: the hole is not in any group
@@ -207,7 +210,7 @@ template <int H, int W>
 template <class OutputIterator>
 void DPDB<H, W>::fill_group(int group_num, const uint8_t *tiles, OutputIterator itr) const {
     for(int i = 0; i < SIZE; ++i)
-        if(tiles[i] != SBPuzzle<H, W>::_X && in_groups[group_num][tiles[i]])
+        if(tiles[i] != sbpuzzle::details::_X && in_groups[group_num][tiles[i]])
             *itr++ = tiles[i];
 }
 
@@ -245,19 +248,22 @@ template <int H, int W>
 template <typename GIterator>
 void DPDB<H, W>::_generate_and_save(int i, const char *filename) 
 {
-    using EA = typename SBPuzzle<H, W>::ExpandedAction;
+    using EA = sbpuzzle::TileSwapAction;
     using search2::BreadthFirstIterator;
     using search2::SearchNode;
     std::cout << "Filename: " << filename << std::endl;
     // we simply need to apply bfs, but only add a cost when a tile
     // from the group is moved, otherwise the moves do not cost anything
-    SBPuzzle<H, W> p(SBPuzzle<H, W>::goal_state(), in_groups[i]);
+    uint8_t tiles[SIZE];
+    for(auto i = 0; i < SIZE; ++i)
+        tiles[i] = i;
+    SBPuzzle<H, W> p(tiles, in_groups[i]);
     // perform breadth first search
     BreadthFirstIterator<SBPuzzle<H, W>, EA> bfs_itr(p);
     while(!bfs_itr.done()) {
         auto node = bfs_itr.next(); // get the next node
         // find the table index of the node's state
-        auto index = calculate_table_index(i, node.puzzle.tiles);
+        auto index = calculate_table_index(i, node.puzzle.get_tiles());
         std::cout << "Index: " << index << ", cost: " << node.path_cost << std::endl
                   << node.puzzle << std::endl;
         // insert the path cost only if it is less than one found so far
@@ -270,7 +276,7 @@ void DPDB<H, W>::_generate_and_save(int i, const char *filename)
         SBPuzzle<H, W> p2 = node.puzzle;
         int cost = search2::a_star_search<SBPuzzle<H, W>, EA, MH<H, W>>(p2);
         for(auto a : p2.template possible_actions<EA>())
-            std::cout << static_cast<int>(a.new_hole_pos) << "," << static_cast<int>(a.new_tile_pos) << " ";
+            std::cout << static_cast<int>(a.tpos) << "," << static_cast<int>(a.hpos) << " ";
         std::cout << std::endl;
         if(cost != node.path_cost) {
             std::cout << "Found cost: " << node.path_cost << ", A*: " << cost << std::endl;
@@ -306,7 +312,7 @@ size_t DPDB<H, W>::calculate_table_index(int i, const uint8_t *tiles) const {
 
 template <int H, int W>
 int DPDB<H, W>::lookup(const SBPuzzle<H, W> &p) const {
-    return lookup(p.tiles);
+    return lookup(p.get_tiles());
 }
 
 template <int H, int W>
@@ -319,5 +325,6 @@ int DPDB<H, W>::lookup(const uint8_t *tiles) const {
     }
     return total;
 }
+
 
 #endif

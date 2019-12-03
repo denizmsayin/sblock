@@ -398,6 +398,7 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
 
+        const uint8_t *get_tiles() const { return Base::tiles; }
     private:
         using Base = SBPuzzleBase<H, W>;
 
@@ -468,6 +469,7 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
     
+        const uint8_t *get_tiles() const { return Base::tiles; }
     private:
         using Base = SBPuzzleBase<H, W>;
 
@@ -534,9 +536,18 @@ namespace sbpuzzle {
 
         SBPuzzle(const SBPuzzle &) = default;
         SBPuzzle(SBPuzzle &&) = default;
+        SBPuzzle &operator=(const SBPuzzle &) = default;
+        SBPuzzle &operator=(SBPuzzle &&) = default;
 
         SBPuzzle(const SBPuzzleWHole<H, W> &o) : tag(TypeTag::W_HOLE), puzzle(o) {}
         SBPuzzle(const SBPuzzleNoHole<H, W> &o) : tag(TypeTag::NO_HOLE), puzzle(o) {}
+
+        const uint8_t *get_tiles() const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.get_tiles();
+                case TypeTag::NO_HOLE:  return puzzle.n.get_tiles();
+            }
+        }
 
         bool is_solved() const {
             switch(tag) {
