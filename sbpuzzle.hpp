@@ -257,6 +257,22 @@ namespace sbpuzzle {
             }
         };
 
+
+        // template polymorphic goal_state base function
+        template <class P, psize_t H, psize_t W>
+        P goal_state(const uint8_t tiles[]) {
+            // this function should not be called often, so it seems
+            // to me it makes more sense to reconstruct the mask array
+            // here rather than store it in each puzzle instance
+            constexpr auto size = H*W;
+            bool mask[size];
+            tiles_reconstruct_mask<H, W>(tiles, mask);
+            uint8_t tiles2[size];
+            tiles_correct_fill<H, W>(tiles2, mask);
+            return P(tiles2, mask);
+        }
+
+
     }
 
     // a utility function to decide if a set of tiles is solvable
@@ -279,64 +295,23 @@ namespace sbpuzzle {
     // I've elected to define the functions right in the declaration since
     // writing them separately takes time and I keep changing implementations...
 
-
     template <details::psize_t H, details::psize_t W>
-    class SBPuzzleWHole {
+    class SBPuzzleBase {
     public:
 
-        explicit SBPuzzleWHole(const uint8_t i_tiles[]) {
-            for(auto i = 0; i < SIZE; ++i) {
-                if(i_tiles[i] == HOLE)
-                    hole_pos = i;
-                tiles[i] = i_tiles[i];
-            }
-        }
-
-        explicit SBPuzzleWHole(const uint8_t i_tiles[], const bool mask[]) {
-            for(auto i = 0; i < SIZE; ++i) {
-                if(mask[i_tiles[i]]) {
-                    if(i_tiles[i] == HOLE)
-                        hole_pos = i;
-                    tiles[i] = i_tiles[i];
-                } else if(i_tiles[i] == HOLE) {
-                    throw std::invalid_argument("Constructing SBPuzzleWHole with unmasked hole will give invalid results");
-                } else {
-                    tiles[i] = details::_X;
-                }
-            }
-        }
-
-        SBPuzzleWHole(const SBPuzzleWHole &other) = default;
-        SBPuzzleWHole &operator=(const SBPuzzleWHole &other) = default;
-
-        SBPuzzleWHole goal_state() const {
-            // this function should not be called often, so it seems
-            // to me it makes more sense to reconstruct the mask array
-            // here rather than store it in each puzzle instance
-            bool mask[SIZE];
-            details::tiles_reconstruct_mask<H, W>(tiles, mask);
-            SBPuzzleWHole p;
-            details::tiles_correct_fill<H, W>(p.tiles, mask);
-            return p;
-        }
 
         bool is_solved() const {
             return details::tiles_in_correct_places<H, W>(tiles);
         }
 
-        template <class Action>
-        std::vector<Action> possible_actions() const {
-            return PADelegate<Action>::f(*this); // delegate to the struct
-        }
+        // Note: these two functions should be implemented by the derived classes
+        // same implementation for derived classes
+        // base class PADelegate should not implement anything
+        // template <class Action>
+        // std::vector<Action> possible_actions() const;
+        // uint64_t apply_action(TileSwapAction a);
 
-        uint64_t apply_action(TileSwapAction a) {
-            tiles[a.hpos] = tiles[a.tpos]; // move tile over the hole
-            tiles[a.tpos] = HOLE; // tile is now the hole
-            hole_pos = a.tpos;
-            return 1; // cost is always unit
-        }
-
-        bool operator==(const SBPuzzleWHole &other) const {
+        bool operator==(const SBPuzzleBase &other) const {
             return details::tiles_equal<H, W>(tiles, other.tiles);
         }
 
@@ -345,7 +320,7 @@ namespace sbpuzzle {
         }
 
         template <int HH, int WW>
-        friend std::ostream &operator<<(std::ostream &s, const SBPuzzleWHole<HH, WW> &p) {
+        friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<HH, WW> &p) {
             return details::tiles_stream<HH, WW>(s, p.tiles);
         }
 
@@ -353,15 +328,81 @@ namespace sbpuzzle {
             return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
         }
 
-    private:
+    protected:
+        // only callable by derived classes
+        SBPuzzleBase() {}
+
         constexpr static auto SIZE = H*W;
         constexpr static uint8_t HOLE = H*W-1;
         
         uint8_t tiles[SIZE];
+
+    };
+ 
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+
+    template <details::psize_t H, details::psize_t W>
+    class SBPuzzleWHole : public SBPuzzleBase<H, W> {
+    public:
+
+        explicit SBPuzzleWHole(const uint8_t i_tiles[]) {
+            for(auto i = 0; i < Base::SIZE; ++i) {
+                if(i_tiles[i] == Base::HOLE)
+                    hole_pos = i;
+                Base::tiles[i] = i_tiles[i];
+            }
+        }
+
+        explicit SBPuzzleWHole(const uint8_t i_tiles[], const bool mask[]) {
+            for(auto i = 0; i < Base::SIZE; ++i) {
+                if(mask[i_tiles[i]]) {
+                    if(i_tiles[i] == Base::HOLE)
+                        hole_pos = i;
+                    Base::tiles[i] = i_tiles[i];
+                } else if(i_tiles[i] == Base::HOLE) {
+                    throw std::invalid_argument("Constructing SBPuzzleWHole with unmasked hole will give invalid results");
+                } else {
+                    Base::tiles[i] = details::_X;
+                }
+            }
+        }
+
+        SBPuzzleWHole(const SBPuzzleWHole &other) = default;
+        SBPuzzleWHole &operator=(const SBPuzzleWHole &other) = default;
+
+        SBPuzzleWHole goal_state() const {
+            return details::goal_state<SBPuzzleWHole<H, W>, H, W>(Base::tiles);
+        }
+
+        template <class Action>
+        std::vector<Action> possible_actions() const {
+            return PADelegate<Action>::f(*this); // delegate to the struct
+        }
+
+        uint64_t apply_action(TileSwapAction a) {
+            Base::tiles[a.hpos] = Base::tiles[a.tpos]; // move tile over the hole
+            Base::tiles[a.tpos] = Base::HOLE; // tile is now the hole
+            hole_pos = a.tpos;
+            return 1; // cost is always unit
+        }
+
+    private:
+        using Base = SBPuzzleBase<H, W>;
+
         details::psize_t hole_pos;
 
         SBPuzzleWHole() {} // empty initialization for in-place business
-
+       
         // since it is not possible to specialize a templated function of an unspecialized
         // templated class, in our case the possible_actions() function, we need a dummy
         // templated wrapper struct to which we can delegate possible_actions(). However,
@@ -405,17 +446,17 @@ namespace sbpuzzle {
     /*                                                           */
    
     template <details::psize_t H, details::psize_t W>
-    class SBPuzzleNoHole {
+    class SBPuzzleNoHole : public SBPuzzleBase<H, W> {
     public:
 
         explicit SBPuzzleNoHole(const uint8_t i_tiles[], const bool mask[]) {
-            for(auto i = 0; i < SIZE; ++i) {
+            for(auto i = 0; i < Base::SIZE; ++i) {
                 if(mask[i_tiles[i]]) {
-                    if(tiles[i] == HOLE)
+                    if(Base::tiles[i] == Base::HOLE)
                         throw std::invalid_argument("Constructing SBPuzzleNoHole with a masked hole will give invalid results");
-                    tiles[i] = i_tiles[i];
+                    Base::tiles[i] = i_tiles[i];
                 } else {
-                    tiles[i] = details::_X;
+                    Base::tiles[i] = details::_X;
                 }
             }
         }
@@ -424,18 +465,7 @@ namespace sbpuzzle {
         SBPuzzleNoHole &operator=(const SBPuzzleNoHole &other) = default;
 
         SBPuzzleNoHole goal_state() const {
-            // this function should not be called often, so it seems
-            // to me it makes more sense to reconstruct the mask array
-            // here rather than store it in each puzzle instance
-            bool mask[SIZE];
-            details::tiles_reconstruct_mask<H, W>(tiles, mask);
-            SBPuzzleNoHole p;
-            details::tiles_correct_fill<H, W>(p.tiles, mask);
-            return p;
-        }
-
-        bool is_solved() const {
-            return details::tiles_in_correct_places<H, W>(tiles);
+            return details::goal_state<SBPuzzleNoHole<H, W>, H, W>(Base::tiles);
         }
 
         template <class Action>
@@ -444,50 +474,20 @@ namespace sbpuzzle {
         }
 
         uint64_t apply_action(TileSwapAction a) {
-            tiles[a.hpos] = tiles[a.tpos]; // move tile over X
-            tiles[a.tpos] = details::_X; // tile is now X
+            Base::tiles[a.hpos] = Base::tiles[a.tpos]; // move tile over X
+            Base::tiles[a.tpos] = details::_X; // tile is now X
             return 1; // cost is always unit
         }
-
-        bool operator==(const SBPuzzleNoHole &other) const {
-            return details::tiles_equal<H, W>(tiles, other.tiles);
-        }
-
-        size_t hash() const {
-            return details::tiles_hash<H, W>(tiles);
-        }
-
-        template <int HH, int WW>
-        friend std::ostream &operator<<(std::ostream &s, const SBPuzzleNoHole<HH, WW> &p) {
-            return details::tiles_stream<HH, WW>(s, p.tiles);
-        }
-
-        int manhattan_distance_to_solution() const {
-            return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
-        }
-
+    
     private:
-        constexpr static auto SIZE = H*W;
-        constexpr static uint8_t HOLE = H*W-1;
-        
-        uint8_t tiles[SIZE];
+        using Base = SBPuzzleBase<H, W>;
+
         // TODO: consider caching hole/tile positions for faster searching
 
-        SBPuzzleNoHole() {} // empty initialization for in-place business
-
-        // since it is not possible to specialize a templated function of an unspecialized
-        // templated class, in our case the possible_actions() function, we need a dummy
-        // templated wrapper struct to which we can delegate possible_actions(). However,
-        // it is not possible to FULLY specialize the wrapper struct either, only partially.
-        // Which is why we need a struct with the actual template parameter and a dummy one.
-        // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
         template <typename Action, typename Dummy = void>
         struct PADelegate {
             static std::vector<Action> f(const SBPuzzleNoHole &p);
         };
-
-
-
     };
 
     // PADelegate specialization for the TileSwapAction class
@@ -527,13 +527,6 @@ namespace sbpuzzle {
     // TODO: remove this after the switch to tagged union is done
     template <details::psize_t H, details::psize_t W>
     using SBPuzzle = SBPuzzleWHole<H, W>;
-
-    template <class P, details::psize_t H, details::psize_t W>
-    struct hash {
-        size_t operator()(P const &p) const noexcept { 
-            return p.hash(); 
-        }
-    };
 
 }
     
