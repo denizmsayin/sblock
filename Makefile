@@ -14,4 +14,7 @@ debug:
 	$(CXX) $(CFLAGS) $(DEBUGFLAGS) $(SRC) -o $(OUT)
 
 dpdb:
+	$(CXX) $(CFLAGS) $(RELEASEFLAGS) $(SRC2) -o $(OUT2)
+
+dpdebug:
 	$(CXX) $(CFLAGS) $(DEBUGFLAGS) $(SRC2) -o $(OUT2)

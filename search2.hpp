@@ -281,22 +281,39 @@ int bidirectional_bfs(const Puzzle &p) {
 
 template <class Puzzle, class Action, class HeuristicFunc>
 int a_star_search(const Puzzle &p) {
-    std::unordered_set<Puzzle> visited;
+    // Since the standard library PQ does not have a decrease-key operation, we have
+    // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
+    // a node with a better cost, and simply discard visited nodes when popping
+    // from the queue, as we are guaranteed to have found the shortest path to
+    // a visited node. 
+    // A* does not have such a strong guarantee. We are certain that we will find 
+    // the shortest path to the GOAL, but not each and every state. Thus it is
+    // possible to find a shorter path to a state that has already been visited.
+    // To deal with this, we also need to keep track of the smallest cost we have
+    // found for each state so far. If we find a path with a lower cost, we simply
+    // have to act as if that state was not visited.
+    std::unordered_map<Puzzle, int> visited;
     std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
     pq.emplace(p, 0, HeuristicFunc()(p));
     while(!pq.empty()) {
         auto node = pq.top(); pq.pop();
         const auto &p = node.puzzle;
-        if(p.is_solved())
-            return node.path_cost;
-        visited.insert(p);
-        for(auto action : p.template possible_actions<Action>()) {
-            Puzzle new_p = p;
-            int step_cost = new_p.apply_action(action);
-            if(visited.find(new_p) == visited.end()) {
+        // check if the state has been visited before
+        // we act as if not visited if the cost is smaller than the prev one too
+        auto lookup = visited.find(p);
+        if(lookup == visited.end() || node.path_cost < lookup->second) {
+            if(p.is_solved())
+                return node.path_cost;
+            visited.emplace(p, node.path_cost);
+            for(auto action : p.template possible_actions<Action>()) {
+                Puzzle new_p = p;
+                int step_cost = new_p.apply_action(action);
                 int new_path_cost = node.path_cost + step_cost;
-                int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
-                pq.emplace(new_p, new_path_cost, new_est_cost);
+                auto lookup = visited.find(new_p);
+                if(lookup == visited.end() || new_path_cost < lookup->second) {
+                    int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+                    pq.emplace(new_p, new_path_cost, new_est_cost);
+                }
             }
         }
     }

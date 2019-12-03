@@ -7,12 +7,19 @@ constexpr int SIZE = H*W;
 #include <cstdint>
 #include <stdexcept>
 #include <algorithm>
+#include <cstring>
+#include <cctype>
 
 #include "dpdb.hpp"
 
 uint8_t validate_groups(const uint8_t *groups) {
     const uint8_t *min, *max;
-    std::tie(min, max) = std::minmax_element(groups, groups + SIZE);
+    min = std::min_element(groups, groups+SIZE);
+    max = std::max_element(groups, groups+SIZE, [](auto x, auto y) { // ignore 255
+            x = (x == sbpuzzle::DONT_CARE) ? 0 : x;
+            y = (y == sbpuzzle::DONT_CARE) ? 0 : y;
+            return x < y;
+    });
     if(*min != 0)
         throw std::invalid_argument("Smallest group number is not 0");
     if(*max > SIZE-1)
@@ -29,26 +36,39 @@ uint8_t validate_groups(const uint8_t *groups) {
 }
 
 void parse_group_string(const char *group_str, uint8_t *out, size_t out_size) {
-    std::stringstream ss(group_str);
-    int64_t x;
-    char ch;
     size_t i = 0;
-    // input example for 3x3: 0,0,0,0,0,1,1,1,0
-    while(ss >> x) { // extract a number 
-        if(i == out_size)
-            throw std::invalid_argument("Buffer overflow, input group spec is too long");
-        ss >> ch; // discard ,
-        if(x < 0 || x > 255)
-            throw std::invalid_argument("Too large or negative values in input group spec");
-        out[i++] = static_cast<uint8_t>(x);
+    uint64_t acc = 0;
+    // input example for 3x3: 0,0,0,0,0,1,1,1,X
+    while(*group_str) {
+        if(isdigit(*group_str)) {
+            acc = 10*acc + (*group_str - '0');
+            if(acc > 255)
+                throw std::invalid_argument("Too large (>255) value in input group spec");
+        } else if(*group_str == 'X') {
+            acc = sbpuzzle::DONT_CARE;
+        } else if(*group_str == ',') {
+            out[i++] = static_cast<uint8_t>(acc);
+            acc = 0;
+            if(i > out_size)
+                throw std::invalid_argument("Buffer overflow, input group spec is too long");
+        } else {
+            throw std::invalid_argument("Unknown char in group spec");
+        }
+        ++group_str;
     }
+    if(acc > 0) {
+        out[i++] = static_cast<uint8_t>(acc);
+        if(i > out_size)
+            throw std::invalid_argument("Buffer overflow, input group spec is too long");
+    }
+    std::cout << i << std::endl;
     if(i < out_size)
         throw std::invalid_argument("Input group spec is too short");
 }
 
 int main(int argc, char *argv[]) {
     if(argc < 3) {
-        std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,0 f1 f2\n";
+        std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,X f1 f2\n";
         return 0;
     }
 
@@ -57,11 +77,14 @@ int main(int argc, char *argv[]) {
 
     uint8_t groups[SIZE];
     parse_group_string(argv[1], groups, SIZE);
+    for(auto x : groups)
+        std::cout << ((int) x) << " ";
+    std::cout << std::endl;
     uint8_t num_groups = validate_groups(groups);
     if(num_groups != argc-2)
         throw std::invalid_argument("Too few/too many files for groups");
 
-    DPDB<H, W>::generate_and_save(groups, groups+SIZE, argv+2, argv+argc);
+    sbpuzzle::DPDB<H, W>::generate_and_save(groups, groups+SIZE, argv+2, argv+argc);
 
     return 0;
 }

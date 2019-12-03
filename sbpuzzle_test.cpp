@@ -14,7 +14,7 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 100;
+constexpr int N = 1000;
 constexpr int H = 3, W = 3;
 
 #define USEDB
@@ -23,8 +23,9 @@ constexpr int H = 3, W = 3;
 
 #ifdef USEDB
 #include "dpdb.hpp"
+using sbpuzzle::DPDB;
 
-uint8_t DBGROUPS[] = {0, 0, 1, 0, 1, 1, 0, 1, 0};
+uint8_t DBGROUPS[] = {1, 1, 1, 0, 0, 1, 0, 0, sbpuzzle::DONT_CARE};
 std::vector<const char *> DBFILES {"g1.db", "g2.db"};
 // uint8_t DBGROUPS[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 // std::vector<const char *> DBFILES {"gmax.db"};
@@ -34,7 +35,7 @@ DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
 #endif
 
 using namespace std;
-// using sbpuzzle::SBPuzzle;
+using sbpuzzle::SBPuzzle;
 using TSA = sbpuzzle::TileSwapAction;
 
 template <int H, int W, class URNG>
@@ -125,50 +126,20 @@ int main() {
     int num_moves = 0;
     size_t num_nodes = 0;
     for(int i = 0; i < N; i++) {
-        /* 
-        cout << i << endl;
-        vector<Dir> moves1 = a_star_search<SBPuzzle, Dir, ManhattanHeuristic>(puzzles[i], Dir::INVALID);
-        vector<Dir> moves2 = bidirectional_bfs<SBPuzzle, Dir>(puzzles[i], Dir::INVALID);
-        if(!check_equality(moves1, moves2) && moves1.size() != moves2.size()) {
-            cout << "Not equal!" << endl;
+        /*
+        int m1 = search2::a_star_search<SBPuzzle<H, W>, TSA, 
+                                        ManhattanHeuristic<H, W>>(puzzles[i]); 
+        #ifdef USEDB
+        int m2 = search2::a_star_search<SBPuzzle<H, W>, TSA, 
+                                        DPDBHeuristic<H, W>>(puzzles[i]); 
+        #endif
+        if(m1 != m2) {
+            cout << "DB Result: " << m2 << ", MD Result: " << m1 << endl;
             cout << puzzles[i] << endl;
-            cout << "M1: ";
-            for(auto m : moves1)
-                cout << m << " ";
-            cout << endl;
-            SBPuzzle p1(puzzles[i]);
-            p1.apply_moves(moves1);
-            cout << p1 << endl;
-            cout << "M2: ";
-            for(auto m : moves2)
-                cout << m << " ";
-            cout << endl;
-            SBPuzzle p2(puzzles[i]);
-            p2.apply_moves(moves2);
-            cout << p2 << endl;
-
+            cout << "**********************" << endl;
         }
         */
-        // vector<Dir> moves;
-        // vector<Dir> moves = search2::breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i]);
-        // moves = breadth_first_search<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
-        // moves = a_star_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
-        // moves = bidirectional_bfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
-        // vector<Dir> moves = iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i], Dir::INVALID);
-        // moves = iterative_deepening_dfs<SBPuzzle<H, W>, Dir>(puzzles[i], Dir::INVALID);
-        /*
-        SBPuzzle p(puzzles[i]);
-        p.apply_moves(moves);
-        cout << p << endl;
-        */
-//        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
-        // num_moves += search2::a_star_search<SBPuzzle<H, W>, EA, ManhattanHeuristic<H, W>>(puzzles[i]);
-        //
-        #ifdef USEDB
-        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, 
-                                            DPDBHeuristic<H, W>>(puzzles[i]); 
-        #endif
-        // num_moves += search2::iterative_deepening_a_star<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += moves.size();
         num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();

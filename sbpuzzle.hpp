@@ -97,8 +97,9 @@ namespace sbpuzzle {
         template <psize_t H, psize_t W>
         inline bool tiles_in_correct_places(const uint8_t tiles[]) {
             constexpr auto size = H*W;
+            constexpr auto hole = size-1;
             for(auto i = 0; i < size; ++i) 
-                if(tiles[i] != _X && tiles[i] != i)
+                if(tiles[i] != _X && tiles[i] != hole && tiles[i] != i)
                     return false;
             return true;
         }
@@ -280,6 +281,9 @@ namespace sbpuzzle {
 
     }
 
+    // publicly accessible value for _X
+    const auto DONT_CARE = details::_X;
+
     // a utility function to decide if a set of tiles is solvable
     template <details::psize_t H, details::psize_t W>
     bool tiles_solvable(const uint8_t tiles[]) {
@@ -441,14 +445,18 @@ namespace sbpuzzle {
 
         explicit SBPuzzleNoHole(const uint8_t i_tiles[], const bool mask[]) {
             for(auto i = 0; i < Base::SIZE; ++i) {
-                if(mask[i_tiles[i]]) {
-                    if(Base::tiles[i] == Base::HOLE)
+                if(i_tiles[i] == Base::HOLE) {
+                    Base::tiles[i] = Base::HOLE;
+                    hole_pos = i;
+                } else if(mask[i_tiles[i]]) {
+                    if(i_tiles[i] == Base::HOLE)
                         throw std::invalid_argument("Constructing SBPuzzleNoHole with a masked hole will give invalid results");
                     Base::tiles[i] = i_tiles[i];
                 } else {
                     Base::tiles[i] = details::_X;
                 }
             }
+            prop_hole();
         }
 
         SBPuzzleNoHole(const SBPuzzleNoHole &other) = default;
@@ -464,16 +472,46 @@ namespace sbpuzzle {
         }
 
         uint64_t apply_action(TileSwapAction a) {
-            Base::tiles[a.hpos] = Base::tiles[a.tpos]; // move tile over X
-            Base::tiles[a.tpos] = details::_X; // tile is now X
+            // TODO: refactor into base
+            Base::tiles[a.hpos] = Base::tiles[a.tpos]; // move tile over hole
+            Base::tiles[a.tpos] = Base::HOLE; // tile is now hole
+            hole_pos = a.tpos;
+            reprop_hole(); // repropagate the hole
             return 1; // cost is always unit
         }
     
         const uint8_t *get_tiles() const { return Base::tiles; }
     private:
         using Base = SBPuzzleBase<H, W>;
+        details::psize_t hole_pos; // TODO: refactor hole_pos into base
 
         // TODO: consider caching hole/tile positions for faster searching
+
+        void prop_hole(int i) {
+            bool valid[4];
+            details::tiles_mark_valid_moves<H, W>(i, valid);
+            for(auto dir = 0; dir < 4; ++dir) {
+                if(valid[dir]) {
+                    auto np = i + details::OFFSETS<W>[dir];
+                    if(Base::tiles[np] == details::_X) {
+                        Base::tiles[np] = Base::HOLE;
+                        prop_hole(np);
+                    }
+                }
+            }
+        }
+
+        void prop_hole() {
+            prop_hole(hole_pos);
+        }
+
+        void reprop_hole() { // re-do hole propagation after a hole position update
+            for(auto i = 0; i < Base::SIZE; ++i)
+                if(Base::tiles[i] == Base::HOLE)
+                    Base::tiles[i] = details::_X;
+            Base::tiles[hole_pos] = Base::HOLE;
+            prop_hole();
+        }
 
         template <typename Action, typename Dummy = void>
         struct PADelegate {
@@ -487,18 +525,17 @@ namespace sbpuzzle {
     struct SBPuzzleNoHole<H, W>::PADelegate<TileSwapAction, Dummy> {
         static auto f(const SBPuzzleNoHole<H, W> &p) {
             std::vector<TileSwapAction> actions;
-            // while constructing disjoint pattern databases, usually there
-            // will be more X values than actual tiles, so it makes more
-            // sense to look around tiles rather than X values
+            // check around propagated hole tiles
             for(auto i = 0; i < p.SIZE; ++i) {
-                if(p.tiles[i] != details::_X) { // only actual tiles
+                if(p.tiles[i] == p.HOLE) { // only actual tiles
                     bool valid[4];
                     details::tiles_mark_valid_moves<H, W>(i, valid);
                     for(auto dir = 0; dir < 4; ++dir) { // check the 4-neighborhood
                         if(valid[dir]) {
                             auto np = i + details::OFFSETS<W>[dir]; // candidate swap position
-                            if(p.tiles[np] == details::_X) // can swap if the neighbor is X
-                                actions.emplace_back(i, np);
+                            if(p.tiles[np] != p.HOLE) // can swap if the neighbor is a tile
+                                actions.emplace_back(np, i);
+                            // No need to check for _X, since holes propagate over those
                         }
                     }
                 }
