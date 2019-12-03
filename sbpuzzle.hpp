@@ -62,6 +62,11 @@ namespace sbpuzzle {
     };
 
     namespace details {
+        // This namespace contains implementation details, with both
+        // basic utility functions as well as C-like functions
+        // that work directly on the tile array, to be called by
+        // the puzzle classes
+        
         typedef int psize_t;
         
         constexpr uint8_t _X = 255;
@@ -295,6 +300,12 @@ namespace sbpuzzle {
     // I've elected to define the functions right in the declaration since
     // writing them separately takes time and I keep changing implementations...
 
+    // Since some functions are exactly the same for cases where the hole is
+    // in the group and not, we have a base class that prevents us from
+    // repeating the same functions a few times. The class is only
+    // instantiable by the derived classes as its constructor is protected.
+    // The derived classes still have to implement constructors, possible_actions(),
+    // and apply_action()
     template <details::psize_t H, details::psize_t W>
     class SBPuzzleBase {
     public:
@@ -339,18 +350,9 @@ namespace sbpuzzle {
 
     };
  
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
+    /*                                                           */
 
+    // The derived class for the case where the hole is masked
     template <details::psize_t H, details::psize_t W>
     class SBPuzzleWHole : public SBPuzzleBase<H, W> {
     public:
@@ -401,8 +403,6 @@ namespace sbpuzzle {
 
         details::psize_t hole_pos;
 
-        SBPuzzleWHole() {} // empty initialization for in-place business
-       
         // since it is not possible to specialize a templated function of an unspecialized
         // templated class, in our case the possible_actions() function, we need a dummy
         // templated wrapper struct to which we can delegate possible_actions(). However,
@@ -427,24 +427,13 @@ namespace sbpuzzle {
             for(auto dir = 0; dir < 4; ++dir)
                 if(valid[dir])
                     actions.emplace_back(hp + details::OFFSETS<W>[dir], hp);
-            /*
-            static int Q = 0;
-            std::cout << p << std::endl;
-            for(auto &a : actions)
-                std::cout << '(' << ((int) a.tpos) << ", " << ((int) a.hpos) << ") ";
-            std::cout << (Q++) << std::endl;
-            std::cout << "**********************\n";
-            */
             return actions;
         }
     };
 
     /*                                                           */
-    /*                                                           */
-    /*                                                           */
-    /*                                                           */
-    /*                                                           */
    
+    // The derived class for the case where the hole is not masked
     template <details::psize_t H, details::psize_t W>
     class SBPuzzleNoHole : public SBPuzzleBase<H, W> {
     public:
@@ -512,21 +501,137 @@ namespace sbpuzzle {
                     }
                 }
             }
-            /*
-            static int Q = 0;
-            std::cout << p << std::endl;
-            for(auto &a : actions)
-                std::cout << '(' << ((int) a.tpos) << ", " << ((int) a.hpos) << ") ";
-            std::cout << (Q++) << std::endl;
-            std::cout << "**********************\n";
-            */
             return actions;
         }
     };
 
+
+    /*
     // TODO: remove this after the switch to tagged union is done
     template <details::psize_t H, details::psize_t W>
     using SBPuzzle = SBPuzzleWHole<H, W>;
+    */
+
+    // Finally, we have to use a tagged union wrapper over the classes for
+    // run-time polymorphic behavior, without actually using virtuals.
+    // This is necessary because groups are run-time input and thus the
+    // decision of which class to instantiate exactly should be done at run-time.
+    template <details::psize_t H, details::psize_t W>
+    class SBPuzzle {
+    public:
+        SBPuzzle(const uint8_t tiles[]) : tag(TypeTag::W_HOLE), puzzle(tiles) {}
+        SBPuzzle(const uint8_t tiles[], const bool mask[]) 
+            : tag(TypeTag::NO_HOLE), puzzle(tiles, mask) 
+        {
+            // slightly more complicated, have to make a decision
+            constexpr auto hole = H*W-1;
+            if(mask[hole]) {
+                std::cout << "Created whole\n";
+                tag = TypeTag::W_HOLE;
+                puzzle = SBPuzzleWHole<H, W>(tiles, mask);
+            }
+        }
+
+        SBPuzzle(const SBPuzzle &) = default;
+        SBPuzzle(SBPuzzle &&) = default;
+
+        SBPuzzle(const SBPuzzleWHole<H, W> &o) : tag(TypeTag::W_HOLE), puzzle(o) {}
+        SBPuzzle(const SBPuzzleNoHole<H, W> &o) : tag(TypeTag::NO_HOLE), puzzle(o) {}
+
+        bool is_solved() const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.is_solved();
+                case TypeTag::NO_HOLE:  return puzzle.n.is_solved();
+            }
+        }
+
+        bool operator==(const SBPuzzle &other) const {
+            if(tag != other.tag)
+                throw std::invalid_argument("Puzzle type tags do not match in operator==");
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w == other.puzzle.w;
+                case TypeTag::NO_HOLE:  return puzzle.n == other.puzzle.n;
+            }
+        }
+
+        size_t hash() const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.hash();
+                case TypeTag::NO_HOLE:  return puzzle.n.hash();
+            }
+        }
+
+        template <int HH, int WW>
+        friend std::ostream &operator<<(std::ostream &s, const SBPuzzle<HH, WW> &p) {
+            switch(p.tag) {
+                case TypeTag::W_HOLE:   return s << p.puzzle.w;
+                case TypeTag::NO_HOLE:  return s << p.puzzle.n;
+            }
+        }
+
+        int manhattan_distance_to_solution() const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.manhattan_distance_to_solution();
+                case TypeTag::NO_HOLE:  return puzzle.n.manhattan_distance_to_solution();
+            }
+        }
+
+        SBPuzzle goal_state() const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return SBPuzzle(puzzle.w.goal_state());
+                case TypeTag::NO_HOLE:  return SBPuzzle(puzzle.n.goal_state());
+            }
+        }
+
+        uint64_t apply_action(TileSwapAction a) {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.apply_action(a);
+                case TypeTag::NO_HOLE:  return puzzle.n.apply_action(a);
+            }
+        }
+
+
+        template <class Action>
+        std::vector<Action> possible_actions() const {
+            return PADelegate<Action>::f(*this); // delegate to the struct
+        }
+
+
+    private:
+        enum class TypeTag {
+            W_HOLE,
+            NO_HOLE
+        } tag;
+        union PuzzleUnion {
+            SBPuzzleWHole<H, W> w;
+            SBPuzzleNoHole<H, W> n;
+
+            PuzzleUnion(const SBPuzzleWHole<H, W> &wh) : w(wh) {}
+            PuzzleUnion(const SBPuzzleNoHole<H, W> &nh) : n(nh) {}
+            PuzzleUnion(const uint8_t tiles[]) : w(tiles) {}
+            // initialize nohole by default, change if not the case
+            PuzzleUnion(const uint8_t tiles[], const bool mask[]) : n(tiles, mask) {} 
+        } puzzle;
+
+        template <typename Action, typename Dummy = void>
+        struct PADelegate {
+            static std::vector<Action> f(const SBPuzzle &p);
+        };
+    };
+
+    template <details::psize_t H, details::psize_t W>
+    template <typename Dummy>
+    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Dummy> {
+        static auto f(const SBPuzzle<H, W> &p) {
+            switch(p.tag) {
+                case SBPuzzle<H, W>::TypeTag::W_HOLE:   
+                    return p.puzzle.w.template possible_actions<TileSwapAction>();
+                case SBPuzzle<H, W>::TypeTag::NO_HOLE:  
+                    return p.puzzle.n.template possible_actions<TileSwapAction>();
+            }
+            return p.puzzle.n.template possible_actions<TileSwapAction>();
+        }
+    };
 
 }
     
@@ -540,6 +645,10 @@ namespace std {
     template <sbpuzzle::details::psize_t H, sbpuzzle::details::psize_t W>
     struct hash<sbpuzzle::SBPuzzleNoHole<H, W>> 
         : sbpuzzle::details::hash<sbpuzzle::SBPuzzleNoHole<H, W>> {};
+    
+    template <sbpuzzle::details::psize_t H, sbpuzzle::details::psize_t W>
+    struct hash<sbpuzzle::SBPuzzle<H, W>> 
+        : sbpuzzle::details::hash<sbpuzzle::SBPuzzle<H, W>> {};
 }
 
 #endif

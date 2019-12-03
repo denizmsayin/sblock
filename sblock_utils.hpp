@@ -25,13 +25,16 @@ template <typename Arithmetic>
 class SeriesTracker {
 public:
     struct Options {
-        std::ostream *stream;
+        std::ostream &stream;
         double alpha;
         Arithmetic print_every;
         bool show_speed;
 
-        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream *s=&std::cout) 
+        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream &s=std::cout) 
             : stream(s), alpha(a), print_every(pe), show_speed(ss) {}
+
+        Options(const Options &o) = default;
+        Options(Options &&o) = default;
     };
 
     SeriesTracker(const Arithmetic *to_track);
@@ -207,9 +210,9 @@ void SeriesTracker<A>::track() {
         NumWrapper<A> print_value(*tracked);
         NumWrapper<double> print_avg(running_avg);
         if(options.show_speed)
-            (*options.stream) << "Value: " << print_value << ", cps: " << print_avg << std::endl;
+            options.stream << "Value: " << print_value << ", cps: " << print_avg << std::endl;
         else
-            (*options.stream) << "Value: " << print_value << std::endl;
+            options.stream << "Value: " << print_value << std::endl;
         record();
     }
 }

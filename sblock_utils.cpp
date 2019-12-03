@@ -25,7 +25,7 @@ void read_byte_array(uint8_t *table, size_t size, const char *filename) {
 // a quick function to determine combination values by table lookup
 static constexpr size_t MAX_COMB = 50;
 size_t combination(size_t x, size_t n) {
-    static size_t table[MAX_COMB][MAX_COMB+1] = {0}; // remember for dynamic programming
+    static size_t table[MAX_COMB][MAX_COMB+1] = {{0}}; // remember for dynamic programming
     if(x == n || n == 0)
         return 1;
     else if(table[x][n] == 0)

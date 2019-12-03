@@ -1,3 +1,4 @@
+CXX=clang++
 CFLAGS=-Wall -std=c++17
 RELEASEFLAGS=-O3
 DEBUGFLAGS=-O0 -g

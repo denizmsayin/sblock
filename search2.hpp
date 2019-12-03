@@ -112,10 +112,8 @@ struct SearchNode {
 template <class Puzzle>
 size_t SearchNode<Puzzle>::NODE_COUNTER = 0;
 
-SeriesTracker<size_t>::Options NT_OPTS(10000000);
-
 template <class Puzzle>
-SeriesTracker<size_t> SearchNode<Puzzle>::COUNTER_TRACKER(&SearchNode<Puzzle>::NODE_COUNTER, NT_OPTS);
+SeriesTracker<size_t> SearchNode<Puzzle>::COUNTER_TRACKER(&SearchNode<Puzzle>::NODE_COUNTER, SeriesTracker<size_t>::Options(10000000));
 
 template <class Puzzle>
 class SearchNodeComparator {
