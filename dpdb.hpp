@@ -95,28 +95,34 @@ namespace sbpuzzle {
     template <int H, int W>
     class DPDB {
     public:
-        DPDB() = default;
 
         // groups is supposed to contain a group for each tile
         // e.g. for 3x3 and 2 groups : {0, 0, 0, 1, 1, 1, 2, 2, 0}
         // Note that the group of the last element (hole) is ignored,
         // and that the groups MUST be enumerated from 0 to N-1
-        DPDB(const std::array<uint8_t, H*W> &o_groups);
         template <typename FIterator>
         DPDB(const std::array<uint8_t, H*W> &o_groups, FIterator filenames_begin, FIterator filenames_end);
 
         // function for a set of groups
         template <typename GIterator, typename FIterator>
         static void generate_and_save(GIterator groups_begin, GIterator groups_end, FIterator filenames_begin, FIterator filenames_end);
-        
-        // function for a single group, with a dpdb object prepared
-        template <typename GIterator>
-        void _generate_and_save(int group_num, const char *filename);
 
         int lookup(const std::array<uint8_t, H*W> &tiles) const;
 
         size_t calculate_table_index(int group_num, const std::array<uint8_t, H*W> &tiles) const;
-    //private:
+    private:
+        DPDB(const std::array<uint8_t, H*W> &o_groups);
+        
+        void init(const std::array<uint8_t, H*W> &o_groups);
+        
+        template <class OutputIterator>
+        void fill_group(int group_num, 
+                        const std::array<uint8_t, H*W> &tiles, 
+                        OutputIterator itr) const;
+        
+        // function for a single group, with a dpdb object prepared
+        void _generate(uint8_t group_num);
+
         std::vector<std::vector<uint8_t>> tables;
         std::array<uint8_t, H*W> groups;
         uint8_t num_groups;
@@ -125,11 +131,6 @@ namespace sbpuzzle {
         std::vector<std::array<bool, H*W>> in_groups;
 
         constexpr static int SIZE = H * W;
-
-        template <class OutputIterator>
-        void fill_group(int group_num, const std::array<uint8_t, H*W> &tiles, OutputIterator itr) const;
-        
-        void init(const std::array<uint8_t, H*W> &o_groups);
     };
 
     // How are the tables laid out? 
@@ -208,21 +209,6 @@ namespace sbpuzzle {
                 *itr++ = tiles[i];
     }
 
-    template <int H, int W>
-    template <typename GIterator, typename FIterator>
-    void DPDB<H, W>::generate_and_save(
-            GIterator groups_begin, 
-            GIterator groups_end,
-            FIterator filenames_begin,
-            FIterator filenames_end) 
-    {
-        std::array<uint8_t, H*W> o_groups;
-        std::copy(groups_begin, groups_end, o_groups.begin()); 
-        DPDB<H, W> db(o_groups);
-        FIterator fname = filenames_begin;
-        for(uint8_t i = 0; i < db.num_groups; ++i) 
-            db._generate_and_save<GIterator>(i, *fname++);
-    }
 
     template <int H, int W>
     class ZH {
@@ -241,8 +227,25 @@ namespace sbpuzzle {
     };
 
     template <int H, int W>
-    template <typename GIterator>
-    void DPDB<H, W>::_generate_and_save(int i, const char *filename) 
+    template <typename GIterator, typename FIterator>
+    void DPDB<H, W>::generate_and_save(
+            GIterator groups_begin, 
+            GIterator groups_end,
+            FIterator filenames_begin,
+            FIterator filenames_end) 
+    {
+        std::array<uint8_t, H*W> o_groups;
+        std::copy(groups_begin, groups_end, o_groups.begin()); 
+        DPDB<H, W> db(o_groups);
+        FIterator fname = filenames_begin;
+        for(uint8_t i = 0; i < db.num_groups; ++i) {
+            db._generate(i);
+            write_byte_array(&(db.tables[i][0]), db.table_sizes[i], *fname++);
+        }
+    }
+
+    template <int H, int W>
+    void DPDB<H, W>::_generate(uint8_t i) 
     {
         using TSA = sbpuzzle::TileSwapAction;
         using search2::BreadthFirstIterator;
@@ -310,8 +313,6 @@ namespace sbpuzzle {
             t.track();
             #endif
         }
-        // write the table to the file
-        write_byte_array(&(tables[i][0]), table_sizes[i], filename);
     }
 
     template <int H, int W>
