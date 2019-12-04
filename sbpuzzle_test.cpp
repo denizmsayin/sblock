@@ -140,9 +140,9 @@ int main() {
             cout << "**********************" << endl;
         }
         */
-        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
+        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
         // num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, DPDBHeuristic<H, W>>(puzzles[i]);
-        // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += moves.size();
         num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();
         // search2::reset_node_counter<SBPuzzle<H, W>>();

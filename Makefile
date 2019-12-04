@@ -1,4 +1,4 @@
-CXX=g++
+CXX=clang++
 CXXFLAGS=-Wall -std=c++17
 RELEASEFLAGS=-O3
 DEBUGFLAGS=-O0 -g

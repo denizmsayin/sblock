@@ -27,17 +27,15 @@ typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::DPDB<H, W> DPDB;
 
-uint8_t DBGROUPS[] = {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
+array<uint8_t, H*W> DBGROUPS {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
 std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
-DPDB DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
 
 template <int H, int W, class URNG>
 Puzzle create_solvable_puzzle(URNG &&rng) {
-    constexpr auto size = H*W;
-    uint8_t tiles[H*W];
-    std::iota(tiles, tiles + size, 0);
+    std::array<uint8_t, H*W> tiles;
+    std::iota(tiles.begin(), tiles.end(), 0);
     do {
-        std::shuffle(tiles, tiles + size, rng); 
+        std::shuffle(tiles.begin(), tiles.end(), rng); 
     } while(!sbpuzzle::tiles_solvable<H, W>(tiles));
     return Puzzle(tiles);
 }
@@ -51,16 +49,21 @@ public:
 
 class DPDBHeuristic {
 public:
+    DPDBHeuristic(const DPDB &odb) : db(odb) {}
+
     int operator()(const Puzzle &p) {
-        return DB.lookup(p);
+        return db.lookup(p);
     }
+
+private:
+    const DPDB &db;
 };
 
-template <typename F>
-void test_function(const vector<Puzzle> &puzzles, F f) {
+template <typename F, typename... Args>
+void test_function(const vector<Puzzle> &puzzles, F f, Args&&... args) {
     int num_moves = 0;
     for(size_t i = 0, size = puzzles.size(); i < size; ++i) {
-        num_moves += f(puzzles[i]);
+        num_moves += f(puzzles[i], args...);
         cout << '\r' << i << '/' << size << flush;
     }
     cout << '\r';
@@ -80,13 +83,18 @@ int main() {
     test_function(puzzles, search2::breadth_first_search<Puzzle, Action>);
 
     cout << "Testing A* with Manhattan Distance..." << endl;
-    test_function(puzzles, search2::a_star_search<Puzzle, Action, ManhattanHeuristic>);
+    test_function(puzzles, search2::a_star_search<Puzzle, Action, ManhattanHeuristic>, ManhattanHeuristic());
+
+    cout << "Generating sample DPDB... ";
+    DPDB::generate_and_save(DBGROUPS.begin(), DBGROUPS.end(), DBFILES.begin(), DBFILES.end());
+    DPDB db(DBGROUPS.begin(), DBGROUPS.end(), DBFILES.begin(), DBFILES.end());
+    cout << "Done!";
 
     cout << "Testing A* with DPDB..." << endl;
-    test_function(puzzles, search2::a_star_search<Puzzle, Action, DPDBHeuristic>);
+    test_function(puzzles, search2::a_star_search<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
 
     cout << "Testing IDA* with DPDB..." << endl;
-    test_function(puzzles, search2::iterative_deepening_a_star<Puzzle, Action, DPDBHeuristic>);
+    test_function(puzzles, search2::iterative_deepening_a_star<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
 
     return 0;
 }

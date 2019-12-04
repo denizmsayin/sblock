@@ -260,9 +260,8 @@ namespace sbpuzzle {
         std::cout << "Filename: " << filename << std::endl;
         // we simply need to apply bfs, but only add a cost when a tile
         // from the group is moved, otherwise the moves do not cost anything
-        uint8_t tiles[SIZE];
-        for(auto i = 0; i < SIZE; ++i)
-            tiles[i] = i;
+        std::array<uint8_t, SIZE> tiles;
+        std::iota(tiles.begin(), tiles.end(), 0);
         // TODO: extend this so it can deal with partitions where the group
         // does not split the puzzle into multiple parts. e.g.
         // -------------
@@ -286,8 +285,9 @@ namespace sbpuzzle {
         // PS: Scratch that, it probably works now
 
 
-
-        SBPuzzle<H, W> p(tiles, in_groups[i]);
+        std::array<bool, SIZE> g;
+        std::copy(in_groups[i], in_groups[i] + SIZE, g.begin());
+        SBPuzzle<H, W> p(tiles, g);
         // perform breadth first search
         BreadthFirstIterator<SBPuzzle<H, W>, EA> bfs_itr(p);
         #ifdef TRACK_DPDB

@@ -288,7 +288,7 @@ int bidirectional_bfs(const Puzzle &p) {
 }
 
 template <class Puzzle, class Action, class HeuristicFunc>
-int a_star_search(const Puzzle &p) {
+int a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
     // Since the standard library PQ does not have a decrease-key operation, we have
     // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
     // a node with a better cost, and simply discard visited nodes when popping
@@ -302,7 +302,7 @@ int a_star_search(const Puzzle &p) {
     // have to act as if that state was not visited.
     std::unordered_map<Puzzle, int> visited;
     std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
-    pq.emplace(p, 0, HeuristicFunc()(p));
+    pq.emplace(p, 0, hf(p));
     while(!pq.empty()) {
         auto node = pq.top(); pq.pop();
         const auto &p = node.puzzle;
@@ -319,7 +319,7 @@ int a_star_search(const Puzzle &p) {
                 int new_path_cost = node.path_cost + step_cost;
                 auto lookup = visited.find(new_p);
                 if(lookup == visited.end() || new_path_cost < lookup->second) {
-                    int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+                    int new_est_cost = new_path_cost + hf(new_p);
                     pq.emplace(new_p, new_path_cost, new_est_cost);
                 }
             }
@@ -333,7 +333,7 @@ namespace details {
 
 // TODO: this implementation of IDA* cannot decide on NOT_FOUND
 template <class Puzzle, class Action, class HeuristicFunc>
-int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit) {
+int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit, HeuristicFunc hf=HeuristicFunc()) {
     if(node.est_cost > cost_limit)
         return node.est_cost;
     else if(node.puzzle.is_solved()) {
@@ -343,9 +343,9 @@ int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit) {
         for(auto action : node.puzzle.template possible_actions<Action>()) {
             Puzzle new_p = node.puzzle; 
             int new_path_cost = node.path_cost + new_p.apply_action(action);
-            int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
+            int new_est_cost = new_path_cost + hf(new_p);
             SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
-            int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit);
+            int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit, hf);
             if(result <= cost_limit) // found
                 return result;
             else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
@@ -357,12 +357,12 @@ int cost_limited_dfs(const SearchNode<Puzzle> &node, int cost_limit) {
 }
 
 template <class Puzzle, class Action, class HeuristicFunc>
-int iterative_deepening_a_star(const Puzzle &p) {
+int iterative_deepening_a_star(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
     using details::cost_limited_dfs;
-    int cost_limit = HeuristicFunc()(p);
+    int cost_limit = hf(p);
     SearchNode<Puzzle> start_node(p, 0, cost_limit);
     while(true) {
-        int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit);
+        int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit, hf);
         if(result <= cost_limit) 
             return result;
         cost_limit = result;
@@ -377,7 +377,7 @@ const int INT_INF = std::numeric_limits<int>::max();
 // but in my sliding block puzzle case RBFS contains so many more complex 
 // basic operations that IDA* wins out 
 template <class Puzzle, class Action, class HeuristicFunc>
-std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit) {
+std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit, HeuristicFunc hf=HeuristicFunc()) {
     const Puzzle &p = node.puzzle;
     if(p.is_solved())
         return std::make_pair(true, node.path_cost);
@@ -406,7 +406,7 @@ std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit) {
         // get a new reference for the best node, which is now at the back
         SearchNode<Puzzle> &best2 = successors.back();
         bool success = false;
-        std::tie(success, best2.est_cost) = rbfs<Puzzle, Action, HeuristicFunc>(best2, std::min(cost_limit, alt_cost));
+        std::tie(success, best2.est_cost) = rbfs<Puzzle, Action, HeuristicFunc>(best2, std::min(cost_limit, alt_cost), hf);
         if(success)
             return std::make_pair(true, best2.est_cost);
         // since the cost of the best was modified, reinsert it into successors
@@ -420,7 +420,8 @@ namespace details {
 template <class Puzzle, class Action, class HeuristicFunc>
 int cost_limited_dfs_nl(const SearchNode<Puzzle> &node, 
                      std::unordered_map<Puzzle, int> visited,
-                     int cost_limit) {
+                     int cost_limit,
+                     HeuristicFunc hf=HeuristicFunc()) {
     visited.emplace(node.puzzle, node.path_cost);
     if(node.est_cost > cost_limit)
         return node.est_cost;
@@ -435,7 +436,7 @@ int cost_limited_dfs_nl(const SearchNode<Puzzle> &node,
             if(lookup == visited.end() || new_path_cost < lookup->second) {
                 int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
                 SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
-                int result = cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(new_node, visited, cost_limit);
+                int result = cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(new_node, visited, cost_limit, hf);
                 if(result <= cost_limit) // found
                     return result;
                 else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
