@@ -3,6 +3,8 @@
 *.swp
 *.swo
 
+massif.out.*
+
 # Prerequisites
 *.d
 
