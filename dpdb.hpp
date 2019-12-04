@@ -263,15 +263,41 @@ namespace sbpuzzle {
         uint8_t tiles[SIZE];
         for(auto i = 0; i < SIZE; ++i)
             tiles[i] = i;
+        // TODO: extend this so it can deal with partitions where the group
+        // does not split the puzzle into multiple parts. e.g.
+        // -------------
+        // | X | X | X | valid group, does not split the puzzle, single
+        // ------------- connected X blob
+        // | 3 | 4 | X |
+        // -------------
+        // | 6 | 7 | X |
+        // -------------
+        // -------------
+        // | X | X | 2 | invalid group, splits the puzzle into two X blobs
+        // -------------
+        // | 3 | 4 | 5 |
+        // -------------
+        // | X | X | X |
+        // -------------
+        // This is troublesome because in the second case, we need two different
+        // starting states with the hole being in each blob, and combine the results
+        // we obtain from either of them.
+        //
+        // PS: Scratch that, it probably works now
+
+
+
         SBPuzzle<H, W> p(tiles, in_groups[i]);
         // perform breadth first search
         BreadthFirstIterator<SBPuzzle<H, W>, EA> bfs_itr(p);
+        size_t sc = 0;
+        SeriesTracker<size_t>::Options opts;
+        opts.print_every = 1000000;
+        SeriesTracker<size_t> t(&sc, opts);
         while(!bfs_itr.done()) {
             auto node = bfs_itr.next(); // get the next node
             // find the table index of the node's state
             auto index = calculate_table_index(i, node.puzzle.get_tiles());
-            std::cout << "Index: " << index << ", cost: " << node.path_cost << std::endl
-                      << node.puzzle << std::endl;
             // insert the path cost only if it is less than one found so far
             // this is necessary because the hole position is not accounted for,
             // and multiple states & paths can lead to the same index
@@ -279,6 +305,7 @@ namespace sbpuzzle {
                 tables[i][index] = node.path_cost; // insert the path cost so far
             // I believe BFS fails for some problem instances. Therefore,
             // for each problem I want to solve it using A* and compare the path cost
+            /*
             SBPuzzle<H, W> p2 = node.puzzle;
             int cost = search2::a_star_search<SBPuzzle<H, W>, EA, MH<H, W>>(p2);
             for(auto a : p2.template possible_actions<EA>())
@@ -288,6 +315,9 @@ namespace sbpuzzle {
                 std::cout << "Found cost: " << node.path_cost << ", A*: " << cost << std::endl;
             }
             std::cout << "----------------------" << std::endl;
+            */
+            sc++;
+            t.track();
         }
         // write the table to the file
         write_byte_array(tables[i], table_sizes[i], filename);

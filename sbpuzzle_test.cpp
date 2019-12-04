@@ -14,7 +14,7 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 1000;
+constexpr int N = 10000;
 constexpr int H = 3, W = 3;
 
 #define USEDB
@@ -25,8 +25,10 @@ constexpr int H = 3, W = 3;
 #include "dpdb.hpp"
 using sbpuzzle::DPDB;
 
-uint8_t DBGROUPS[] = {1, 1, 1, 0, 0, 1, 0, 0, sbpuzzle::DONT_CARE};
-std::vector<const char *> DBFILES {"g1.db", "g2.db"};
+//uint8_t DBGROUPS[] = {1, 1, 1, 0, 0, 1, 0, 0, sbpuzzle::DONT_CARE};
+//std::vector<const char *> DBFILES {"g1.db", "g2.db"};
+uint8_t DBGROUPS[] = {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
+std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
 // uint8_t DBGROUPS[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 // std::vector<const char *> DBFILES {"gmax.db"};
 // uint8_t DBGROUPS[] = {0, 1, 2, 3, 4, 5, 6, 7, 0};
@@ -139,7 +141,8 @@ int main() {
             cout << "**********************" << endl;
         }
         */
-        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, ManhattanHeuristic<H, W>>(puzzles[i]);
+        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
+        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, DPDBHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += moves.size();
         num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();
