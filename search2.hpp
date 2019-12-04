@@ -95,8 +95,8 @@ struct SearchNode {
     #endif
 
     Puzzle puzzle;
-    int path_cost;
-    int est_cost;
+    uint8_t path_cost;
+    uint8_t est_cost;
 
     SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) 
     {

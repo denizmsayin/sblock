@@ -69,7 +69,7 @@ namespace sbpuzzle {
         // that work directly on the tile array, to be called by
         // the puzzle classes
 
-        typedef int psize_t;
+        typedef uint8_t psize_t;
         
         constexpr uint8_t _X = 255;
 
@@ -676,7 +676,7 @@ namespace sbpuzzle {
 
 
     private:
-        enum class TypeTag {
+        enum class TypeTag : uint8_t {
             W_HOLE,
             NO_HOLE
         } tag;

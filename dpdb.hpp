@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <fstream>
 #include <string>
-#include <cstring>
+#include <cstdio>
 
 #include "sbpuzzle.hpp"
 #include "sblock_utils.hpp"
@@ -104,8 +104,12 @@ namespace sbpuzzle {
         DPDB(const std::array<uint8_t, H*W> &o_groups, FIterator filenames_begin, FIterator filenames_end);
 
         // function for a set of groups
-        template <typename GIterator, typename FIterator>
-        static void generate_and_save(GIterator groups_begin, GIterator groups_end, FIterator filenames_begin, FIterator filenames_end);
+        static DPDB from_file(const std::string &filename);
+        static DPDB generate(const std::array<uint8_t, H*W> &o_groups);
+        static void generate_and_save(const std::array<uint8_t, H*W> &o_groups, 
+                                      const std::string &filename);
+        
+        void save(const std::string &filename) const;
 
         int lookup(const std::array<uint8_t, H*W> &tiles) const;
 
@@ -140,6 +144,7 @@ namespace sbpuzzle {
     // the group are, as the first part of the index (the C(Ntiles, Ngroup) part). 
     // -> For the second index we simply calculate the lexicographical index of the ordering
     // of the members of the group (the Ngroup! part)
+
 
     template <int H, int W>
     void DPDB<H, W>::init(const std::array<uint8_t, H*W> &o_groups) 
@@ -227,21 +232,67 @@ namespace sbpuzzle {
     };
 
     template <int H, int W>
-    template <typename GIterator, typename FIterator>
-    void DPDB<H, W>::generate_and_save(
-            GIterator groups_begin, 
-            GIterator groups_end,
-            FIterator filenames_begin,
-            FIterator filenames_end) 
-    {
-        std::array<uint8_t, H*W> o_groups;
-        std::copy(groups_begin, groups_end, o_groups.begin()); 
-        DPDB<H, W> db(o_groups);
-        FIterator fname = filenames_begin;
+    DPDB<H, W> DPDB<H, W>::from_file(const std::string &filename) {
+        // Check DPDB<H, W>::save for a description of the format
+        /*
+        std::ifstream in_file(filename, std::ifstream::binary);
+        char h = in_file.get();
+        char w = in_file.get();
+        */
+        FILE *f = fopen(filename.c_str(), "rb");
+        int h = fgetc(f);
+        int w = fgetc(f);
+        if(h != H || w != W)
+            throw std::invalid_argument("Stored DPDB dimensions do not match template function");
+        std::array<uint8_t, H*W> groups;
+        ssize_t s = fread(&groups[0], sizeof(groups[0]), H*W, f);
+        if(s != H*W)
+            throw std::runtime_error("Failed to read enough bytes");
+        // TODO: ifstream fails to read the 255 values, which is why
+        // I switched to cstdio for this function. Would be good to fix.
+        // in_file.get(reinterpret_cast<char *>(&groups[0]), H*W);
+        DPDB<H, W> db(groups);
         for(uint8_t i = 0; i < db.num_groups; ++i) {
-            db._generate(i);
-            write_byte_array(&(db.tables[i][0]), db.table_sizes[i], *fname++);
+            // in_file.get(reinterpret_cast<char *>(&(db.tables[i][0])), db.table_sizes[i]);
+            s = fread(&(db.tables[i][0]), sizeof(db.tables[i][0]), db.table_sizes[i], f);
+            if(s != static_cast<ssize_t>(db.table_sizes[i]))
+                throw std::runtime_error("Failed to read enough bytes");
         }
+        // in_file.close();
+        fclose(f);
+        return db;
+    }
+
+    template <int H, int W>
+    void DPDB<H, W>::generate_and_save(
+            const std::array<uint8_t, H*W> &o_groups,
+            const std::string &filename) 
+    {
+        DPDB<H, W> db = DPDB<H, W>::generate(o_groups);
+        db.save(filename);
+    }
+
+    template <int H, int W>
+    void DPDB<H, W>::save(const std::string &filename) const {
+        // A DPDB file is a binary file with the following format:
+        // first 2 bytes: H & W
+        // following H*W bytes: group specification
+        // remaining bytes: table for group 0, table for group 1, ...
+        std::ofstream out_file(filename, std::ofstream::binary);
+        out_file.put(H);
+        out_file.put(W);
+        out_file.write(reinterpret_cast<const char *>(&groups[0]), H*W);
+        for(uint8_t i = 0; i < num_groups; ++i)
+            out_file.write(reinterpret_cast<const char *>(&tables[i][0]), table_sizes[i]);
+        out_file.close();
+    }
+
+    template <int H, int W>
+    DPDB<H, W> DPDB<H, W>::generate(const std::array<uint8_t, H*W> &o_groups) {
+        DPDB db(o_groups);
+        for(uint8_t i = 0; i < db.num_groups; ++i)
+            db._generate(i);
+        return db;
     }
 
     template <int H, int W>
@@ -283,7 +334,7 @@ namespace sbpuzzle {
         #ifdef TRACK_DPDB
         size_t sc = 0;
         SeriesTracker<size_t>::Options opts;
-        opts.print_every = 1000000;
+        opts.print_every = 10000000;
         SeriesTracker<size_t> t(&sc, opts);
         #endif
         while(!bfs_itr.done()) {

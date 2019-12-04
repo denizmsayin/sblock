@@ -1,0 +1,1337 @@
+desc: (none)
+cmd: ./generate_dpdb_3x3.out 0,0,0,0,1,1,1,1,X dp3x3.db
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=4774694
+mem_heap_B=92372
+mem_heap_extra_B=1780
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=11306770
+mem_heap_B=118250
+mem_heap_extra_B=5966
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=15898833
+mem_heap_B=137746
+mem_heap_extra_B=8438
+mem_stacks_B=0
+heap_tree=detailed
+n6: 137746 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 31200 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 31200 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 31168 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 31168 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 31168 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 31168 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 31168 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 31168 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 31168 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 31168 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 31168 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 14112 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 14112 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 14112 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 14112 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 14112 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 14112 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 14112 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 14112 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 14112 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 14112 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 14112 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 11944 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 11944 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 11944 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 11944 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 11944 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 11944 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 11944 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 11944 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 11944 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 11944 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 11944 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 11944 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 11944 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 11944 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 11944 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 1736 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=4
+#-----------
+time=21432250
+mem_heap_B=154180
+mem_heap_extra_B=11516
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=24607410
+mem_heap_B=185540
+mem_heap_extra_B=12748
+mem_stacks_B=0
+heap_tree=detailed
+n6: 185540 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 47776 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 47776 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 47744 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 47744 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 47744 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 47744 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 47744 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 47744 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 47744 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 47744 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 47744 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 37616 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 37616 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 37616 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 37616 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 37616 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 37616 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 37616 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 37616 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 37616 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 37616 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 37616 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 37616 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 37616 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 37616 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 37616 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 19656 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 19656 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 19656 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 19656 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 19656 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 19656 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 19656 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 19656 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 19656 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 19656 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 19656 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 1738 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=6
+#-----------
+time=28638654
+mem_heap_B=185428
+mem_heap_extra_B=14860
+mem_stacks_B=0
+heap_tree=detailed
+n6: 185428 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 55936 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 55936 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 55904 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 55904 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 55904 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 55904 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 55904 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 55904 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 55904 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 55904 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 55904 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 25672 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 25672 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 25672 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 25672 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 25672 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 25672 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 25672 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 25672 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 25672 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 25672 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 25672 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 25672 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 25672 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 25672 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 25672 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 22680 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 22680 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 22680 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 22680 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 22680 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 22680 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 22680 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 22680 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 22680 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 22680 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 22680 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2386 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=7
+#-----------
+time=33443170
+mem_heap_B=199324
+mem_heap_extra_B=17564
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=38598202
+mem_heap_B=211060
+mem_heap_extra_B=19948
+mem_stacks_B=0
+heap_tree=detailed
+n6: 211060 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 75520 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 75520 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 75488 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 75488 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 75488 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 75488 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 75488 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 75488 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 75488 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 75488 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 75488 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 28728 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 28728 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 28728 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 28728 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 28728 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 28728 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 28728 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 28728 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 28728 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 28728 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 28728 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 25672 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 25672 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 25672 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 25672 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 25672 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 25672 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 25672 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 25672 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 25672 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 25672 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 25672 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 25672 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 25672 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 25672 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 25672 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2386 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=9
+#-----------
+time=43132290
+mem_heap_B=217606
+mem_heap_extra_B=21602
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=47230497
+mem_heap_B=225788
+mem_heap_extra_B=23300
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=50781256
+mem_heap_B=233464
+mem_heap_extra_B=24904
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=55881828
+mem_heap_B=241732
+mem_heap_extra_B=26732
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=59283153
+mem_heap_B=271372
+mem_heap_extra_B=27596
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=65058039
+mem_heap_B=278660
+mem_heap_extra_B=29532
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=70854063
+mem_heap_B=284532
+mem_heap_extra_B=31236
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=16
+#-----------
+time=75270339
+mem_heap_B=291492
+mem_heap_extra_B=32876
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=81805294
+mem_heap_B=301140
+mem_heap_extra_B=35164
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=86731108
+mem_heap_B=307290
+mem_heap_extra_B=36742
+mem_stacks_B=0
+heap_tree=detailed
+n6: 307290 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 141984 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 141984 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 141952 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 141952 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 141952 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 141952 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 141952 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 141952 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 141952 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 141952 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 141952 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 51416 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 51416 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 51416 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 51416 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 51416 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 51416 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 51416 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 51416 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 51416 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 51416 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 51416 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 51416 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 51416 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 51416 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 51416 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 32760 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 32760 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 32760 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 32760 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 32760 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 32760 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 32760 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 32760 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 32760 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 32760 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 32760 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2376 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=19
+#-----------
+time=90432350
+mem_heap_B=309460
+mem_heap_extra_B=37588
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=93524240
+mem_heap_B=310372
+mem_heap_extra_B=38132
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=98478709
+mem_heap_B=312300
+mem_heap_extra_B=39164
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=103194512
+mem_heap_B=315206
+mem_heap_extra_B=40242
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=107946264
+mem_heap_B=317132
+mem_heap_extra_B=41156
+mem_stacks_B=0
+heap_tree=detailed
+n6: 317132 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 160896 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 160896 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 160864 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 160864 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 160864 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 160864 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 160864 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 160864 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 160864 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 160864 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 160864 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 51416 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 51416 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 51416 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 51416 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 51416 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 51416 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 51416 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 51416 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 51416 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 51416 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 51416 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 51416 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 51416 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 51416 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 51416 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 23688 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 23688 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 23688 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 23688 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 23688 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 23688 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 23688 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 23688 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 23688 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 23688 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 23688 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2378 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=24
+#-----------
+time=113040057
+mem_heap_B=318294
+mem_heap_extra_B=42114
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=119155614
+mem_heap_B=316644
+mem_heap_extra_B=42780
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=123142109
+mem_heap_B=318306
+mem_heap_extra_B=43566
+mem_stacks_B=0
+heap_tree=peak
+n6: 318306 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 171648 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 171648 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 171616 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 171616 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 171616 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 171616 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 171616 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 171616 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 171616 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 171616 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 171616 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 51416 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 51416 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 51416 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 51416 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 51416 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 51416 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 51416 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 51416 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 51416 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 51416 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 51416 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 51416 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 51416 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 51416 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 51416 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 14112 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 14112 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 14112 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 14112 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 14112 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 14112 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 14112 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 14112 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 14112 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 14112 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 14112 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2376 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=27
+#-----------
+time=129254194
+mem_heap_B=315700
+mem_heap_extra_B=44084
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=133341577
+mem_heap_B=312668
+mem_heap_extra_B=44316
+mem_stacks_B=0
+heap_tree=detailed
+n6: 312668 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 176096 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 176096 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 176064 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 176064 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 176064 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 176064 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 176064 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 176064 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 176064 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 176064 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 176064 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 51416 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 51416 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 51416 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 51416 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 51416 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 51416 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 51416 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 51416 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 51416 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 51416 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 51416 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 51416 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 51416 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 51416 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 51416 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 4032 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 4032 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 4032 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 4032 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 4032 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 4032 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 4032 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 4032 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 4032 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 4032 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 4032 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2370 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=29
+#-----------
+time=139838979
+mem_heap_B=89396
+mem_heap_extra_B=1500
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=143258170
+mem_heap_B=106220
+mem_heap_extra_B=3692
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=148385970
+mem_heap_B=128764
+mem_heap_extra_B=6716
+mem_stacks_B=0
+heap_tree=detailed
+n6: 128764 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 24736 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 24736 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 24704 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 24704 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 24704 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 24704 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 24704 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 24704 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 24704 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 24704 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 24704 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 11944 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 11944 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 11944 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 11944 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 11944 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 11944 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 11944 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 11944 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 11944 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 11944 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 11944 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 11944 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 11944 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 11944 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 11944 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 11592 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 11592 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 11592 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 11592 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 11592 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 11592 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 11592 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 11592 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 11592 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 11592 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 11592 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 1738 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=32
+#-----------
+time=151800623
+mem_heap_B=139820
+mem_heap_extra_B=8700
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=156921804
+mem_heap_B=153166
+mem_heap_extra_B=11394
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=160335088
+mem_heap_B=175916
+mem_heap_extra_B=12972
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=165453221
+mem_heap_B=188724
+mem_heap_extra_B=15460
+mem_stacks_B=0
+heap_tree=detailed
+n6: 188724 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 58240 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 58240 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 58208 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 58208 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 58208 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 58208 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 58208 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 58208 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 58208 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 58208 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 58208 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 25672 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 25672 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 25672 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 25672 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 25672 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 25672 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 25672 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 25672 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 25672 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 25672 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 25672 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 25672 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 25672 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 25672 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 25672 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 23688 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 23688 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 23688 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 23688 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 23688 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 23688 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 23688 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 23688 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 23688 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 23688 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 23688 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2370 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=36
+#-----------
+time=170571787
+mem_heap_B=200412
+mem_heap_extra_B=17956
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=175691576
+mem_heap_B=212708
+mem_heap_extra_B=20356
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=179107307
+mem_heap_B=219380
+mem_heap_extra_B=21804
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=182519824
+mem_heap_B=226154
+mem_heap_extra_B=23318
+mem_stacks_B=0
+heap_tree=detailed
+n6: 226154 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 88608 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 88608 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 88576 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 88576 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 88576 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 88576 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 88576 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 88576 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 88576 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 88576 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 88576 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 30744 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 30744 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 30744 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 30744 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 30744 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 30744 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 30744 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 30744 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 30744 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 30744 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 30744 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 25672 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 25672 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 25672 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 25672 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 25672 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 25672 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 25672 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 25672 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 25672 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 25672 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 25672 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 25672 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 25672 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 25672 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 25672 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2376 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=40
+#-----------
+time=187640456
+mem_heap_B=235410
+mem_heap_extra_B=25302
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=193361860
+mem_heap_B=267992
+mem_heap_extra_B=26880
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=196776007
+mem_heap_B=273548
+mem_heap_extra_B=28140
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=200187335
+mem_heap_B=279686
+mem_heap_extra_B=29586
+mem_stacks_B=0
+heap_tree=detailed
+n6: 279686 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 113376 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 113376 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 113344 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 113344 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 113344 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 113344 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 113344 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 113344 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 113344 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 113344 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 113344 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 51416 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 51416 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 51416 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 51416 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 51416 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 51416 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 51416 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 51416 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 51416 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 51416 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 51416 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 51416 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 51416 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 51416 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 51416 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 33768 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 33768 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 33768 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 33768 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 33768 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 33768 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 33768 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 33768 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 33768 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 33768 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 33768 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6050 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6050 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6050 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6050 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6050 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 0 in 1 place, below massif's threshold (1.00%)
+ n0: 2372 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=44
+#-----------
+time=205305337
+mem_heap_B=287452
+mem_heap_extra_B=31412
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=45
+#-----------
+time=208722384
+mem_heap_B=291868
+mem_heap_extra_B=32516
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=212140992
+mem_heap_B=295912
+mem_heap_extra_B=33656
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=215555305
+mem_heap_B=300070
+mem_heap_extra_B=34698
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=48
+#-----------
+time=218965133
+mem_heap_B=302748
+mem_heap_extra_B=35580
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=222383757
+mem_heap_B=305124
+mem_heap_extra_B=36380
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=225475809
+mem_heap_B=307674
+mem_heap_extra_B=37278
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=228569440
+mem_heap_B=310452
+mem_heap_extra_B=38060
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=231663796
+mem_heap_B=312428
+mem_heap_extra_B=38756
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=234758845
+mem_heap_B=313892
+mem_heap_extra_B=39452
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=237851134
+mem_heap_B=315508
+mem_heap_extra_B=40076
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=55
+#-----------
+time=240952692
+mem_heap_B=316492
+mem_heap_extra_B=40652
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=56
+#-----------
+time=244045240
+mem_heap_B=318048
+mem_heap_extra_B=41280
+mem_stacks_B=0
+heap_tree=detailed
+n6: 318048 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 161312 0x114D86: __gnu_cxx::new_allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n2: 161312 0x114284: std::allocator_traits<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::allocate(std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 161280 0x113A3B: std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>* std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_node<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 161280 0x111C4C: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 161280 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 161280 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 161280 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 161280 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 161280 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 161280 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 161280 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n0: 32 in 1 place, below massif's threshold (1.00%)
+ n1: 72704 0x4EC2414: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25)
+  n1: 72704 0x4010731: _dl_init (dl-init.c:72)
+   n1: 72704 0x40010C8: ??? (in /lib/x86_64-linux-gnu/ld-2.27.so)
+    n1: 72704 0x1: ???
+     n1: 72704 0x1FFF000011: ???
+      n1: 72704 0x1FFF000029: ???
+       n0: 72704 0x1FFF00003B: ???
+ n1: 51416 0x115AF0: __gnu_cxx::new_allocator<std::__detail::_Hash_node_base*>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 51416 0x1159C8: std::allocator_traits<std::allocator<std::__detail::_Hash_node_base*> >::allocate(std::allocator<std::__detail::_Hash_node_base*>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 51416 0x115767: std::__detail::_Hashtable_alloc<std::allocator<std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false> > >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 51416 0x1153FD: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_allocate_buckets(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 51416 0x114DFF: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash_aux(unsigned long, std::integral_constant<bool, true>) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 51416 0x11435E: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_rehash(unsigned long, unsigned long const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n2: 51416 0x112F60: std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_insert_unique_node(unsigned long, unsigned long, std::__detail::_Hash_node<sbpuzzle::SBPuzzle<3, 3>, false>*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 51416 0x111D2A: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::_M_emplace<sbpuzzle::SBPuzzle<3, 3>&>(std::integral_constant<bool, true>, sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 51416 0x11035B: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::_Hashtable<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::SBPuzzle<3, 3>, std::allocator<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Identity, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<false, true, true> >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 51416 0x10E7A2: std::pair<std::__detail::_Node_iterator<sbpuzzle::SBPuzzle<3, 3>, true, false>, bool> std::unordered_set<sbpuzzle::SBPuzzle<3, 3>, std::hash<sbpuzzle::SBPuzzle<3, 3> >, std::equal_to<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<sbpuzzle::SBPuzzle<3, 3> > >::emplace<sbpuzzle::SBPuzzle<3, 3>&>(sbpuzzle::SBPuzzle<3, 3>&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n1: 51416 0x10D326: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+            n1: 51416 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+             n1: 51416 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+              n1: 51416 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+               n0: 51416 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 24192 0x114238: __gnu_cxx::new_allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 24192 0x112C43: std::allocator_traits<std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::allocate(std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > >&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n2: 24192 0x11120A: std::_Deque_base<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_allocate_node() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 24192 0x11040A: void std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::_M_push_back_aux<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n1: 24192 0x10E853: search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >& std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > >::emplace_back<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n1: 24192 0x10D194: decltype(auto) std::queue<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::deque<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> >, std::allocator<search2::SearchNode<sbpuzzle::SBPuzzle<3, 3> > > > >::emplace<sbpuzzle::SBPuzzle<3, 3>&, int&>(sbpuzzle::SBPuzzle<3, 3>&, int&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 24192 0x10D347: search2::BreadthFirstIterator<sbpuzzle::SBPuzzle<3, 3>, sbpuzzle::TileSwapAction>::next() (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 24192 0x10C000: sbpuzzle::DPDB<3, 3>::_generate(unsigned char) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 24192 0x10B82C: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 24192 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 24192 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 6054 0x10EF44: __gnu_cxx::new_allocator<unsigned char>::allocate(unsigned long, void const*) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+  n1: 6054 0x10D993: std::allocator_traits<std::allocator<unsigned char> >::allocate(std::allocator<unsigned char>&, unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+   n1: 6054 0x10C628: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_allocate(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+    n1: 6054 0x10BD01: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_M_create_storage(unsigned long) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+     n2: 6054 0x10B6B3: std::_Vector_base<unsigned char, std::allocator<unsigned char> >::_Vector_base(unsigned long, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+      n2: 6050 0x10B22A: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, unsigned char const&, std::allocator<unsigned char> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n1: 6048 0x10CAD5: sbpuzzle::DPDB<3, 3>::init(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+        n1: 6048 0x10BE20: sbpuzzle::DPDB<3, 3>::DPDB(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+         n1: 6048 0x10B809: sbpuzzle::DPDB<3, 3>::generate(std::array<unsigned char, 9ul> const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+          n1: 6048 0x10B3D6: sbpuzzle::DPDB<3, 3>::generate_and_save(std::array<unsigned char, 9ul> const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+           n0: 6048 0x10AB21: main (in /mnt/hdd/Documents/self/sblock/generate_dpdb_3x3.out)
+       n0: 2 in 2 places, all below massif's threshold (1.00%)
+      n0: 4 in 1 place, below massif's threshold (1.00%)
+ n0: 2370 in 6 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=57
+#-----------
+time=247142323
+mem_heap_B=318300
+mem_heap_extra_B=41764
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=58
+#-----------
+time=250238625
+mem_heap_B=317644
+mem_heap_extra_B=42164
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=59
+#-----------
+time=253330551
+mem_heap_B=318782
+mem_heap_extra_B=42786
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=256424345
+mem_heap_B=318876
+mem_heap_extra_B=43228
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=61
+#-----------
+time=259526258
+mem_heap_B=318276
+mem_heap_extra_B=43628
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=62
+#-----------
+time=262625330
+mem_heap_B=317228
+mem_heap_extra_B=43916
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=63
+#-----------
+time=265721203
+mem_heap_B=315404
+mem_heap_extra_B=44124
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=64
+#-----------
+time=268820675
+mem_heap_B=313548
+mem_heap_extra_B=44316
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=65
+#-----------
+time=271913345
+mem_heap_B=310128
+mem_heap_extra_B=44360
+mem_stacks_B=0
+heap_tree=empty

@@ -181,14 +181,14 @@ std::ostream& operator<<(
 
 template <typename A>
 SeriesTracker<A>::SeriesTracker(const A *to_track) : tracked(to_track),
-    rec_value(), rec_time(), options()
+    rec_value(), rec_time(), options(), running_avg()
 {
     record();
 }
 
 template <typename A>
 SeriesTracker<A>::SeriesTracker(const A *to_track, const Options &opts) : 
-    tracked(to_track), rec_value(), rec_time(), options(opts)
+    tracked(to_track), rec_value(), rec_time(), options(opts), running_avg()
 {
     record();
 }

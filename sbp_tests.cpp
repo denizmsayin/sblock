@@ -28,7 +28,7 @@ typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::DPDB<H, W> DPDB;
 
 array<uint8_t, H*W> DBGROUPS {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
-std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
+// std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
 
 template <int H, int W, class URNG>
 Puzzle create_solvable_puzzle(URNG &&rng) {
@@ -86,10 +86,14 @@ int main() {
     test_function(puzzles, search2::a_star_search<Puzzle, Action, ManhattanHeuristic>, ManhattanHeuristic());
 
     cout << "Generating sample DPDB... ";
-    DPDB::generate_and_save(DBGROUPS.begin(), DBGROUPS.end(), DBFILES.begin(), DBFILES.end());
-    DPDB db(DBGROUPS, DBFILES.begin(), DBFILES.end());
-    cout << "Done!";
+    /*
+    DPDB::generate_and_save(DBGROUPS, "tmpfile");
+    cout << "Saved." << endl;
+    DPDB db = DPDB::from_file("tmpfile");
+    cout << "Read back successfully!" << endl;
+    */
 
+    DPDB db = DPDB::generate(DBGROUPS);
     cout << "Testing A* with DPDB..." << endl;
     test_function(puzzles, search2::a_star_search<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
 

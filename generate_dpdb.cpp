@@ -1,5 +1,10 @@
-constexpr int H = 3, W = 3;
-constexpr int SIZE = H*W;
+// H & W are defined so that they can be set from the Makefile
+#ifndef __H
+#define __H 3
+#endif
+#ifndef __W
+#define __W 3
+#endif
 
 #include <iostream>
 #include <sstream>
@@ -12,10 +17,13 @@ constexpr int SIZE = H*W;
 
 #include "dpdb.hpp"
 
-uint8_t validate_groups(const uint8_t *groups) {
+constexpr int H = __H, W = __W;
+constexpr int SIZE = H*W;
+
+uint8_t validate_groups(const std::array<uint8_t, SIZE> &groups) {
     const uint8_t *min, *max;
-    min = std::min_element(groups, groups+SIZE);
-    max = std::max_element(groups, groups+SIZE, [](auto x, auto y) { // ignore 255
+    min = std::min_element(groups.begin(), groups.end());
+    max = std::max_element(groups.begin(), groups.end(), [](auto x, auto y) { // ignore 255
             x = (x == sbpuzzle::DONT_CARE) ? 0 : x;
             y = (y == sbpuzzle::DONT_CARE) ? 0 : y;
             return x < y;
@@ -26,16 +34,17 @@ uint8_t validate_groups(const uint8_t *groups) {
         throw std::invalid_argument("Largest group number implies more groups than tiles");
     // now, ensure all groups from 0 to *max exist
     size_t val_size = *max + 1;
-    bool *values = new bool[val_size]();
+    std::vector<uint8_t> values(val_size, 0);
     for(int i = 0; i < SIZE; ++i)
-        values[groups[i]] = true;
+        if(groups[i] != sbpuzzle::DONT_CARE)
+            values[groups[i]] = 1;
     for(size_t i = 0; i < val_size; ++i)
         if(!values[i])
             throw std::invalid_argument("Groups should be from 0 to N-1, but a value is missing");
     return *max+1;
 }
 
-void parse_group_string(const char *group_str, uint8_t *out, size_t out_size) {
+void parse_group_string(const char *group_str, std::array<uint8_t, SIZE> &out) {
     size_t i = 0;
     uint64_t acc = 0;
     // input example for 3x3: 0,0,0,0,0,1,1,1,X
@@ -49,7 +58,7 @@ void parse_group_string(const char *group_str, uint8_t *out, size_t out_size) {
         } else if(*group_str == ',') {
             out[i++] = static_cast<uint8_t>(acc);
             acc = 0;
-            if(i > out_size)
+            if(i > SIZE)
                 throw std::invalid_argument("Buffer overflow, input group spec is too long");
         } else {
             throw std::invalid_argument("Unknown char in group spec");
@@ -58,33 +67,31 @@ void parse_group_string(const char *group_str, uint8_t *out, size_t out_size) {
     }
     if(acc > 0) {
         out[i++] = static_cast<uint8_t>(acc);
-        if(i > out_size)
+        if(i > SIZE)
             throw std::invalid_argument("Buffer overflow, input group spec is too long");
     }
     std::cout << i << std::endl;
-    if(i < out_size)
+    if(i < SIZE)
         throw std::invalid_argument("Input group spec is too short");
 }
 
 int main(int argc, char *argv[]) {
-    if(argc < 3) {
-        std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,X f1 f2\n";
+    if(argc != 3) {
+        std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,X filename\n";
         return 0;
     }
 
     // I wanted to create the files given a directory, but my current version
     // of g++ does not yet have the standard <filesystem> header
 
-    uint8_t groups[SIZE];
-    parse_group_string(argv[1], groups, SIZE);
+    std::array<uint8_t, SIZE> groups;
+    parse_group_string(argv[1], groups);
     for(auto x : groups)
         std::cout << ((int) x) << " ";
     std::cout << std::endl;
-    uint8_t num_groups = validate_groups(groups);
-    if(num_groups != argc-2)
-        throw std::invalid_argument("Too few/too many files for groups");
+    validate_groups(groups);
 
-    sbpuzzle::DPDB<H, W>::generate_and_save(groups, groups+SIZE, argv+2, argv+argc);
+    sbpuzzle::DPDB<H, W>::generate_and_save(groups, argv[2]);
 
     return 0;
 }
