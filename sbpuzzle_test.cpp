@@ -14,7 +14,7 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 10000;
+constexpr int N = 300;
 constexpr int H = 3, W = 3;
 
 #define USEDB
@@ -42,11 +42,10 @@ using TSA = sbpuzzle::TileSwapAction;
 
 template <int H, int W, class URNG>
 SBPuzzle<H, W> create_solvable_puzzle(URNG &&rng) {
-    constexpr auto size = H*W;
-    uint8_t tiles[H*W];
-    std::iota(tiles, tiles + size, 0);
+    std::array<uint8_t, H*W> tiles;
+    std::iota(tiles.begin(), tiles.end(), 0);
     do {
-        std::shuffle(tiles, tiles + size, rng); 
+        std::shuffle(tiles.begin(), tiles.end(), rng); 
     } while(!sbpuzzle::tiles_solvable<H, W>(tiles));
     return SBPuzzle<H, W>(tiles);
 }
@@ -141,12 +140,12 @@ int main() {
             cout << "**********************" << endl;
         }
         */
-        // num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
-        num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, DPDBHeuristic<H, W>>(puzzles[i]);
+        num_moves += search2::breadth_first_search<SBPuzzle<H, W>, TSA>(puzzles[i]);
+        // num_moves += search2::a_star_search<SBPuzzle<H, W>, TSA, DPDBHeuristic<H, W>>(puzzles[i]);
         // num_moves += search2::recursive_best_first_search<SBPuzzle<H, W>, Dir, ManhattanHeuristic<H, W>>(puzzles[i]);
         // num_moves += moves.size();
         num_nodes += search2::get_node_counter<SBPuzzle<H, W>>();
-        search2::reset_node_counter<SBPuzzle<H, W>>();
+        // search2::reset_node_counter<SBPuzzle<H, W>>();
         cout << '\r' << i << "/" << N << flush;
     }
     cout << '\r';

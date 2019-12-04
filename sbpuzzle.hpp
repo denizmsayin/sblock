@@ -50,6 +50,8 @@
 // a custom iterator-like type would work nicely if it can be made light-weight
 
 namespace sbpuzzle {
+        
+    using std::array;
 
     struct TileSwapAction {
         uint8_t tpos, hpos;
@@ -66,48 +68,47 @@ namespace sbpuzzle {
         // basic utility functions as well as C-like functions
         // that work directly on the tile array, to be called by
         // the puzzle classes
-        
+
         typedef int psize_t;
         
         constexpr uint8_t _X = 255;
 
         template <psize_t H, psize_t W>
-        inline void tiles_correct_fill(uint8_t tiles[]) {
-            constexpr auto size = H*W;
-            for(auto i = 0; i < size; ++i)
+        inline void tiles_correct_fill(array<uint8_t, H*W> &tiles) {
+            for(size_t size = tiles.size(), i = 0; i < size; ++i)
                 tiles[i] = i;
         }
 
         template <psize_t H, psize_t W>
-        inline void tiles_correct_fill(uint8_t tiles[], const bool mask[]) {
-            constexpr auto size = H*W;
-            for(auto i = 0; i < size; ++i)
+        inline void tiles_correct_fill(array<uint8_t, H*W> &tiles, 
+                                       const array<bool, H*W> &mask) 
+        {
+            for(size_t size = tiles.size(), i = 0; i < size; ++i)
                 tiles[i] = mask[i] ? i : _X;
         }
 
         template <psize_t H, psize_t W>
-        inline void tiles_reconstruct_mask(const uint8_t tiles[], bool mask[]) {
-            constexpr auto size = H*W;
-            std::fill(mask, mask + size, false);
-            for(auto i = 0; i < size; ++i)
+        inline void tiles_reconstruct_mask(const array<uint8_t, H*W> &tiles, 
+                                           array<bool, H*W> &mask) 
+        {
+            std::fill(mask.begin(), mask.end(), false);
+            for(size_t size = tiles.size(), i = 0; i < size; ++i)
                 if(tiles[i] != _X)
                     mask[tiles[i]] = true;
         }
 
         template <psize_t H, psize_t W>
-        inline bool tiles_in_correct_places(const uint8_t tiles[]) {
-            constexpr auto size = H*W;
-            constexpr auto hole = size-1;
-            for(auto i = 0; i < size; ++i) 
+        inline bool tiles_in_correct_places(const array<uint8_t, H*W> &tiles) {
+            constexpr auto hole = H*W-1;
+            for(size_t size = tiles.size(), i = 0; i < size; ++i) 
                 if(tiles[i] != _X && tiles[i] != hole && tiles[i] != i)
                     return false;
             return true;
         }
 
         template <psize_t H, psize_t W>
-        inline bool tiles_equal(const uint8_t t1[], const uint8_t t2[]) {
-            constexpr auto size = H*W;
-            return std::equal(t1, t1+size, t2);
+        inline bool tiles_equal(const array<uint8_t, H*W> &t1, const array<uint8_t, H*W> &t2) {
+            return std::equal(t1.begin(), t1.end(), t2.begin());
         }
 
         // copied from the boost implementation
@@ -125,13 +126,13 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
-        size_t tiles_hash(const uint8_t tiles[]) {
+        size_t tiles_hash(const array<uint8_t, H*W> tiles) {
             constexpr auto size = H*W;
             // first, do all you can using 8 bytes each time
             size_t seed = 0;
             constexpr std::hash<uint64_t> hasher64;
             auto n = size;
-            const uint64_t *itr = reinterpret_cast<const uint64_t *>(tiles);
+            const uint64_t *itr = reinterpret_cast<const uint64_t *>(&tiles[0]);
             while(n >= 8) {
                 seed = hash_combine(seed, hasher64(*itr++));
                 n -= 8;
@@ -174,9 +175,8 @@ namespace sbpuzzle {
         template <psize_t H, psize_t W>
         std::ostream& tiles_stream(
                 std::ostream &s, 
-                const uint8_t tiles[]) 
+                const array<uint8_t, H*W> &tiles) 
         {
-            constexpr auto size = H*W;
             // custom comparator that does not care about the _X value, takes it as min
             constexpr auto cmp = [](uint8_t a, uint8_t b) -> bool {
                 // _X (don't care) values are replaced by 0
@@ -184,14 +184,14 @@ namespace sbpuzzle {
                 b = (b == _X) ? 0 : b;
                 return a < b;
             };
-            const uint8_t *max = std::max_element(tiles, tiles + size, cmp);
+            const uint8_t *max = std::max_element(tiles.begin(), tiles.end(), cmp);
             uint8_t num_digits = (*max > 99) ? 3 : ((*max > 9) ? 2 : 1); 
             int num_dashes = W * (num_digits + 3) + 1;
             std::string dash_str(num_dashes, '-');
             std::string empty_str(num_digits - 1, ' ');
-            for(auto i = 0, k = 0; i < H; i++) {
+            for(size_t i = 0, k = 0; i < H; i++) {
                 s << dash_str << std::endl;
-                for(auto j = 0; j < W; j++) {
+                for(size_t j = 0; j < W; j++) {
                     s << "| "; 
                     if(tiles[k] == _X)
                         s << empty_str << "X ";
@@ -206,11 +206,10 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
-        uint64_t tiles_manhattan_distance_to_solution(const uint8_t tiles[]) {
-            constexpr auto size = H*W;
-            constexpr auto hole = size-1;
+        uint64_t tiles_manhattan_distance_to_solution(const array<uint8_t, H*W> &tiles) {
+            constexpr auto hole = H*W-1;
             uint64_t dist = 0;
-            for(auto i = 0; i < size; ++i) {
+            for(size_t size = tiles.size(), i = 0; i < size; ++i) {
                 if(tiles[i] != _X && tiles[i] != hole) {
                     // open to optimisation, but no need
                     uint8_t row = i / W, col = i % W;
@@ -222,7 +221,7 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
-        void tiles_mark_valid_moves(uint8_t p, bool directions[]) {
+        void tiles_mark_valid_moves(uint8_t p, array<bool, 4> &directions) {
             constexpr auto size = H*W;
             int rem = p % W;
             directions[0] = p >= W; // up
@@ -266,14 +265,14 @@ namespace sbpuzzle {
 
         // template polymorphic goal_state base function
         template <class P, psize_t H, psize_t W>
-        P goal_state(const uint8_t tiles[]) {
+        P goal_state(const array<uint8_t, H*W> &tiles) {
             // this function should not be called often, so it seems
             // to me it makes more sense to reconstruct the mask array
             // here rather than store it in each puzzle instance
             constexpr auto size = H*W;
-            bool mask[size];
+            array<bool, size> mask;
             tiles_reconstruct_mask<H, W>(tiles, mask);
-            uint8_t tiles2[size];
+            array<uint8_t, size> tiles2;
             tiles_correct_fill<H, W>(tiles2, mask);
             return P(tiles2, mask);
         }
@@ -286,12 +285,11 @@ namespace sbpuzzle {
 
     // a utility function to decide if a set of tiles is solvable
     template <details::psize_t H, details::psize_t W>
-    bool tiles_solvable(const uint8_t tiles[]) {
-        constexpr auto size = H*W;
+    bool tiles_solvable(const array<uint8_t, H*W> &tiles) {
         constexpr uint8_t hole = H*W-1;
         // see https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-        uint8_t hole_pos = std::find(tiles, tiles + size, hole) - tiles;
-        int inversions = details::count_inversions(tiles, tiles + size);
+        uint8_t hole_pos = std::find(tiles.begin(), tiles.end(), hole) - tiles.begin();
+        int inversions = details::count_inversions(tiles.begin(), tiles.end());
         int hole_row_from_bottom = H - hole_pos % W;
         if(W % 2 == 1) // odd width
             return inversions % 2 == 0; // must have even inversions
@@ -350,7 +348,7 @@ namespace sbpuzzle {
         constexpr static auto SIZE = H*W;
         constexpr static uint8_t HOLE = H*W-1;
         
-        uint8_t tiles[SIZE];
+        array<uint8_t, SIZE> tiles;
 
     };
  
@@ -361,16 +359,18 @@ namespace sbpuzzle {
     class SBPuzzleWHole : public SBPuzzleBase<H, W> {
     public:
 
-        explicit SBPuzzleWHole(const uint8_t i_tiles[]) {
-            for(auto i = 0; i < Base::SIZE; ++i) {
+        explicit SBPuzzleWHole(const array<uint8_t, H*W> &i_tiles) {
+            for(size_t i = 0; i < Base::SIZE; ++i) {
                 if(i_tiles[i] == Base::HOLE)
                     hole_pos = i;
                 Base::tiles[i] = i_tiles[i];
             }
         }
 
-        explicit SBPuzzleWHole(const uint8_t i_tiles[], const bool mask[]) {
-            for(auto i = 0; i < Base::SIZE; ++i) {
+        explicit SBPuzzleWHole(const array<uint8_t, H*W> &i_tiles, 
+                               const array<bool, H*W> &mask) 
+        {
+            for(size_t i = 0; i < Base::SIZE; ++i) {
                 if(mask[i_tiles[i]]) {
                     if(i_tiles[i] == Base::HOLE)
                         hole_pos = i;
@@ -402,7 +402,7 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
 
-        const uint8_t *get_tiles() const { return Base::tiles; }
+        const uint8_t *get_tiles() const { return &Base::tiles[0]; }
     private:
         using Base = SBPuzzleBase<H, W>;
 
@@ -427,9 +427,9 @@ namespace sbpuzzle {
         static auto f(const SBPuzzleWHole<H, W> &p) {
             auto hp = p.hole_pos;
             std::vector<TileSwapAction> actions;
-            bool valid[4];
+            std::array<bool, 4> valid;
             details::tiles_mark_valid_moves<H, W>(hp, valid);
-            for(auto dir = 0; dir < 4; ++dir)
+            for(size_t dir = 0; dir < 4; ++dir)
                 if(valid[dir])
                     actions.emplace_back(hp + details::OFFSETS<W>[dir], hp);
             return actions;
@@ -443,8 +443,10 @@ namespace sbpuzzle {
     class SBPuzzleNoHole : public SBPuzzleBase<H, W> {
     public:
 
-        explicit SBPuzzleNoHole(const uint8_t i_tiles[], const bool mask[]) {
-            for(auto i = 0; i < Base::SIZE; ++i) {
+        explicit SBPuzzleNoHole(const array<uint8_t, H*W> &i_tiles, 
+                                const array<bool, H*W> &mask) 
+        {
+            for(size_t i = 0; i < Base::SIZE; ++i) {
                 if(i_tiles[i] == Base::HOLE) {
                     Base::tiles[i] = Base::HOLE;
                     hole_pos = i;
@@ -480,7 +482,7 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
     
-        const uint8_t *get_tiles() const { return Base::tiles; }
+        const uint8_t *get_tiles() const { return &Base::tiles[0]; }
     private:
         using Base = SBPuzzleBase<H, W>;
         details::psize_t hole_pos; // TODO: refactor hole_pos into base
@@ -488,7 +490,7 @@ namespace sbpuzzle {
         // TODO: consider caching hole/tile positions for faster searching
 
         void prop_hole(int i) {
-            bool valid[4];
+            array<bool, 4> valid;
             details::tiles_mark_valid_moves<H, W>(i, valid);
             for(auto dir = 0; dir < 4; ++dir) {
                 if(valid[dir]) {
@@ -506,7 +508,7 @@ namespace sbpuzzle {
         }
 
         void reprop_hole() { // re-do hole propagation after a hole position update
-            for(auto i = 0; i < Base::SIZE; ++i)
+            for(size_t i = 0; i < Base::SIZE; ++i)
                 if(Base::tiles[i] == Base::HOLE)
                     Base::tiles[i] = details::_X;
             Base::tiles[hole_pos] = Base::HOLE;
@@ -526,11 +528,11 @@ namespace sbpuzzle {
         static auto f(const SBPuzzleNoHole<H, W> &p) {
             std::vector<TileSwapAction> actions;
             // check around propagated hole tiles
-            for(auto i = 0; i < p.SIZE; ++i) {
+            for(size_t i = 0; i < p.SIZE; ++i) {
                 if(p.tiles[i] == p.HOLE) { // only actual tiles
-                    bool valid[4];
+                    array<bool, 4> valid;
                     details::tiles_mark_valid_moves<H, W>(i, valid);
-                    for(auto dir = 0; dir < 4; ++dir) { // check the 4-neighborhood
+                    for(size_t dir = 0; dir < 4; ++dir) { // check the 4-neighborhood
                         if(valid[dir]) {
                             auto np = i + details::OFFSETS<W>[dir]; // candidate swap position
                             if(p.tiles[np] != p.HOLE) // can swap if the neighbor is a tile
@@ -558,8 +560,9 @@ namespace sbpuzzle {
     template <details::psize_t H, details::psize_t W>
     class SBPuzzle {
     public:
-        SBPuzzle(const uint8_t tiles[]) : tag(TypeTag::W_HOLE), puzzle(tiles) {}
-        SBPuzzle(const uint8_t tiles[], const bool mask[]) 
+        SBPuzzle(const array<uint8_t, H*W> &tiles) : tag(TypeTag::W_HOLE), puzzle(tiles) {}
+        SBPuzzle(const array<uint8_t, H*W> &tiles, 
+                 const array<bool, H*W> &mask) 
             : tag(TypeTag::NO_HOLE), puzzle(tiles, mask) 
         {
             // slightly more complicated, have to make a decision
@@ -583,6 +586,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.get_tiles();
                 case TypeTag::NO_HOLE:  return puzzle.n.get_tiles();
+                default: throw_tterror(); return nullptr;
             }
         }
 
@@ -590,6 +594,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.is_solved();
                 case TypeTag::NO_HOLE:  return puzzle.n.is_solved();
+                default: throw_tterror(); return false;
             }
         }
 
@@ -599,6 +604,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w == other.puzzle.w;
                 case TypeTag::NO_HOLE:  return puzzle.n == other.puzzle.n;
+                default: throw_tterror(); return false;
             }
         }
 
@@ -606,6 +612,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.hash();
                 case TypeTag::NO_HOLE:  return puzzle.n.hash();
+                default: throw_tterror(); return 0;
             }
         }
 
@@ -614,6 +621,7 @@ namespace sbpuzzle {
             switch(p.tag) {
                 case TypeTag::W_HOLE:   return s << p.puzzle.w;
                 case TypeTag::NO_HOLE:  return s << p.puzzle.n;
+                default: throw_tterror(); return s;
             }
         }
 
@@ -621,6 +629,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.manhattan_distance_to_solution();
                 case TypeTag::NO_HOLE:  return puzzle.n.manhattan_distance_to_solution();
+                default: throw_tterror(); return 0;
             }
         }
 
@@ -628,6 +637,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return SBPuzzle(puzzle.w.goal_state());
                 case TypeTag::NO_HOLE:  return SBPuzzle(puzzle.n.goal_state());
+                default: throw_tterror(); return SBPuzzle(puzzle.w.goal_state());
             }
         }
 
@@ -635,6 +645,7 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.apply_action(a);
                 case TypeTag::NO_HOLE:  return puzzle.n.apply_action(a);
+                default: throw_tterror(); return 0;
             }
         }
 
@@ -656,15 +667,20 @@ namespace sbpuzzle {
 
             PuzzleUnion(const SBPuzzleWHole<H, W> &wh) : w(wh) {}
             PuzzleUnion(const SBPuzzleNoHole<H, W> &nh) : n(nh) {}
-            PuzzleUnion(const uint8_t tiles[]) : w(tiles) {}
+            PuzzleUnion(const array<uint8_t, H*W> &tiles) : w(tiles) {}
             // initialize nohole by default, change if not the case
-            PuzzleUnion(const uint8_t tiles[], const bool mask[]) : n(tiles, mask) {} 
+            PuzzleUnion(const array<uint8_t, H*W> &tiles, 
+                        const array<bool, H*W> &mask) : n(tiles, mask) {} 
         } puzzle;
 
         template <typename Action, typename Dummy = void>
         struct PADelegate {
             static std::vector<Action> f(const SBPuzzle &p);
         };
+
+        static void throw_tterror() {
+            throw std::runtime_error("Invalid type tag");
+        }
     };
 
     template <details::psize_t H, details::psize_t W>

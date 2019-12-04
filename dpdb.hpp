@@ -290,10 +290,12 @@ namespace sbpuzzle {
         SBPuzzle<H, W> p(tiles, in_groups[i]);
         // perform breadth first search
         BreadthFirstIterator<SBPuzzle<H, W>, EA> bfs_itr(p);
+        #ifdef TRACK_DPDB
         size_t sc = 0;
         SeriesTracker<size_t>::Options opts;
         opts.print_every = 1000000;
         SeriesTracker<size_t> t(&sc, opts);
+        #endif
         while(!bfs_itr.done()) {
             auto node = bfs_itr.next(); // get the next node
             // find the table index of the node's state
@@ -316,8 +318,10 @@ namespace sbpuzzle {
             }
             std::cout << "----------------------" << std::endl;
             */
+            #ifdef TRACK_DPDB
             sc++;
             t.track();
+            #endif
         }
         // write the table to the file
         write_byte_array(tables[i], table_sizes[i], filename);

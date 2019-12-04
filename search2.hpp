@@ -83,14 +83,16 @@ void throw_unreachable() {
 }
 }
 
-
 // SEARCH NODE, the class that defines a search node, a record structure that keeps
 // both a puzzle state and extra book-keeping information about it. Also holds some
 // static variables such as a counter for the number of created nodes.
 template <class Puzzle>
 struct SearchNode {
     static size_t NODE_COUNTER;
+
+    #ifdef TRACK_NODES
     static SeriesTracker<size_t> COUNTER_TRACKER;
+    #endif
 
     Puzzle puzzle;
     int path_cost;
@@ -99,21 +101,27 @@ struct SearchNode {
     SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) 
     {
         NODE_COUNTER++;
+        #ifdef TRACK_NODES
         COUNTER_TRACKER.track();
+        #endif
     }
 
     SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) 
     {
         NODE_COUNTER++;
+        #ifdef TRACK_NODES
         COUNTER_TRACKER.track();
+        #endif
     }
 };
 
 template <class Puzzle>
 size_t SearchNode<Puzzle>::NODE_COUNTER = 0;
 
+#ifdef TRACK_NODES
 template <class Puzzle>
 SeriesTracker<size_t> SearchNode<Puzzle>::COUNTER_TRACKER(&SearchNode<Puzzle>::NODE_COUNTER, SeriesTracker<size_t>::Options(10000000));
+#endif
 
 template <class Puzzle>
 class SearchNodeComparator {

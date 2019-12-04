@@ -1,20 +1,27 @@
-CXX=clang++
-CFLAGS=-Wall -std=c++17
+CXX=g++
+CXXFLAGS=-Wall -std=c++17
 RELEASEFLAGS=-O3
 DEBUGFLAGS=-O0 -g
 SRC=sbpuzzle_test.cpp sblock_utils.cpp
 OUT=sbpuzzle_test.out
 SRC2=generate_dpdb.cpp sblock_utils.cpp
 OUT2=generate_dpdb.out
+TESTSRC=sbp_tests.cpp sblock_utils.cpp
+TESTOUT=sbp_tests.out
+
+# CXXFLAGS += -DTRACK_NODES
 
 all:
-	$(CXX) $(CFLAGS) $(RELEASEFLAGS) $(SRC) -o $(OUT)
+	$(CXX) $(CXXFLAGS) $(RELEASEFLAGS) $(SRC) -o $(OUT)
 
 debug:
-	$(CXX) $(CFLAGS) $(DEBUGFLAGS) $(SRC) -o $(OUT)
+	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(SRC) -o $(OUT)
 
 dpdb:
-	$(CXX) $(CFLAGS) $(RELEASEFLAGS) $(SRC2) -o $(OUT2)
+	$(CXX) $(CXXFLAGS) $(RELEASEFLAGS) $(SRC2) -o $(OUT2)
 
 dpdebug:
-	$(CXX) $(CFLAGS) $(DEBUGFLAGS) $(SRC2) -o $(OUT2)
+	$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(SRC2) -o $(OUT2)
+
+tests:
+	$(CXX) $(CXXFLAGS) $(RELEASEFLAGS) $(TESTSRC) -o $(TESTOUT)
