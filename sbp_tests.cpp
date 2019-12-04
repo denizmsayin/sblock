@@ -27,7 +27,10 @@ typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::DPDB<H, W> DPDB;
 
-array<uint8_t, H*W> DBGROUPS {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
+std::vector<array<uint8_t, H*W>> DBGROUPS { 
+    {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE},
+    {0, 0, 0, 1, 1, 0, 1, 1, sbpuzzle::DONT_CARE} 
+};
 // std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
 
 template <int H, int W, class URNG>
@@ -85,7 +88,6 @@ int main() {
     cout << "Testing A* with Manhattan Distance..." << endl;
     test_function(puzzles, search2::a_star_search<Puzzle, Action, ManhattanHeuristic>, ManhattanHeuristic());
 
-    cout << "Generating sample DPDB... ";
     /*
     DPDB::generate_and_save(DBGROUPS, "tmpfile");
     cout << "Saved." << endl;
@@ -93,12 +95,17 @@ int main() {
     cout << "Read back successfully!" << endl;
     */
 
-    DPDB db = DPDB::generate(DBGROUPS);
-    cout << "Testing A* with DPDB..." << endl;
-    test_function(puzzles, search2::a_star_search<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
+    for(const auto &group : DBGROUPS) {
+        cout << "Generating sample DPDB... ";
+        for(auto x : group)
+            std::cout << static_cast<int>(x) << " ";
+        std::cout << std::endl;
+        DPDB db = DPDB::generate(group);
+        cout << "Testing A* with DPDB..." << endl;
+        test_function(puzzles, search2::a_star_search<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
 
-    cout << "Testing IDA* with DPDB..." << endl;
-    test_function(puzzles, search2::iterative_deepening_a_star<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
-
+        cout << "Testing IDA* with DPDB..." << endl;
+        test_function(puzzles, search2::iterative_deepening_a_star<Puzzle, Action, DPDBHeuristic>, DPDBHeuristic(db));
+    }
     return 0;
 }

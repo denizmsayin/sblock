@@ -73,6 +73,16 @@ namespace sbpuzzle {
         
         constexpr uint8_t _X = 255;
 
+        template <psize_t W>
+        static constexpr int8_t OFFSETS[] = {-W, +1, +W, -1};
+        // offset applied to moves allowed by tiles_mark_valid_moves
+
+        template <psize_t H, psize_t W>
+        static constexpr uint8_t SIZE = H*W;
+
+        template <psize_t H, psize_t W>
+        static constexpr uint8_t HOLE = H*W-1;
+
         template <psize_t H, psize_t W>
         inline void tiles_correct_fill(array<uint8_t, H*W> &tiles) {
             for(size_t size = tiles.size(), i = 0; i < size; ++i)
@@ -99,9 +109,8 @@ namespace sbpuzzle {
 
         template <psize_t H, psize_t W>
         inline bool tiles_in_correct_places(const array<uint8_t, H*W> &tiles) {
-            constexpr auto hole = H*W-1;
             for(size_t size = tiles.size(), i = 0; i < size; ++i) 
-                if(tiles[i] != _X && tiles[i] != hole && tiles[i] != i)
+                if(tiles[i] != _X && tiles[i] != HOLE<H, W> && tiles[i] != i)
                     return false;
             return true;
         }
@@ -127,11 +136,10 @@ namespace sbpuzzle {
 
         template <psize_t H, psize_t W>
         size_t tiles_hash(const array<uint8_t, H*W> tiles) {
-            constexpr auto size = H*W;
             // first, do all you can using 8 bytes each time
             size_t seed = 0;
             constexpr std::hash<uint64_t> hasher64;
-            auto n = size;
+            size_t n = SIZE<H, W>;
             const uint64_t *itr = reinterpret_cast<const uint64_t *>(&tiles[0]);
             while(n >= 8) {
                 seed = hash_combine(seed, hasher64(*itr++));
@@ -139,7 +147,7 @@ namespace sbpuzzle {
             }
             // hash the remainder
             const void *p = reinterpret_cast<const void *>(itr);
-            switch(size) {
+            switch(n) {
                 case 1: 
                     seed = hash_combine(seed, cast_hash<uint8_t>(p)); 
                     break;
@@ -207,10 +215,9 @@ namespace sbpuzzle {
 
         template <psize_t H, psize_t W>
         uint64_t tiles_manhattan_distance_to_solution(const array<uint8_t, H*W> &tiles) {
-            constexpr auto hole = H*W-1;
             uint64_t dist = 0;
             for(size_t size = tiles.size(), i = 0; i < size; ++i) {
-                if(tiles[i] != _X && tiles[i] != hole) {
+                if(tiles[i] != _X && tiles[i] != HOLE<H, W>) {
                     // open to optimisation, but no need
                     uint8_t row = i / W, col = i % W;
                     uint8_t actual_row = tiles[i] / W, actual_col = tiles[i] % W;
@@ -222,17 +229,12 @@ namespace sbpuzzle {
 
         template <psize_t H, psize_t W>
         void tiles_mark_valid_moves(uint8_t p, array<bool, 4> &directions) {
-            constexpr auto size = H*W;
             int rem = p % W;
             directions[0] = p >= W; // up
             directions[1] = rem < W-1; // right
-            directions[2] = p < size-W; // down
+            directions[2] = p < SIZE<H, W> - W; // down
             directions[3] = rem > 0; // left
         }
-
-        template <psize_t W>
-        static constexpr int8_t OFFSETS[] = {-W, +1, +W, -1};
-        // offset applied to moves allowed by tiles_mark_valid_moves
 
         template <typename RandomAccessIterator>
         int count_inversions(RandomAccessIterator begin, RandomAccessIterator end) {
@@ -269,13 +271,65 @@ namespace sbpuzzle {
             // this function should not be called often, so it seems
             // to me it makes more sense to reconstruct the mask array
             // here rather than store it in each puzzle instance
-            constexpr auto size = H*W;
-            array<bool, size> mask;
+            array<bool, SIZE<H, W>> mask;
             tiles_reconstruct_mask<H, W>(tiles, mask);
-            array<uint8_t, size> tiles2;
+            array<uint8_t, SIZE<H, W>> tiles2;
             tiles_correct_fill<H, W>(tiles2, mask);
             return P(tiles2, mask);
         }
+
+        // hole propagation & variants for the no-hole puzzle version
+        template <psize_t H, psize_t W>
+        void tiles_prop_hole(array<uint8_t, H*W> &tiles, uint8_t i) {
+            array<bool, 4> valid;
+            tiles_mark_valid_moves<H, W>(i, valid);
+            for(auto dir = 0; dir < 4; ++dir) {
+                if(valid[dir]) {
+                    auto np = i + OFFSETS<W>[dir];
+                    if(tiles[np] == _X) {
+                        tiles[np] = HOLE<H, W>;
+                        tiles_prop_hole<H, W>(tiles, np);
+                    }
+                }
+            }
+        }
+        
+        // re-do hole propagation after a hole position update
+        template <psize_t H, psize_t W>
+        void tiles_reprop_hole(array<uint8_t, H*W> &tiles, uint8_t new_hole_pos) {
+            for(size_t i = 0, size = tiles.size(); i < size; ++i)
+                if(tiles[i] == HOLE<H, W>)
+                    tiles[i] = _X;
+            tiles[new_hole_pos] = HOLE<H, W>;
+            tiles_prop_hole<H, W>(tiles, new_hole_pos);
+        }
+
+        // collapse hole for extended index calculation by DPDB
+        template <psize_t H, psize_t W>
+        void tiles_collapse_hole(array<uint8_t, H*W> &tiles) {
+            bool hole_found = false;
+            // only leave the hole at the first position
+            for(size_t i = 0, size = tiles.size(); i < size; ++i) {
+                if(tiles[i] == HOLE<H, W>) {
+                    if(hole_found)
+                        tiles[i] = _X;
+                    else
+                        hole_found = true;
+                }
+            }
+        }
+
+        template <psize_t H, psize_t W, class OutputIterator>
+        void tiles_fill_group(const std::array<bool, H*W> &group_mask, 
+                              const std::array<uint8_t, H*W> &tiles, 
+                              OutputIterator itr)
+        {
+            for(size_t i = 0, size = tiles.size(); i < size; ++i)
+                if(tiles[i] != _X && group_mask[tiles[i]])
+                    *itr++ = tiles[i];
+        }
+
+
 
 
     }
@@ -286,9 +340,9 @@ namespace sbpuzzle {
     // a utility function to decide if a set of tiles is solvable
     template <details::psize_t H, details::psize_t W>
     bool tiles_solvable(const array<uint8_t, H*W> &tiles) {
-        constexpr uint8_t hole = H*W-1;
         // see https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-        uint8_t hole_pos = std::find(tiles.begin(), tiles.end(), hole) - tiles.begin();
+        uint8_t hole_pos = std::find(tiles.begin(), tiles.end(), details::HOLE<H, W>) 
+                           - tiles.begin();
         int inversions = details::count_inversions(tiles.begin(), tiles.end());
         int hole_row_from_bottom = H - hole_pos % W;
         if(W % 2 == 1) // odd width
@@ -332,7 +386,7 @@ namespace sbpuzzle {
             return details::tiles_hash<H, W>(tiles);
         }
 
-        template <int HH, int WW>
+        template <details::psize_t HH, details::psize_t WW>
         friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<HH, WW> &p) {
             return details::tiles_stream<HH, WW>(s, p.tiles);
         }
@@ -342,12 +396,12 @@ namespace sbpuzzle {
         }
 
         template <typename PDBType>
-        int lookup_cost(const PDBType &pdb) const {
+        uint8_t lookup_cost(const PDBType &pdb) const {
             return pdb.lookup(tiles);
         }
 
         template <typename PDBType>
-        int determine_index(int group_no, const PDBType &pdb) const {
+        size_t determine_index(uint8_t group_no, const PDBType &pdb) const {
             return pdb.calculate_table_index(group_no, tiles);
         }
 
@@ -356,8 +410,8 @@ namespace sbpuzzle {
         // only callable by derived classes
         SBPuzzleBase() {}
 
-        constexpr static auto SIZE = H*W;
-        constexpr static uint8_t HOLE = H*W-1;
+        static constexpr auto SIZE = details::SIZE<H, W>;
+        static constexpr auto HOLE = details::HOLE<H, W>;
         
         array<uint8_t, SIZE> tiles;
 
@@ -491,37 +545,25 @@ namespace sbpuzzle {
             reprop_hole(); // repropagate the hole
             return 1; // cost is always unit
         }
-    
+
+        template <typename PDBType>
+        size_t determine_index(uint8_t group_no, const PDBType &pdb) const {
+            return pdb.calculate_table_index(group_no, Base::tiles);
+        }
+
+
     private:
         using Base = SBPuzzleBase<H, W>;
         details::psize_t hole_pos; // TODO: refactor hole_pos into base
 
         // TODO: consider caching hole/tile positions for faster searching
 
-        void prop_hole(int i) {
-            array<bool, 4> valid;
-            details::tiles_mark_valid_moves<H, W>(i, valid);
-            for(auto dir = 0; dir < 4; ++dir) {
-                if(valid[dir]) {
-                    auto np = i + details::OFFSETS<W>[dir];
-                    if(Base::tiles[np] == details::_X) {
-                        Base::tiles[np] = Base::HOLE;
-                        prop_hole(np);
-                    }
-                }
-            }
-        }
-
         void prop_hole() {
-            prop_hole(hole_pos);
+            details::tiles_prop_hole<H, W>(Base::tiles, hole_pos);
         }
 
         void reprop_hole() { // re-do hole propagation after a hole position update
-            for(size_t i = 0; i < Base::SIZE; ++i)
-                if(Base::tiles[i] == Base::HOLE)
-                    Base::tiles[i] = details::_X;
-            Base::tiles[hole_pos] = Base::HOLE;
-            prop_hole();
+            details::tiles_reprop_hole<H, W>(Base::tiles, hole_pos);
         }
 
         template <typename Action, typename Dummy = void>
@@ -617,7 +659,7 @@ namespace sbpuzzle {
             }
         }
 
-        template <int HH, int WW>
+        template <details::psize_t HH, details::psize_t WW>
         friend std::ostream &operator<<(std::ostream &s, const SBPuzzle<HH, WW> &p) {
             switch(p.tag) {
                 case TypeTag::W_HOLE:   return s << p.puzzle.w;
@@ -635,7 +677,7 @@ namespace sbpuzzle {
         }
 
         template <typename PDBType>
-        int lookup_cost(const PDBType &pdb) const {
+        uint8_t lookup_cost(const PDBType &pdb) const {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.lookup_cost(pdb);
                 case TypeTag::NO_HOLE:  return puzzle.n.lookup_cost(pdb);
@@ -644,7 +686,7 @@ namespace sbpuzzle {
         }
 
         template <typename PDBType>
-        int determine_index(int group_no, const PDBType &pdb) const {
+        size_t determine_index(uint8_t group_no, const PDBType &pdb) const {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.determine_index(group_no, pdb);
                 case TypeTag::NO_HOLE:  return puzzle.n.determine_index(group_no, pdb);

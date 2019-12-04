@@ -17,7 +17,7 @@
 
 #include "dpdb.hpp"
 
-constexpr int H = __H, W = __W;
+constexpr sbpuzzle::details::psize_t H = __H, W = __W;
 constexpr int SIZE = H*W;
 
 uint8_t validate_groups(const std::array<uint8_t, SIZE> &groups) {
@@ -70,7 +70,6 @@ void parse_group_string(const char *group_str, std::array<uint8_t, SIZE> &out) {
         if(i > SIZE)
             throw std::invalid_argument("Buffer overflow, input group spec is too long");
     }
-    std::cout << i << std::endl;
     if(i < SIZE)
         throw std::invalid_argument("Input group spec is too short");
 }
@@ -86,9 +85,6 @@ int main(int argc, char *argv[]) {
 
     std::array<uint8_t, SIZE> groups;
     parse_group_string(argv[1], groups);
-    for(auto x : groups)
-        std::cout << ((int) x) << " ";
-    std::cout << std::endl;
     validate_groups(groups);
 
     sbpuzzle::DPDB<H, W>::generate_and_save(groups, argv[2]);
