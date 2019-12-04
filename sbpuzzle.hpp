@@ -547,8 +547,8 @@ namespace sbpuzzle {
         }
 
         template <typename PDBType>
-        size_t determine_index(uint8_t group_no, const PDBType &pdb) const {
-            return pdb.calculate_table_index(group_no, Base::tiles);
+        size_t determine_extended_index(uint8_t group_no, const PDBType &pdb) const {
+            return pdb.calculate_table_index(group_no, Base::tiles, true);
         }
 
 

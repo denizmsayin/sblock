@@ -339,6 +339,13 @@ namespace sbpuzzle {
         //                                       0 1 2 3 X X H X X etc.
         // TODO: make this better by somehow finding a way to remove redundant positions
         
+        // the size of the lookup table will be +1 compared to the hole-less group
+        size_t visited_size = combination(SIZE, group_counts[i] + 1) 
+                              * factorial(group_counts[i] + 1);
+        
+        // sadly, bitset size has to be known at compile time,
+        // so we're left with vector<bool>...
+        std::vector<uint8_t> visited(visited_size, 0);
         
         // a tracker for tracking the progress of generation
         #ifdef TRACK_DPDB
@@ -348,55 +355,71 @@ namespace sbpuzzle {
         SeriesTracker<size_t> t(&sc, opts);
         #endif
 
-//        // a small local struct as a bfs node
-//        // ideally, SBPuzzleNoHole could be serialized
-//        struct Node {
-//            SBPuzzleNoHole<H, W> puzzle;
-//            uint8_t cost;
-//            Node(const SBPuzzleNoHole<H, W> &p, uint8_t c) : puzzle(p), cost(c) {}
-//        };
-//
-//        // the actual modified BFS implementation
-//        using TSA = sbpuzzle::TileSwapAction;
-//        std::vector<uint8_t> &table = tables[i];
-//        for(size_t i = 0; i < table.size(); ++i)
-//            if(table[i] != DIST_MAX)
-//                std::cout << "entry at " << i << " is " << table[i] << std::endl;
-//        SBPuzzleNoHole<H, W> start_state(tiles, in_groups[i]);
-//        std::queue<Node> q;
-//        q.emplace(start_state, 0);
-//        while(!q.empty()) {
-//            auto node = q.front(); q.pop(); // get the next node
-//            const auto &p = node.puzzle;
-//            if(node.cost == DIST_MAX)
-//                std::cerr << "Warning: cost overflow in DPDB BFS" << std::endl;
-//            // find the table index of the node's state
-//            auto index = p.determine_index(i, *this);
-//            // insert the path cost only if it is less than one found so far
-//            // this is necessary because the hole position is not accounted for,
-//            // and multiple states & paths can lead to the same index
-//            // not visited / lower cost found
-//            if(node.cost < table[index]) {
-//                table[index] = node.cost; // essentially, mark as visited
-//                for(auto action : p.template possible_actions<TSA>()) {
-//                    std::cout << '(' << ((int)action.tpos) << ", " << ((int)action.hpos) << ") ";
-//                    SBPuzzleNoHole<H, W> new_p = p; 
-//                    uint8_t new_cost = node.cost + new_p.apply_action(action);
-//                    auto new_index = new_p.determine_index(i, *this);
-//                    if(new_cost < table[new_index])
-//                        q.emplace(new_p, new_cost);
-//                    else 
-//                        std::cout << "NC: " << ((int)new_cost) << ", TC: " << ((int)table[new_index]) << ", I: " << new_index << std::endl << new_p;
-//                    std::cout << std::endl;
-//                }
-//            }
-//            std::cout << std::endl;
-//            std::cout << node.puzzle << std::endl;
-//            std::cout << static_cast<int>(node.cost) << std::endl;
-//            std::cout << index << std::endl;
-//            std::cout << "qsize: " << q.size() << std::endl;
-//            std::cout << "*************************" << std::endl;
-            
+        // a small local struct as a bfs node
+        // ideally, SBPuzzleNoHole could be serialized
+        struct Node {
+            PuzzleType puzzle;
+            uint8_t cost;
+            Node(const PuzzleType &p, uint8_t c) : puzzle(p), cost(c) {}
+        };
+
+        // the actual modified BFS implementation
+        std::vector<uint8_t> &table = tables[i];
+        PuzzleType start_state(tiles, in_groups[i]);
+        std::queue<Node> q;
+        q.emplace(start_state, 0);
+        size_t start_ex_index = start_state.determine_extended_index(i, *this);
+        visited[start_ex_index] = 1;
+        while(!q.empty()) {
+            Node node = q.front(); q.pop(); // get the next node
+            const auto &p = node.puzzle;
+            if(node.cost == DIST_MAX)
+                std::cerr << "Warning: cost overflow in DPDB BFS" << std::endl;
+            // update cost in table if necessary (with reduced index)
+            size_t index = p.determine_index(i, *this);
+            if(node.cost < table[index])
+                table[index] = node.cost;
+            // generate neighboring states
+            for(const auto &action : p.template possible_actions<ActionType>()) {
+                //    std::cout << '(' << ((int)action.tpos) << ", " << ((int)action.hpos) << ") ";
+                PuzzleType new_p = p; 
+                uint8_t new_cost = node.cost + new_p.apply_action(action);
+                size_t new_ex_index = new_p.determine_extended_index(i, *this);
+                if(!visited[new_ex_index]) {
+                    // can already be marked as visited before actually
+                    // expanding. Why? As soon as a node is added to the open
+                    // list, the shortest path to it has been found for BFS
+                    visited[new_ex_index] = 1;
+                    q.emplace(new_p, new_cost);
+                }
+                // std::cout << std::endl;
+            }
+            /*
+               std::cout << std::endl;
+               std::cout << node.puzzle << std::endl;
+               std::cout << static_cast<int>(node.cost) << std::endl;
+               std::cout << index << std::endl;
+               std::cout << "qsize: " << q.size() << std::endl;
+               std::cout << "*************************" << std::endl;
+               */
+            #ifdef TRACK_DPDB
+            sc++;
+            t.track();
+            #endif
+        }
+
+        /*
+        search2::BreadthFirstIterator<PuzzleType, ActionType> itr(start_state);
+        while(!itr.done()) {
+            auto node = itr.next();
+            size_t index = node.puzzle.determine_index(i, *this);
+            if(tables[i][index] == DIST_MAX)
+                std::cout << node.puzzle << std::endl;
+            size_t ex_index = node.puzzle.determine_extended_index(i, *this);
+            if(!visited[ex_index])
+                std::cout << node.puzzle << std::endl;
+        }
+        */
             // I believe BFS fails for some problem instances. Therefore,
             // for each problem I want to solve it using A* and compare the path cost
             /*
@@ -411,6 +434,7 @@ namespace sbpuzzle {
             std::cout << "----------------------" << std::endl;
             */
 
+        /*
         PuzzleType start_puzzle(tiles, in_groups[i]);
         search2::BreadthFirstIterator<PuzzleType, ActionType> itr(start_puzzle);
         while(!itr.done()) {
@@ -426,6 +450,7 @@ namespace sbpuzzle {
             t.track();
             #endif
         }
+        */
     }
 
     template <details::psize_t H, details::psize_t W>
@@ -437,11 +462,28 @@ namespace sbpuzzle {
         std::array<uint8_t, H*W> tiles = o_tiles; // copying output tiles to keep constness
         std::array<bool, H*W> group_mask = in_groups[i];
         uint8_t group_size = group_counts[i];
+        /*
+        std::cout << "GS=" << ((int)group_size) << std::endl;
+        details::tiles_stream<H, W>(std::cout, tiles);
+        std::cout << std::endl;
+        for(auto x : group_mask)
+            std::cout << x << " ";
+        std::cout << std::endl;
+        */
         if(extended) {
             // collapse the hole and add it to the group
             details::tiles_collapse_hole<H, W>(tiles);
             group_mask[details::HOLE<H, W>] = true;
             ++group_size;
+            /*
+            std::cout << "EXTENDED\n";
+        std::cout << "GS=" << ((int)group_size) << std::endl;
+        details::tiles_stream<H, W>(std::cout, tiles);
+        std::cout << std::endl;
+        for(auto x : group_mask)
+            std::cout << x << " ";
+        std::cout << std::endl;
+        */
         }
         // first, find the combination index
         auto s = details::TileCombIterator<H, W>::begin(group_mask, tiles);
@@ -462,7 +504,12 @@ namespace sbpuzzle {
         */
         size_t lex_i = calculate_lexindex(group_tiles.begin(), group_tiles.end());
         // calculate the total index and lookup the table
-        return comb_i * factorial(group_size) + lex_i;
+        size_t index = comb_i * factorial(group_size) + lex_i;
+        /*
+        std::cout << "I=" << index << std::endl;
+        std::cout << "******************************\n";
+        */
+        return index;
     }
 
     /*
