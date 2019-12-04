@@ -341,6 +341,17 @@ namespace sbpuzzle {
             return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
         }
 
+        template <typename PDBType>
+        int lookup_cost(const PDBType &pdb) const {
+            return pdb.lookup(tiles);
+        }
+
+        template <typename PDBType>
+        int determine_index(int group_no, const PDBType &pdb) const {
+            return pdb.calculate_table_index(group_no, tiles);
+        }
+
+
     protected:
         // only callable by derived classes
         SBPuzzleBase() {}
@@ -402,7 +413,6 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
 
-        const uint8_t *get_tiles() const { return &Base::tiles[0]; }
     private:
         using Base = SBPuzzleBase<H, W>;
 
@@ -482,7 +492,6 @@ namespace sbpuzzle {
             return 1; // cost is always unit
         }
     
-        const uint8_t *get_tiles() const { return &Base::tiles[0]; }
     private:
         using Base = SBPuzzleBase<H, W>;
         details::psize_t hole_pos; // TODO: refactor hole_pos into base
@@ -582,14 +591,6 @@ namespace sbpuzzle {
         SBPuzzle(const SBPuzzleWHole<H, W> &o) : tag(TypeTag::W_HOLE), puzzle(o) {}
         SBPuzzle(const SBPuzzleNoHole<H, W> &o) : tag(TypeTag::NO_HOLE), puzzle(o) {}
 
-        const uint8_t *get_tiles() const {
-            switch(tag) {
-                case TypeTag::W_HOLE:   return puzzle.w.get_tiles();
-                case TypeTag::NO_HOLE:  return puzzle.n.get_tiles();
-                default: throw_tterror(); return nullptr;
-            }
-        }
-
         bool is_solved() const {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.is_solved();
@@ -629,6 +630,24 @@ namespace sbpuzzle {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.manhattan_distance_to_solution();
                 case TypeTag::NO_HOLE:  return puzzle.n.manhattan_distance_to_solution();
+                default: throw_tterror(); return 0;
+            }
+        }
+
+        template <typename PDBType>
+        int lookup_cost(const PDBType &pdb) const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.lookup_cost(pdb);
+                case TypeTag::NO_HOLE:  return puzzle.n.lookup_cost(pdb);
+                default: throw_tterror(); return 0;
+            }
+        }
+
+        template <typename PDBType>
+        int determine_index(int group_no, const PDBType &pdb) const {
+            switch(tag) {
+                case TypeTag::W_HOLE:   return puzzle.w.determine_index(group_no, pdb);
+                case TypeTag::NO_HOLE:  return puzzle.n.determine_index(group_no, pdb);
                 default: throw_tterror(); return 0;
             }
         }

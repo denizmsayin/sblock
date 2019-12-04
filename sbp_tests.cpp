@@ -52,7 +52,7 @@ public:
     DPDBHeuristic(const DPDB &odb) : db(odb) {}
 
     int operator()(const Puzzle &p) {
-        return db.lookup(p);
+        return p.lookup_cost(db);
     }
 
 private:
@@ -87,7 +87,7 @@ int main() {
 
     cout << "Generating sample DPDB... ";
     DPDB::generate_and_save(DBGROUPS.begin(), DBGROUPS.end(), DBFILES.begin(), DBFILES.end());
-    DPDB db(DBGROUPS.begin(), DBGROUPS.end(), DBFILES.begin(), DBFILES.end());
+    DPDB db(DBGROUPS, DBFILES.begin(), DBFILES.end());
     cout << "Done!";
 
     cout << "Testing A* with DPDB..." << endl;

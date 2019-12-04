@@ -27,13 +27,13 @@ using sbpuzzle::DPDB;
 
 //uint8_t DBGROUPS[] = {1, 1, 1, 0, 0, 1, 0, 0, sbpuzzle::DONT_CARE};
 //std::vector<const char *> DBFILES {"g1.db", "g2.db"};
-uint8_t DBGROUPS[] = {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
+std::array<uint8_t, H*W> DBGROUPS {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE};
 std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
 // uint8_t DBGROUPS[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 // std::vector<const char *> DBFILES {"gmax.db"};
 // uint8_t DBGROUPS[] = {0, 1, 2, 3, 4, 5, 6, 7, 0};
 // std::vector<const char *> DBFILES {"m0.db", "m1.db", "m2.db", "m3.db", "m4.db", "m5.db", "m6.db", "m7.db"};
-DPDB<H, W> DB(DBGROUPS, DBGROUPS + 9, DBFILES.begin(), DBFILES.end());
+DPDB<H, W> DB(DBGROUPS, DBFILES.begin(), DBFILES.end());
 #endif
 
 using namespace std;
