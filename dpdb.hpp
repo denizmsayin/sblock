@@ -339,13 +339,15 @@ namespace sbpuzzle {
         //                                       0 1 2 3 X X H X X etc.
         // TODO: make this better by somehow finding a way to remove redundant positions
         
-        // the size of the lookup table will be +1 compared to the hole-less group
+        // the size of the visited lookup table will be +1 compared to the hole-less group
+        // so (group_size + 1) times the cost lookup table
+        // only a fraction will be utilized, but hopefully vector<bool> will help with space
         size_t visited_size = combination(SIZE, group_counts[i] + 1) 
                               * factorial(group_counts[i] + 1);
         
         // sadly, bitset size has to be known at compile time,
         // so we're left with vector<bool>...
-        std::vector<uint8_t> visited(visited_size, 0);
+        std::vector<bool> visited(visited_size, false);
         
         // a tracker for tracking the progress of generation
         #ifdef TRACK_DPDB
@@ -369,7 +371,7 @@ namespace sbpuzzle {
         std::queue<Node> q;
         q.emplace(start_state, 0);
         size_t start_ex_index = start_state.determine_extended_index(i, *this);
-        visited[start_ex_index] = 1;
+        visited[start_ex_index] = true;
         while(!q.empty()) {
             Node node = q.front(); q.pop(); // get the next node
             const auto &p = node.puzzle;
@@ -381,7 +383,6 @@ namespace sbpuzzle {
                 table[index] = node.cost;
             // generate neighboring states
             for(const auto &action : p.template possible_actions<ActionType>()) {
-                //    std::cout << '(' << ((int)action.tpos) << ", " << ((int)action.hpos) << ") ";
                 PuzzleType new_p = p; 
                 uint8_t new_cost = node.cost + new_p.apply_action(action);
                 size_t new_ex_index = new_p.determine_extended_index(i, *this);
@@ -389,25 +390,24 @@ namespace sbpuzzle {
                     // can already be marked as visited before actually
                     // expanding. Why? As soon as a node is added to the open
                     // list, the shortest path to it has been found for BFS
-                    visited[new_ex_index] = 1;
+                    visited[new_ex_index] = true;
                     q.emplace(new_p, new_cost);
                 }
-                // std::cout << std::endl;
             }
-            /*
-               std::cout << std::endl;
-               std::cout << node.puzzle << std::endl;
-               std::cout << static_cast<int>(node.cost) << std::endl;
-               std::cout << index << std::endl;
-               std::cout << "qsize: " << q.size() << std::endl;
-               std::cout << "*************************" << std::endl;
-               */
+            
             #ifdef TRACK_DPDB
             sc++;
             t.track();
             #endif
         }
 
+        #ifdef TRACK_DPDB
+        // count the number of false values in visited, because I wonder!
+        // somewhere between table_size and table_size * (group_size + 1)
+        size_t visited_count = std::count(visited.begin(), visited.end(), true);
+        std::cout << "Visited table usage: " 
+                  << visited_count << '/' << visited.size() << std::endl;
+        #endif
         /*
         search2::BreadthFirstIterator<PuzzleType, ActionType> itr(start_state);
         while(!itr.done()) {
@@ -462,28 +462,11 @@ namespace sbpuzzle {
         std::array<uint8_t, H*W> tiles = o_tiles; // copying output tiles to keep constness
         std::array<bool, H*W> group_mask = in_groups[i];
         uint8_t group_size = group_counts[i];
-        /*
-        std::cout << "GS=" << ((int)group_size) << std::endl;
-        details::tiles_stream<H, W>(std::cout, tiles);
-        std::cout << std::endl;
-        for(auto x : group_mask)
-            std::cout << x << " ";
-        std::cout << std::endl;
-        */
         if(extended) {
             // collapse the hole and add it to the group
             details::tiles_collapse_hole<H, W>(tiles);
             group_mask[details::HOLE<H, W>] = true;
             ++group_size;
-            /*
-            std::cout << "EXTENDED\n";
-        std::cout << "GS=" << ((int)group_size) << std::endl;
-        details::tiles_stream<H, W>(std::cout, tiles);
-        std::cout << std::endl;
-        for(auto x : group_mask)
-            std::cout << x << " ";
-        std::cout << std::endl;
-        */
         }
         // first, find the combination index
         auto s = details::TileCombIterator<H, W>::begin(group_mask, tiles);
@@ -492,16 +475,6 @@ namespace sbpuzzle {
         // then the lexicographical index of the group elements
         std::vector<uint8_t> group_tiles(group_size);
         details::tiles_fill_group<H, W>(group_mask, tiles, group_tiles.begin());
-        /*
-        std::cout << "Comb view: ";
-        for(auto x = s; x != e; ++x)
-            std::cout << *x << " ";
-        std::cout << std::endl;
-        std::cout << "Lex view: ";
-        for(int i = 0; i < group_size; ++i)
-            std::cout << static_cast<int>(group_tiles[i]) << " ";
-        std::cout << std::endl;
-        */
         size_t lex_i = calculate_lexindex(group_tiles.begin(), group_tiles.end());
         // calculate the total index and lookup the table
         size_t index = comb_i * factorial(group_size) + lex_i;

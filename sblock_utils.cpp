@@ -6,23 +6,6 @@
 #include <stdexcept>
 #include <string>
 
-// TODO: add proper error checking other than at file opening
-void write_byte_array(const uint8_t *table, size_t size, const char *filename) {
-    FILE *f = fopen(filename, "w");
-    if(!f) throw std::runtime_error("Could not open file to write byte array");
-    fwrite(table, sizeof(*table), size, f);
-    fclose(f);
-}
-
-void read_byte_array(uint8_t *table, size_t size, const char *filename) {
-    FILE *f = fopen(filename, "r");
-    if(!f) throw std::runtime_error("Could not open file to read byte array");
-    size_t rb = fread(table, sizeof(*table), size, f);
-    std::cout << rb << " " << size <<std:: endl;
-    if(rb != size) throw std::runtime_error("Could not read as many bytes as expected");
-    fclose(f);
-}
-
 // a quick function to determine combination values by table lookup
 static constexpr size_t MAX_COMB = 50;
 size_t combination(size_t x, size_t n) {
