@@ -14,9 +14,9 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 300;
+constexpr int N = 10;
 constexpr int H = 4, W = 4;
-const std::string dbfile = "dp4x4.db";
+const std::string dbfile = "databases/dp4x4.db";
 
 #define USEDB
 
@@ -135,15 +135,15 @@ int main() {
             cout << "**********************" << endl;
         }
         */
-        // num_moves += search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
+        // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
-        int m = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
+        auto r = search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
         // std::cout << "Solved in " << m << " moves." << std::endl;
-        num_moves += m;
+        num_moves += r.cost;
         // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
         // num_moves += search2::a_star_search<Puzzle, TSA, ManhattanHeuristic>(puzzles[i]);
         // num_moves += moves.size();
-        num_nodes += search2::get_node_counter<Puzzle>();
+        num_nodes += r.nodes_expanded; // search2::get_node_counter<Puzzle>();
         // search2::reset_node_counter<SBPuzzle<H, W>>();
         cout << '\r' << (i+1) << "/" << N << flush;
     }
@@ -156,7 +156,7 @@ int main() {
     double avg_nodes = static_cast<double>(num_nodes) / N;
     cout << "Solved " << N << " puzzles in " << fp_ms.count() / N << " milliseconds on "
          << "average with " << avg_moves << " moves and " << avg_nodes 
-         << " nodes generated on average." << endl;
+         << " nodes expanded on average." << endl;
 
     return 0;
 }

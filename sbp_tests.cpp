@@ -66,7 +66,8 @@ template <typename F, typename... Args>
 void test_function(const vector<Puzzle> &puzzles, F f, Args&&... args) {
     int num_moves = 0;
     for(size_t i = 0, size = puzzles.size(); i < size; ++i) {
-        num_moves += f(puzzles[i], args...);
+        auto r = f(puzzles[i], args...);
+        num_moves += r.cost;
         cout << '\r' << i << '/' << size << flush;
     }
     cout << '\r';
