@@ -236,23 +236,15 @@ namespace sbpuzzle {
             directions[3] = rem > 0; // left
         }
 
-        template <typename RandomAccessIterator>
-        int count_inversions(RandomAccessIterator begin, RandomAccessIterator end) {
-            // count inversions with O(n^2) instead of mergesort style,
-            // since the vectors are very small
-            int inversions = 0;
-            int size = end - begin;
-            int hole = size - 1;
-            for(RandomAccessIterator i = begin; i != end; i++) {
-                if(*i != hole) {
-                    for(RandomAccessIterator j = i+1; j != end; j++) {
-                        if(*i > *j) {
-                            inversions++;
-                        }
-                    }
-                }
-            }
-            return inversions;
+        template <psize_t H, psize_t W>
+        size_t count_inversions(const array<uint8_t, H*W> &tiles) {
+            size_t inv = 0;
+            for(size_t i = 0, size = tiles.size(); i < size; ++i) 
+                if(tiles[i] != HOLE<H, W>) 
+                    for(size_t j = i+1; j < size; ++j) 
+                        if(tiles[j] != HOLE<H, W> && tiles[i] > tiles[j]) 
+                            ++inv;
+            return inv;
         }
 
         // simple struct to inherit from while extending std::hash
@@ -343,14 +335,13 @@ namespace sbpuzzle {
         // see https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
         uint8_t hole_pos = std::find(tiles.begin(), tiles.end(), details::HOLE<H, W>) 
                            - tiles.begin();
-        int inversions = details::count_inversions(tiles.begin(), tiles.end());
-        int hole_row_from_bottom = H - hole_pos % W;
-        if(W % 2 == 1) // odd width
-            return inversions % 2 == 0; // must have even inversions
-        if(hole_row_from_bottom % 2 == 0) // even width
-            return inversions % 2 == 1; // must have odd inversions
-        // otherwise even
-        return inversions % 2 == 1;
+        size_t inversions = details::count_inversions<H, W>(tiles);
+        size_t hole_row_from_bottom = H - hole_pos / W;
+        bool grid_width_odd = (W & 1);
+        bool inversions_even = !(inversions & 1);
+        bool blank_on_odd_row = (hole_row_from_bottom & 1);
+        return ((grid_width_odd && inversions_even) ||
+                ((!grid_width_odd) && (blank_on_odd_row == inversions_even)));
     }
 
     // I've elected to define the functions right in the declaration since

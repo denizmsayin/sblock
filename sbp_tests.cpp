@@ -85,6 +85,9 @@ int main() {
     cout << "Testing BFS..." << endl;
     test_function(puzzles, search2::breadth_first_search<Puzzle, Action>);
 
+    cout << "Testing DQ-BFS..." << endl;
+    test_function(puzzles, search2::bfs_double_q<Puzzle, Action>);
+
     cout << "Testing A* with Manhattan Distance..." << endl;
     test_function(puzzles, search2::a_star_search<Puzzle, Action, ManhattanHeuristic>, ManhattanHeuristic());
 

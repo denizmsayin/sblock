@@ -197,6 +197,34 @@ int breadth_first_search(const Puzzle &p) {
     return 0;
 }
 
+template <class Puzzle, class Action>
+int bfs_double_q(const Puzzle &p) {
+    std::queue<Puzzle> q1, q2;
+    std::queue<Puzzle> *qf = &q1, *qn = &q2;
+    std::unordered_set<Puzzle> v;
+    int cost = 0;
+    qf->emplace(p);
+    v.emplace(p);
+    while(!qf->empty()) {
+        while(!qf->empty()) {
+            Puzzle p = qf->front(); qf->pop();
+            if(p.is_solved())
+                return cost;
+            for(const auto &action : p.template possible_actions<Action>()) {
+                Puzzle new_p = p; new_p.apply_action(action);
+                if(v.find(new_p) == v.end()) {
+                    qn->emplace(new_p);
+                    v.emplace(new_p);
+                }
+            }
+        }
+        cost +=1;
+        std::swap(qf, qn);
+    }
+    details::throw_unreachable();
+    return 0;
+}
+
 enum class IDFSResult {
     CUTOFF,
     FOUND,
