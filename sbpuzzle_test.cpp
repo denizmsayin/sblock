@@ -11,20 +11,21 @@
 #include "search2.hpp"
 #include "search_queues.hpp"
 #include "sbpuzzle.hpp"
+#include "pdb.hpp"
+#include "dpdb.hpp"
+#include "reflectdpdb.hpp"
+#include "combineddb.hpp"
 
 unsigned SEED = 42;
 
-constexpr int N = 10;
+constexpr int N = 1000;
 constexpr int H = 4, W = 4;
 const std::string dbfile = "databases/dp4x4.db";
 
-#define USEDB
 
 //-------------------------------------------------------------------------------
 
-#ifdef USEDB
-#include "dpdb.hpp"
-using sbpuzzle::DPDB;
+using namespace sbpuzzle;
 //uint8_t DBGROUPS[] = {1, 1, 1, 0, 0, 1, 0, 0, sbpuzzle::DONT_CARE};
 //std::vector<const char *> DBFILES {"g1.db", "g2.db"};
 // uint8_t DBGROUPS[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -32,7 +33,9 @@ using sbpuzzle::DPDB;
 // uint8_t DBGROUPS[] = {0, 1, 2, 3, 4, 5, 6, 7, 0};
 // std::vector<const char *> DBFILES {"m0.db", "m1.db", "m2.db", "m3.db", "m4.db", "m5.db", "m6.db", "m7.db"};
 DPDB<H, W> DB = DPDB<H, W>::from_file(dbfile);
-#endif
+ReflectDPDB<H, W> RDB(DB);
+std::vector<const PDB<H, W> *> _DBS {&DB, &RDB};
+CombinedDB<H, W> CDB(_DBS);
 
 using namespace std;
 using TSA = sbpuzzle::TileSwapAction;
@@ -87,14 +90,12 @@ public:
     }
 };
 
-#ifdef USEDB
 class DPDBHeuristic {
 public:
     int operator()(const Puzzle &p) {
-        return p.lookup_cost(DB);
+        return p.lookup_cost(&CDB);
     }
 };
-#endif
 
 /*
 bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
@@ -137,7 +138,7 @@ int main() {
         */
         // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
-        auto r = search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
+        auto r = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;
         // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);

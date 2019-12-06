@@ -40,6 +40,7 @@
 //
 
 #include <cstdint>
+#include <array>
 #include <vector>
 #include <algorithm>
 #include <numeric>
@@ -48,6 +49,8 @@
 
 // TODO: consider alternatives to returning a vector for possible_actions()
 // a custom iterator-like type would work nicely if it can be made light-weight
+
+#include "pdb.hpp"
 
 namespace sbpuzzle {
         
@@ -186,7 +189,7 @@ namespace sbpuzzle {
                 const array<uint8_t, H*W> &tiles) 
         {
             // custom comparator that does not care about the _X value, takes it as min
-            constexpr auto cmp = [](uint8_t a, uint8_t b) -> bool {
+            auto cmp = [](uint8_t a, uint8_t b) -> bool {
                 // _X (don't care) values are replaced by 0
                 a = (a == _X) ? 0 : a;
                 b = (b == _X) ? 0 : b;
@@ -386,9 +389,8 @@ namespace sbpuzzle {
             return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
         }
 
-        template <typename PDBType>
-        uint8_t lookup_cost(const PDBType &pdb) const {
-            return pdb.lookup(tiles);
+        uint8_t lookup_cost(const PDB<H, W> *pdb) const {
+            return pdb->lookup(tiles);
         }
 
         template <typename PDBType>
@@ -667,8 +669,7 @@ namespace sbpuzzle {
             }
         }
 
-        template <typename PDBType>
-        uint8_t lookup_cost(const PDBType &pdb) const {
+        uint8_t lookup_cost(const PDB<H, W> *pdb) const {
             switch(tag) {
                 case TypeTag::W_HOLE:   return puzzle.w.lookup_cost(pdb);
                 case TypeTag::NO_HOLE:  return puzzle.n.lookup_cost(pdb);

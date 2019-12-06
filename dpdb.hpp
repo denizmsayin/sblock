@@ -9,6 +9,7 @@
 #include <queue>
 
 #include "sbpuzzle.hpp"
+#include "pdb.hpp"
 #include "sblock_utils.hpp"
 #include "search2.hpp"
 
@@ -94,15 +95,13 @@ namespace sbpuzzle {
     }
 
     template <details::psize_t H, details::psize_t W>
-    class DPDB {
+    class DPDB : public PDB<H, W> {
     public:
 
         // groups is supposed to contain a group for each tile
         // e.g. for 3x3 and 2 groups : {0, 0, 0, 1, 1, 1, 2, 2, 0}
         // Note that the group of the last element (hole) is ignored,
         // and that the groups MUST be enumerated from 0 to N-1
-        template <typename FIterator>
-        DPDB(const std::array<uint8_t, H*W> &o_groups, FIterator filenames_begin, FIterator filenames_end);
 
         // function for a set of groups
         static DPDB from_file(const std::string &filename);
@@ -112,7 +111,7 @@ namespace sbpuzzle {
         
         void save(const std::string &filename) const;
 
-        int lookup(const std::array<uint8_t, H*W> &tiles) const;
+        uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const;
 
         // calculate the index of the given tile configuration for the given group
         // note that DPDB works with the no-hole version of SBPuzzle. extended
@@ -187,19 +186,6 @@ namespace sbpuzzle {
     template <details::psize_t H, details::psize_t W>
     DPDB<H, W>::DPDB(const std::array<uint8_t, H*W> &o_groups) {
         init(o_groups);
-    }
-
-    template <details::psize_t H, details::psize_t W>
-    template <typename FIterator>
-    DPDB<H, W>::DPDB(
-            const std::array<uint8_t, H*W> &o_groups,
-            FIterator filenames_begin, 
-            FIterator filenames_end) 
-    {
-        init(o_groups);
-        FIterator fname = filenames_begin;
-        for(uint8_t i = 0; i < num_groups; ++i) 
-            read_byte_array(&(tables[i][0]), tables[i].size(), *fname++);
     }
 
     // This function is necessary for easy use of the calculate_lexindex
@@ -493,8 +479,8 @@ namespace sbpuzzle {
     */
 
     template <details::psize_t H, details::psize_t W>
-    int DPDB<H, W>::lookup(const std::array<uint8_t, H*W> &tiles) const {
-        int total = 0;
+    uint8_t DPDB<H, W>::lookup(const std::array<uint8_t, H*W> &tiles) const {
+        uint8_t total = 0;
         // for each group
         for(uint8_t i = 0; i < num_groups; ++i) {
             size_t index = calculate_table_index(i, tiles);
