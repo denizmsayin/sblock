@@ -15,14 +15,17 @@ sbpuzzle_test: sbpuzzle_test.cpp sblock_utils.cpp
 	$(PREFIX) $^ -o $(BINPATH)$@.out
 
 generate_dpdb: generate_dpdb.cpp sblock_utils.cpp
-	$(PREFIX) $^ -o $(BINPATH)$@_$(PH)x$(PW).out
+	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out
 
 sbp_tests: sbp_tests.cpp sblock_utils.cpp
 	$(PREFIX) $^ -o $(BINPATH)$@.out
 
 generate_solutions: generate_solutions.cpp sblock_utils.cpp
-	$(PREFIX) $^ -o $(BINPATH)$@_$(PH)x$(PW).out -lpthread
+	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out -lpthread
 
 cmp_solution_files: cmp_solution_files.cpp sblock_utils.cpp
 	$(PREFIX) $^ -o $(BINPATH)$@.out
+
+check_solution_file: check_solution_file.cpp sblock_utils.cpp
+	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out
 

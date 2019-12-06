@@ -31,11 +31,13 @@ public:
         Arithmetic print_every; // 0 implies disabled
         bool show_speed;
         std::string name_str;
+        bool no_newline;
 
         Options(Arithmetic pe=static_cast<Arithmetic>(1000), double a=0.0, 
                 bool ss=true, std::ostream &s=std::cout, 
                 const std::string &ns = "Value") 
-            : stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns) {}
+            : stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns), 
+              no_newline(true) {}
 
         Options(const Options &o) = default;
         Options(Options &&o) = default;
@@ -215,10 +217,15 @@ void SeriesTracker<A>::track() {
             NumWrapper<A> print_value(*tracked);
             NumWrapper<double> print_avg(running_avg);
             char fc = tolower(options.name_str[0]);
+            if(options.no_newline) 
+                options.stream << '\r';
             options.stream << options.name_str << ": " << print_value;
             if(options.show_speed)
                 options.stream << ", " << fc << "ps: " << print_avg;
-            options.stream << std::endl;
+            if(options.no_newline)
+                options.stream << std::flush;
+            else
+                options.stream << std::endl;
             record();
         }
     }

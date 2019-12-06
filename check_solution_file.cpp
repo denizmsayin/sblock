@@ -31,10 +31,12 @@ int main(int argc, char *argv[]) {
 
     auto db = CRDPDB::from_file(argv[1]);
 
+    size_t ctr = 0;
     std::array<uint8_t, H*W> tiles;
+    char *tiles_ptr = reinterpret_cast<char *>(&tiles[0]);
+    size_t tiles_size = sizeof(tiles[0]) * tiles.size();
     fstream f(argv[2], fstream::in | fstream::binary);
-    while(f) {
-        f.read(reinterpret_cast<char *>(&tiles[0]), sizeof(tiles[0]) * tiles.size());
+    while(f.read(tiles_ptr, tiles_size)) {
         uint8_t read_cost = f.get();
         Puzzle p(tiles);
         auto r = search2::a_star_search<Puzzle, Action>(p, [&](const Puzzle &p) { 
@@ -43,12 +45,13 @@ int main(int argc, char *argv[]) {
         if(read_cost != r.cost) {
             cout << "Cost mismatch!" << endl
                  << p << endl
-                 << "Read cost: " << read_cost << endl
+                 << "Read cost: " << static_cast<int>(read_cost) << endl
                  << "Calc cost: " << r.cost << endl;
             return 0;
         }
+        cout << '\r' << (++ctr) << " instances checked" << flush;
     }
-    
+    cout << endl;
     cout << "Check successful." << endl;
     return 0;
 }

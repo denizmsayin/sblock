@@ -125,6 +125,7 @@ void writer_thread_routine(std::fstream &stream, size_t print_every) {
     size_t written_sols = 0;
     SeriesTracker<size_t>::Options opts;
     opts.print_every = print_every;
+    opts.name_str = "puzzles solved";
     SeriesTracker<size_t> sol_tracker(&written_sols, opts);
     
     // actual variables & logic
