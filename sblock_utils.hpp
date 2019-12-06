@@ -6,6 +6,7 @@
 #include <chrono>
 #include <string>
 #include <cstdint>
+#include <cctype>
 
 // first, non-templated functions 
 size_t combination(size_t x, size_t n);
@@ -27,9 +28,11 @@ public:
         double alpha;
         Arithmetic print_every;
         bool show_speed;
+        std::string name_str;
 
-        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream &s=std::cout) 
-            : stream(s), alpha(a), print_every(pe), show_speed(ss) {}
+        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream &s=std::cout, 
+                const std::string &ns = "Value") 
+            : stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns) {}
 
         Options(const Options &o) = default;
         Options(Options &&o) = default;
@@ -207,10 +210,11 @@ void SeriesTracker<A>::track() {
         running_avg = options.alpha * running_avg + (1 - options.alpha) * inst_speed;
         NumWrapper<A> print_value(*tracked);
         NumWrapper<double> print_avg(running_avg);
+        char fc = tolower(options.name_str[0]);
+        options.stream << options.name_str << ": " << print_value;
         if(options.show_speed)
-            options.stream << "Value: " << print_value << ", cps: " << print_avg << std::endl;
-        else
-            options.stream << "Value: " << print_value << std::endl;
+            options.stream << ", " << fc << "ps: " << print_avg;
+        options.stream << std::endl;
         record();
     }
 }
