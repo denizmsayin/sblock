@@ -60,7 +60,10 @@ std::atomic<size_t> gpuzzles_to_solve;
 // specialize std::hash
 
 template <class URNG>
-void generate_puzzles(size_t n, std::queue<Puzzle> &puzzles, URNG &&rng) {
+void generate_puzzles(size_t n, 
+                      std::queue<Puzzle> &puzzles, 
+                      const std::unordered_set<Puzzle> &already_solved,
+                      URNG &&rng) {
     typedef std::array<uint8_t, H*W> Tiles;
     Tiles tiles;
     std::iota(tiles.begin(), tiles.end(), 0);
@@ -74,10 +77,16 @@ void generate_puzzles(size_t n, std::queue<Puzzle> &puzzles, URNG &&rng) {
             std::shuffle(tiles.begin(), tiles.end(), rng);
             if(!sbpuzzle::tiles_solvable<H, W>(tiles)) continue;
             // if it is, check if it has already been generated before
+            // if not, we're done generating this puzzle 
             Puzzle p(tiles);
-            if(generated.find(p) == generated.end()) { // if not, add it to the puzzles
-                puzzles.emplace(p);
+            if(generated.find(p) == generated.end()) { 
                 success = true;
+                generated.emplace(p);
+                // only actually enqueue the generated puzzle if
+                // it was not one that was previously solved
+                // (only when resuming from a partially generated file)
+                if(already_solved.find(p) == already_solved.end())
+                    puzzles.emplace(p);
             }
         }
     }
@@ -160,10 +169,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // initialize the rng and generate puzzles
-    auto rng = std::default_random_engine(SEED);
     size_t n = std::stoull(argv[1]);
-    generate_puzzles(n, gpuzzles, rng);
 
     // open the output file and check how many bytes it has
     std::fstream stream(argv[3], std::fstream::in | std::fstream::out 
@@ -173,7 +179,10 @@ int main(int argc, char *argv[]) {
     stream.clear();
 
     // if the file is not new, must be continuing from a previous run
+    // fill an already_solved set from the file
+    std::unordered_set<Puzzle> already_solved;
     if(file_size > 0) {
+        // check how many instances the output file contains
         size_t storage_size = Puzzle::tile_size_in_bytes() + sizeof(Solution::cost);
         size_t num_puzzles = file_size / storage_size;
         size_t rem = file_size % storage_size;
@@ -183,14 +192,27 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "Outfile is an existing file containing " << num_puzzles
                   << " solved instances." << std::endl;
+
+        // quit if it was already filled
         if(num_puzzles >= n) {
             std::cout << "The outfile already contains at least as many puzzles as requested."
                       << " Quitting." << std::endl;
             return 0;
         }
-        for(size_t i = 0; i < num_puzzles; ++i) // remove already solved puzzles
-            gpuzzles.pop();
+        
+        // fill the already_solved set
+        stream.seekg(std::fstream::beg);
+        for(size_t i = 0; i < num_puzzles; ++i) { // remove already solved puzzles
+            std::array<uint8_t, H*W> tiles; // TODO: puzzle::underlying_type ?
+            stream.read(reinterpret_cast<char *>(&tiles[0]), tiles.size());
+            stream.ignore(1); // discard 1 byte (the solution)
+            already_solved.emplace(tiles);
+        }
     }
+
+    // initialize the rng and generate puzzles
+    auto rng = std::default_random_engine(SEED);
+    generate_puzzles(n, gpuzzles, already_solved, rng);
 
     gpuzzles_to_solve = gpuzzles.size();
 
@@ -222,12 +244,13 @@ int main(int argc, char *argv[]) {
     if(worker_thread_count == 0) {
         // run in the main program
         std::cout << "W: 0 worker threads means that the output will only "
-                  << "be saved once all solutions are generated" << std::endl;
+                  << "be saved once all solutions are generated." << std::endl;
         solver_thread_routine(&db);
     }
 
 
     // the main program will take care of writing
+    stream.clear();
     writer_thread_routine(std::ref(stream), print_every);
     // close the stream
     stream.close();
