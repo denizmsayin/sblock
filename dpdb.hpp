@@ -108,7 +108,7 @@ namespace sbpuzzle {
         static DPDB generate(const std::array<uint8_t, H*W> &o_groups);
         static void generate_and_save(const std::array<uint8_t, H*W> &o_groups, 
                                       const std::string &filename);
-        
+
         void save(const std::string &filename) const;
 
         uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const;

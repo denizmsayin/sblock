@@ -14,6 +14,7 @@
 #include "dpdb.hpp"
 #include "reflectdpdb.hpp"
 #include "combineddb.hpp"
+#include "crdpdb.hpp"
 
 unsigned SEED = 42;
 constexpr int N = 300;
@@ -31,6 +32,7 @@ typedef sbpuzzle::PDB<H, W> PDB;
 typedef sbpuzzle::DPDB<H, W> DPDB;
 typedef sbpuzzle::ReflectDPDB<H, W> ReflectDPDB;
 typedef sbpuzzle::CombinedDB<H, W> CombinedDB;
+typedef sbpuzzle::CRDPDB<H, W> CRDPDB;
 
 std::vector<array<uint8_t, H*W>> DBGROUPS { 
     {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE},
@@ -129,6 +131,10 @@ int main() {
         std::vector<const PDB *> dbs {&db, &rdb};
         CombinedDB cdb(dbs);
         test_db(puzzles, &cdb);
+        cout << "**************************************" << endl;
+        cout << "Testing direct construction of CRDB..." << endl;
+        CRDPDB cdb2 = CRDPDB::generate(group);
+        test_db(puzzles, &cdb2);
         cout << "**************************************" << endl;
     }
     return 0;

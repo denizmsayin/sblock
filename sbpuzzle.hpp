@@ -380,9 +380,19 @@ namespace sbpuzzle {
                 }
 
                 template <psize_t HH, psize_t WW>
-                    friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<HH, WW> &p) {
-                        return details::tiles_stream<HH, WW>(s, p.tiles);
-                    }
+                friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<HH, WW> &p) {
+                    return details::tiles_stream<HH, WW>(s, p.tiles);
+                }
+
+                std::ostream &stream_binary(std::ostream &s) const {
+                    const char *out_ptr = reinterpret_cast<const char *>(&tiles[0]);
+                    size_t out_size = tiles.size() * sizeof(tiles[0]);
+                    return s.write(out_ptr, out_size);
+                }
+
+                static size_t tile_size_in_bytes() {
+                    return sizeof(tiles);
+                }
 
                 int manhattan_distance_to_solution() const {
                     return details::tiles_manhattan_distance_to_solution<H, W>(tiles);

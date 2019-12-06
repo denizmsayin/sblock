@@ -4,6 +4,7 @@
 #include "search2.hpp"
 #include "sbpuzzle.hpp"
 #include "reflectdpdb.hpp"
+#include "crdpdb.hpp"
 
 using namespace std;
 using sbpuzzle::SBPuzzle;
@@ -14,6 +15,7 @@ int main() {
     using sbpuzzle::PDB;
     using sbpuzzle::DPDB;
     using sbpuzzle::ReflectDPDB;
+    using sbpuzzle::CRDPDB;
     /*
     bool mask[] = {true, true, true, true, false, false, false, false, false};
     uint8_t tiles1[] = {0, 7, 2, 3, 1, 4, 5, 6, 8};
@@ -27,6 +29,7 @@ int main() {
     cout << endl;
     */
     // std::array<uint8_t, H*W> arr {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    /*
     std::array<uint8_t, H*W> g {0, 0, 0, 1, 1, 0, 1, 1, sbpuzzle::DONT_CARE};
     DPDB<H, W> db = DPDB<H, W>::generate(g);
     ReflectDPDB<H, W> rdb(db);
@@ -43,5 +46,9 @@ int main() {
     std::array<uint8_t, H*W> refl2;
     sbpuzzle::details::tiles_reflect<H, W>(refl, refl2);
     sbpuzzle::details::tiles_stream<H, W>(std::cout, refl2) << std::endl;
+    */
+    std::cout << "sizeof(DPDB)=" << sizeof(DPDB<H, W>) << std::endl;
+    std::cout << "sizeof(ReflectDPDB)=" << sizeof(ReflectDPDB<H, W>) << std::endl;
+    std::cout << "sizeof(CRDPDB)=" << sizeof(CRDPDB<H, W>) << std::endl;
     return 0;
 }
