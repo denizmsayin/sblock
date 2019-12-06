@@ -14,6 +14,9 @@ DBGENSRC=generate_dpdb.cpp sblock_utils.cpp
 DBGENOUT=generate_dpdb_$(PH)x$(PW).out
 # CXXFLAGS += -DTRACK_NODES
 
+SOLSRC=generate_solutions.cpp sblock_utils.cpp
+SOLOUT=generate_solutions_$(PH)x$(PW).out
+
 all:
 	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(SRC) -o $(OUT)
 
@@ -22,3 +25,6 @@ dpdb:
 
 tests:
 	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(TESTSRC) -o $(TESTOUT)
+
+sols:
+	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(HW) $(SOLSRC) -o $(SOLOUT)
