@@ -19,7 +19,7 @@ namespace sbpuzzle {
 // create a custom iterator class constructed over a set of tiles
 // that presents a 'boolean' view of them
     namespace details {
-        template <details::psize_t H, details::psize_t W>
+        template <psize_t H, psize_t W>
         class TileCombIterator {
         public:
             // IMPORTANT: the iterator does not perform a copy of the input
@@ -94,7 +94,7 @@ namespace sbpuzzle {
         };
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     class DPDB : public PDB<H, W> {
     public:
 
@@ -150,7 +150,7 @@ namespace sbpuzzle {
     // of the members of the group (the Ngroup! part)
 
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     void DPDB<H, W>::init(const std::array<uint8_t, H*W> &o_groups) 
     {
         // copy the group number of each tile
@@ -183,7 +183,7 @@ namespace sbpuzzle {
         }
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     DPDB<H, W>::DPDB(const std::array<uint8_t, H*W> &o_groups) {
         init(o_groups);
     }
@@ -193,7 +193,7 @@ namespace sbpuzzle {
     // for their index to be calculated, this function simply fills
     // the output iterator with consecutive tiles from the same group
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     class ZH {
     public:
         constexpr int operator()(const SBPuzzleNoHole<H, W> &p) {
@@ -201,7 +201,7 @@ namespace sbpuzzle {
         }
     };
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     class MH {
     public:
         constexpr int operator()(const SBPuzzleNoHole<H, W> &p) {
@@ -209,7 +209,7 @@ namespace sbpuzzle {
         }
     };
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     DPDB<H, W> DPDB<H, W>::from_file(const std::string &filename) {
         // Check DPDB<H, W>::save for a description of the format
         /*
@@ -241,7 +241,7 @@ namespace sbpuzzle {
         return db;
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     void DPDB<H, W>::generate_and_save(
             const std::array<uint8_t, H*W> &o_groups,
             const std::string &filename) 
@@ -250,7 +250,7 @@ namespace sbpuzzle {
         db.save(filename);
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     void DPDB<H, W>::save(const std::string &filename) const {
         // A DPDB file is a binary file with the following format:
         // first 2 bytes: H & W
@@ -265,7 +265,7 @@ namespace sbpuzzle {
         out_file.close();
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     DPDB<H, W> DPDB<H, W>::generate(const std::array<uint8_t, H*W> &o_groups) {
         DPDB db(o_groups);
         for(uint8_t i = 0; i < db.num_groups; ++i)
@@ -273,7 +273,7 @@ namespace sbpuzzle {
         return db;
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     void DPDB<H, W>::_generate(uint8_t i) 
     {
         typedef SBPuzzleNoHole<H, W> PuzzleType;
@@ -439,7 +439,7 @@ namespace sbpuzzle {
         */
     }
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     size_t DPDB<H, W>::calculate_table_index(int i, 
                                              const std::array<uint8_t, H*W> &o_tiles,
                                              bool extended) const 
@@ -472,13 +472,13 @@ namespace sbpuzzle {
     }
 
     /*
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     int DPDB<H, W>::lookup(const SBPuzzleNoHole<H, W> &p) const {
         return lookup(p.get_tiles());
     }
     */
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     uint8_t DPDB<H, W>::lookup(const std::array<uint8_t, H*W> &tiles) const {
         uint8_t total = 0;
         // for each group

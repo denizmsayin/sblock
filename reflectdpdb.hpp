@@ -13,7 +13,7 @@ namespace sbpuzzle {
     // It uses the provided database's table for looking up and 
     // does not consume any extra space, but is entirely dependent
     // on the provided database.
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     class ReflectDPDB : public PDB<H, W> {
     public:
         ReflectDPDB(const DPDB<H, W> &o_db) : db(o_db) {}
@@ -39,7 +39,7 @@ namespace sbpuzzle {
         }
     }
 
-    template<details::psize_t H, details::psize_t W>
+    template<psize_t H, psize_t W>
     uint8_t ReflectDPDB<H, W>::lookup(const std::array<uint8_t, H*W> &tiles) const {
         std::array<uint8_t, H*W> rtiles;
         details::tiles_reflect<H, W>(tiles, rtiles);

@@ -8,7 +8,7 @@
 
 namespace sbpuzzle {
 
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     class CombinedDB : public PDB<H, W> {
     public:
         CombinedDB(const std::vector<const PDB<H, W> *> &o_dbs) : dbs(o_dbs) {}
@@ -19,7 +19,7 @@ namespace sbpuzzle {
         std::vector<const PDB<H, W> *> dbs;
     };
     
-    template <details::psize_t H, details::psize_t W>
+    template <psize_t H, psize_t W>
     uint8_t CombinedDB<H, W>::lookup(const std::array<uint8_t, H*W> &tiles) const {
         uint8_t max_val = 0;
         for(const auto *db : dbs) {
