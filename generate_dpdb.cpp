@@ -17,7 +17,7 @@
 
 #include "dpdb.hpp"
 
-constexpr sbpuzzle::details::psize_t H = __H, W = __W;
+constexpr sbpuzzle::psize_t H = __H, W = __W;
 constexpr int SIZE = H*W;
 
 uint8_t validate_groups(const std::array<uint8_t, SIZE> &groups) {

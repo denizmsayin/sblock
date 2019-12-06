@@ -28,26 +28,63 @@ size_t factorial(size_t n) {
     return table[n];
 }
 
-std::ostream& stream_tiles(std::ostream &s, const uint8_t *tiles, size_t h, size_t w, uint8_t x) {
-    const uint8_t *max = std::max_element(tiles, tiles + h*w);
-    uint8_t num_digits = (*max > 99) ? 3 : ((*max > 9) ? 2 : 1); 
-    int num_dashes = w * (num_digits + 3) + 1;
-    std::string dash_str(num_dashes, '-');
-    std::string empty_str(num_digits - 1, ' ');
-    for(size_t i = 0, k = 0; i < h; i++) {
-        s << dash_str << std::endl;
-        
-        for(size_t j = 0; j < w; j++) {
-            s << "| "; 
-            if(tiles[k] == x) // marks masked tiles, big dep issue!
-                s << empty_str << "X ";
-            else 
-                s << std::setw(num_digits) << static_cast<int>(tiles[k]) << " ";
-            ++k;
-        }
-        s << "|" << std::endl;
+
+// copied from the boost implementation
+static inline size_t hash_combine(size_t h1, size_t h2) {
+    return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+}
+
+template <typename P>
+static inline size_t cast_hash(const void *p) {
+    return std::hash<P>()(*static_cast<const P *>(p));
+}
+
+static inline const void *offset_voidptr(const void *p, size_t x) {
+    return static_cast<const void *>(reinterpret_cast<const char *>(p) + x);
+}
+
+size_t hash_byte_array(const uint8_t *arr, size_t size) {
+    // first, do all you can using 8 bytes each time
+    size_t seed = 0;
+    constexpr std::hash<uint64_t> hasher64;
+    size_t n = size;
+    const uint64_t *itr = reinterpret_cast<const uint64_t *>(arr);
+    while(n >= 8) {
+        seed = hash_combine(seed, hasher64(*itr++));
+        n -= 8;
     }
-    s << dash_str;
-    return s;
+    // hash the remainder
+    const void *p = reinterpret_cast<const void *>(itr);
+    switch(n) {
+        case 1: 
+            seed = hash_combine(seed, cast_hash<uint8_t>(p)); 
+            break;
+        case 2: 
+            seed = hash_combine(seed, cast_hash<uint16_t>(p)); 
+            break;
+        case 3: 
+            seed = hash_combine(hash_combine(seed, cast_hash<uint16_t>(p)),
+                    cast_hash<uint8_t>(offset_voidptr(p, 2)));
+            break;
+        case 4: 
+            seed = hash_combine(seed, cast_hash<uint32_t>(p)); 
+            break;
+        case 5: 
+            seed = hash_combine(hash_combine(seed, cast_hash<uint32_t>(p)),
+                    cast_hash<uint8_t>(offset_voidptr(p, 4)));
+            break;
+        case 6:
+            seed = hash_combine(hash_combine(seed, cast_hash<uint32_t>(p)),
+                    cast_hash<uint16_t>(offset_voidptr(p, 4)));
+            break;
+        case 7:
+            seed = hash_combine(hash_combine(hash_combine(seed, cast_hash<uint32_t>(p)),
+                        cast_hash<uint16_t>(offset_voidptr(p, 4))),
+                    cast_hash<uint8_t>(offset_voidptr(p, 6)));
+            break;
+        default: ;
+    }
+    return seed;
+    // brought form 34 ms to 28 ms compared to hashing one by one
 }
 

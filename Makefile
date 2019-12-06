@@ -1,30 +1,28 @@
 CXX=g++
 CXXFLAGS=-Wall -std=c++17
 EXTRAFLAGS?=-O3
-SRC=sbpuzzle_test.cpp sblock_utils.cpp
-OUT=sbpuzzle_test.out
-TESTSRC=sbp_tests.cpp sblock_utils.cpp
-TESTOUT=sbp_tests.out
-
+BINPATH=bin/
 # used to set the height and width for which the db generator is compiled
 PH=3
 PW=3
 HW=-D__W=$(PW) -D__H=$(PH)
-DBGENSRC=generate_dpdb.cpp sblock_utils.cpp
-DBGENOUT=generate_dpdb_$(PH)x$(PW).out
+
 # CXXFLAGS += -DTRACK_NODES
 
-SOLSRC=generate_solutions.cpp sblock_utils.cpp
-SOLOUT=generate_solutions_$(PH)x$(PW).out
+PREFIX=$(CXX) $(CXXFLAGS) $(EXTRAFLAGS)
 
-all:
-	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(SRC) -o $(OUT)
+sbpuzzle_test: sbpuzzle_test.cpp sblock_utils.cpp
+	$(PREFIX) $^ -o $(BINPATH)$@.out
 
-dpdb:
-	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(HW) $(DBGENSRC) -o $(DBGENOUT)
+generate_dpdb: generate_dpdb.cpp sblock_utils.cpp
+	$(PREFIX) $^ -o $(BINPATH)$@_$(PH)x$(PW).out
 
-tests:
-	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(TESTSRC) -o $(TESTOUT)
+sbp_tests: sbp_tests.cpp sblock_utils.cpp
+	$(PREFIX) $^ -o $(BINPATH)$@.out
 
-sols:
-	$(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(HW) $(SOLSRC) -o $(SOLOUT)
+generate_solutions: generate_solutions.cpp sblock_utils.cpp
+	$(PREFIX) $^ -o $(BINPATH)$@_$(PH)x$(PW).out -lpthread
+
+cmp_solution_files: cmp_solution_files.cpp sblock_utils.cpp
+	$(PREFIX) $^ -o $(BINPATH)$@.out
+

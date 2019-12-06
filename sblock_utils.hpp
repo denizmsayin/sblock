@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <array>
 #include <chrono>
 #include <string>
 #include <cstdint>
@@ -11,13 +12,14 @@
 // first, non-templated functions 
 size_t combination(size_t x, size_t n);
 size_t factorial(size_t n);
-std::ostream& stream_tiles(std::ostream &s, const uint8_t *tiles, size_t h, size_t w, uint8_t x);
 
 template <typename Iterator>
 size_t calculate_combindex(Iterator begin, Iterator end, int x, int n);
 
 template <typename RandomAccessIterator>
 size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end);
+
+size_t hash_byte_array(const uint8_t *a, size_t s);
 
 // templated class declarations
 template <typename Arithmetic>
@@ -26,11 +28,12 @@ public:
     struct Options {
         std::ostream &stream;
         double alpha;
-        Arithmetic print_every;
+        Arithmetic print_every; // 0 implies disabled
         bool show_speed;
         std::string name_str;
 
-        Options(int pe=1000, double a=0.0, bool ss=true, std::ostream &s=std::cout, 
+        Options(Arithmetic pe=static_cast<Arithmetic>(1000), double a=0.0, 
+                bool ss=true, std::ostream &s=std::cout, 
                 const std::string &ns = "Value") 
             : stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns) {}
 
@@ -202,20 +205,22 @@ void SeriesTracker<A>::record() {
 
 template <typename A>
 void SeriesTracker<A>::track() {
-    A diff = *tracked - rec_value;
-    if(diff >= options.print_every) {
-        auto now = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> ms = now - rec_time;
-        double inst_speed = 1000 * diff / ms.count(); // per second
-        running_avg = options.alpha * running_avg + (1 - options.alpha) * inst_speed;
-        NumWrapper<A> print_value(*tracked);
-        NumWrapper<double> print_avg(running_avg);
-        char fc = tolower(options.name_str[0]);
-        options.stream << options.name_str << ": " << print_value;
-        if(options.show_speed)
-            options.stream << ", " << fc << "ps: " << print_avg;
-        options.stream << std::endl;
-        record();
+    if(options.print_every != static_cast<A>(0)) {
+        A diff = *tracked - rec_value;
+        if(diff >= options.print_every) {
+            auto now = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> ms = now - rec_time;
+            double inst_speed = 1000 * diff / ms.count(); // per second
+            running_avg = options.alpha * running_avg + (1 - options.alpha) * inst_speed;
+            NumWrapper<A> print_value(*tracked);
+            NumWrapper<double> print_avg(running_avg);
+            char fc = tolower(options.name_str[0]);
+            options.stream << options.name_str << ": " << print_value;
+            if(options.show_speed)
+                options.stream << ", " << fc << "ps: " << print_avg;
+            options.stream << std::endl;
+            record();
+        }
     }
 }
 
