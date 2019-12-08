@@ -8,8 +8,6 @@
 #include <numeric>
 #include <memory>
 
-#define W_TORCH
-
 #include "search.hpp"
 #include "search2.hpp"
 #include "search_queues.hpp"
@@ -18,16 +16,12 @@
 #include "dpdb.hpp"
 #include "reflectdpdb.hpp"
 #include "combineddb.hpp"
-#include "dlmodel.hpp"
 
 unsigned SEED = 42;
 
 constexpr int N = 1;
-constexpr int H = 4, W = 4;
-const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp4x4.db";
-
-const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_ce.pt";
-auto device = torch::kCUDA;
+constexpr int H = 5, W = 5;
+const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp5x5.db";
 
 //-------------------------------------------------------------------------------
 
@@ -43,7 +37,12 @@ ReflectDPDB<H, W> RDB(DB);
 std::vector<const PDB<H, W> *> _DBS {&DB, &RDB};
 CombinedDB<H, W> CDB(_DBS);
 
+#ifdef W_TORCH
+#include "dlmodel.hpp"
+const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_ce.pt";
+auto device = torch::kCPU;
 std::unique_ptr<DLModel<H*W>> DLMODEL = DLModel<H*W>::from_file(torchfile, device);
+#endif
 
 using namespace std;
 using TSA = sbpuzzle::TileSwapAction;
@@ -108,6 +107,7 @@ public:
 size_t gequal = 0;
 std::vector<int64_t> goffs;
 
+#ifdef W_TORCH
 class TorchRegHeuristic {
 public:
     uint64_t operator()(const Puzzle &p) {
@@ -125,6 +125,7 @@ public:
         return r;
     }
 };
+#endif
 
 /*
 bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
@@ -167,8 +168,8 @@ int main() {
         */
         // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
-        // auto r = search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
-        auto r = search2::a_star_search<Puzzle, TSA, TorchRegHeuristic, true>(puzzles[i]);
+        auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic, true>(puzzles[i], 0.8);
+        // auto r = search2::a_star_search<Puzzle, TSA, TorchRegHeuristic, true>(puzzles[i]);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;
         // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);

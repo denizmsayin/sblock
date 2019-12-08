@@ -340,7 +340,7 @@ namespace search2 {
         }
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
+    SearchResult weighted_a_star_search(const Puzzle &p, double w, HeuristicFunc hf=HeuristicFunc()) {
         // Since the standard library PQ does not have a decrease-key operation, we have
         // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
         // a node with a better cost, and simply discard visited nodes when popping
@@ -379,7 +379,7 @@ namespace search2 {
                     int new_path_cost = node.path_cost + step_cost;
                     auto lookup = visited.find(new_p);
                     if(lookup == visited.end() || new_path_cost < lookup->second) {
-                        int new_est_cost = new_path_cost + hf(new_p);
+                        int new_est_cost = static_cast<int>(w * new_path_cost) + hf(new_p);
                         pq.emplace(new_p, new_path_cost, new_est_cost);
                     }
                 }
@@ -387,6 +387,11 @@ namespace search2 {
         }
         details::throw_unreachable();
         return SearchResult(0, exp_ctr);
+    }
+
+    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
+    SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
+        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, hf);
     }
 
     namespace details {
@@ -596,6 +601,59 @@ namespace search2 {
             }
             return 0;
         }
+
+
+    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
+    SearchResult xa_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
+        // Since the standard library PQ does not have a decrease-key operation, we have
+        // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
+        // a node with a better cost, and simply discard visited nodes when popping
+        // from the queue, as we are guaranteed to have found the shortest path to
+        // a visited node. 
+        // A* does not have such a strong guarantee. We are certain that we will find 
+        // the shortest path to the GOAL, but not each and every state. Thus it is
+        // possible to find a shorter path to a state that has already been visited.
+        // To deal with this, we also need to keep track of the smallest cost we have
+        // found for each state so far. If we find a path with a lower cost, we simply
+        // have to act as if that state was not visited.
+        std::unordered_map<Puzzle, int> visited;
+        std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
+        pq.emplace(p, 0, hf(p));
+        size_t exp_ctr = 0;
+        SeriesTracker<size_t>::Options opts;
+        opts.print_every = 10000;
+        opts.name_str = "Nodes expanded";
+        SeriesTracker<size_t> t(&exp_ctr, opts);
+        while(!pq.empty()) {
+            auto node = pq.top(); pq.pop();
+            const auto &p = node.puzzle;
+            // check if the state has been visited before
+            // we act as if not visited if the cost is smaller than the prev one too
+            auto lookup = visited.find(p);
+            if(lookup == visited.end() || node.path_cost < lookup->second) {
+                if(p.is_solved())
+                    return SearchResult(node.path_cost, exp_ctr);
+                visited.emplace(p, node.path_cost);
+                exp_ctr++; 
+                if(Track) t.track();
+                // std::cout << '\r' << static_cast<int>(node.path_cost) << " " << static_cast<int>(node.est_cost);
+                for(auto action : p.template possible_actions<Action>()) {
+                    Puzzle new_p = p;
+                    int step_cost = new_p.apply_action(action);
+                    int new_path_cost = node.path_cost + step_cost;
+                    auto lookup = visited.find(new_p);
+                    if(lookup == visited.end() || new_path_cost < lookup->second) {
+                        int new_est_cost = new_path_cost + hf(new_p);
+                        pq.emplace(new_p, new_path_cost, new_est_cost);
+                    }
+                }
+            }
+        }
+        details::throw_unreachable();
+        return SearchResult(0, exp_ctr);
+    }
+
+
 
 
 
