@@ -42,7 +42,7 @@ namespace sbpuzzle {
         }   
 
         template <typename IType = float, typename OType = int, typename OutputItr>
-        void forward(const std::vector<SBPuzzleWHole<H, W>> &puzzles, OutputItr out_itr) {
+        void forward(const std::vector<SBPuzzle<H, W>> &puzzles, OutputItr out_itr) {
             static constexpr size_t S = details::SIZE<H, W>;
             // one hot encode all the puzzles in a cont. memory block
             long int n = static_cast<long int>(puzzles.size());
@@ -68,7 +68,7 @@ namespace sbpuzzle {
                 *out_itr++ = static_cast<OType>(acc[i]);
         }
 
-        uint8_t forward(const SBPuzzleWHole<H, W> &p) {
+        uint8_t forward(const SBPuzzle<H, W> &p) {
             return forward(p.get_tiles());
         }
 

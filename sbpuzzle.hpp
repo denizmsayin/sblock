@@ -365,12 +365,12 @@ namespace sbpuzzle {
 
     // The derived class for the case where the hole is masked
     template <psize_t H, psize_t W>
-    class SBPuzzleWHole : public SBPuzzleBase<H, W> {
+    class SBPuzzle : public SBPuzzleBase<H, W> {
     public:
 
-        SBPuzzleWHole() : Base() {}
+        SBPuzzle() : Base() {}
 
-        explicit SBPuzzleWHole(const array<uint8_t, H*W> &i_tiles) {
+        explicit SBPuzzle(const array<uint8_t, H*W> &i_tiles) {
             for(size_t i = 0; i < Base::SIZE; ++i) {
                 if(i_tiles[i] == Base::HOLE)
                     Base::hole_pos = i;
@@ -378,7 +378,7 @@ namespace sbpuzzle {
             }
         }
 
-        explicit SBPuzzleWHole(const array<uint8_t, H*W> &i_tiles, 
+        explicit SBPuzzle(const array<uint8_t, H*W> &i_tiles, 
                 const array<bool, H*W> &mask) 
         {
             for(size_t i = 0; i < Base::SIZE; ++i) {
@@ -387,18 +387,18 @@ namespace sbpuzzle {
                         Base::hole_pos = i;
                     Base::tiles[i] = i_tiles[i];
                 } else if(i_tiles[i] == Base::HOLE) {
-                    throw std::invalid_argument("Constructing SBPuzzleWHole with unmasked hole will give invalid results");
+                    throw std::invalid_argument("Constructing SBPuzzle with unmasked hole will give invalid results");
                 } else {
                     Base::tiles[i] = details::_X;
                 }
             }
         }
 
-        SBPuzzleWHole(const SBPuzzleWHole &other) = default;
-        SBPuzzleWHole &operator=(const SBPuzzleWHole &other) = default;
+        SBPuzzle(const SBPuzzle &other) = default;
+        SBPuzzle &operator=(const SBPuzzle &other) = default;
 
-        SBPuzzleWHole goal_state() const { 
-            return details::goal_state<SBPuzzleWHole<H, W>, H, W>(Base::tiles);
+        SBPuzzle goal_state() const { 
+            return details::goal_state<SBPuzzle<H, W>, H, W>(Base::tiles);
         }
 
         template <class Action>
@@ -417,15 +417,15 @@ namespace sbpuzzle {
         // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
         template <typename Action, typename Dummy = void>
         struct PADelegate {
-            static std::vector<Action> f(const SBPuzzleWHole &p);
+            static std::vector<Action> f(const SBPuzzle &p);
         };
     };
  
     // PADelegate specialization for the TileSwapAction class
     template <psize_t H, psize_t W>
     template <typename Dummy>
-    struct SBPuzzleWHole<H, W>::PADelegate<TileSwapAction, Dummy> {
-        static auto f(const SBPuzzleWHole<H, W> &p) {
+    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Dummy> {
+        static auto f(const SBPuzzle<H, W> &p) {
             auto hp = p.hole_pos;
             std::vector<TileSwapAction> actions;
             std::array<bool, 4> valid;
@@ -444,7 +444,7 @@ namespace sbpuzzle {
     class SBPuzzleNoHole : public SBPuzzleBase<H, W> {
     public:
 
-        // constructs with only hole unmasked, equivalent to SBPuzzleWHole in that case
+        // constructs with only hole unmasked, equivalent to SBPuzzle in that case
         SBPuzzleNoHole() : Base() {}
 
         explicit SBPuzzleNoHole(const array<uint8_t, H*W> &i_tiles, 
@@ -531,7 +531,7 @@ namespace sbpuzzle {
     /*
     // TODO: remove this after the switch to tagged union is done
     template <psize_t H, psize_t W>
-    using SBPuzzle = SBPuzzleWHole<H, W>;
+    using SBPuzzle = SBPuzzle<H, W>;
     */
 
     // Finally, we have to use a tagged union wrapper over the classes for
@@ -539,10 +539,10 @@ namespace sbpuzzle {
     // This is necessary because groups are run-time input and thus the
     // decision of which class to instantiate exactly should be done at run-time.
     template <psize_t H, psize_t W>
-    class SBPuzzle {
+    class SBPuzzleUnion {
     public:
-        SBPuzzle(const array<uint8_t, H*W> &tiles) : tag(TypeTag::W_HOLE), puzzle(tiles) {}
-        SBPuzzle(const array<uint8_t, H*W> &tiles, 
+        SBPuzzleUnion(const array<uint8_t, H*W> &tiles) : tag(TypeTag::W_HOLE), puzzle(tiles) {}
+        SBPuzzleUnion(const array<uint8_t, H*W> &tiles, 
                  const array<bool, H*W> &mask) 
             : tag(TypeTag::NO_HOLE), puzzle(tiles, mask) 
         {
@@ -551,17 +551,17 @@ namespace sbpuzzle {
             if(mask[hole]) {
                 std::cout << "Created whole\n";
                 tag = TypeTag::W_HOLE;
-                puzzle = SBPuzzleWHole<H, W>(tiles, mask);
+                puzzle = SBPuzzle<H, W>(tiles, mask);
             }
         }
 
-        SBPuzzle(const SBPuzzle &) = default;
-        SBPuzzle(SBPuzzle &&) = default;
-        SBPuzzle &operator=(const SBPuzzle &) = default;
-        SBPuzzle &operator=(SBPuzzle &&) = default;
+        SBPuzzleUnion(const SBPuzzleUnion &) = default;
+        SBPuzzleUnion(SBPuzzleUnion &&) = default;
+        SBPuzzleUnion &operator=(const SBPuzzleUnion &) = default;
+        SBPuzzleUnion &operator=(SBPuzzleUnion &&) = default;
 
-        SBPuzzle(const SBPuzzleWHole<H, W> &o) : tag(TypeTag::W_HOLE), puzzle(o) {}
-        SBPuzzle(const SBPuzzleNoHole<H, W> &o) : tag(TypeTag::NO_HOLE), puzzle(o) {}
+        SBPuzzleUnion(const SBPuzzle<H, W> &o) : tag(TypeTag::W_HOLE), puzzle(o) {}
+        SBPuzzleUnion(const SBPuzzleNoHole<H, W> &o) : tag(TypeTag::NO_HOLE), puzzle(o) {}
 
         bool is_solved() const {
             switch(tag) {
@@ -571,7 +571,7 @@ namespace sbpuzzle {
             }
         }
 
-        bool operator==(const SBPuzzle &other) const {
+        bool operator==(const SBPuzzleUnion &other) const {
             if(tag != other.tag)
                 throw std::invalid_argument("Puzzle type tags do not match in operator==");
             switch(tag) {
@@ -590,7 +590,7 @@ namespace sbpuzzle {
         }
 
         template <psize_t HH, psize_t WW>
-        friend std::ostream &operator<<(std::ostream &s, const SBPuzzle<HH, WW> &p) {
+        friend std::ostream &operator<<(std::ostream &s, const SBPuzzleUnion<HH, WW> &p) {
             switch(p.tag) {
                 default: throw_tterror();
                 case TypeTag::W_HOLE:   return s << p.puzzle.w;
@@ -606,11 +606,11 @@ namespace sbpuzzle {
             }
         }
 
-        SBPuzzle goal_state() const {
+        SBPuzzleUnion goal_state() const {
             switch(tag) {
                 default: throw_tterror();
-                case TypeTag::W_HOLE:   return SBPuzzle(puzzle.w.goal_state());
-                case TypeTag::NO_HOLE:  return SBPuzzle(puzzle.n.goal_state());
+                case TypeTag::W_HOLE:   return SBPuzzleUnion(puzzle.w.goal_state());
+                case TypeTag::NO_HOLE:  return SBPuzzleUnion(puzzle.n.goal_state());
             }
         }
 
@@ -642,10 +642,10 @@ namespace sbpuzzle {
             NO_HOLE
         } tag;
         union PuzzleUnion {
-            SBPuzzleWHole<H, W> w;
+            SBPuzzle<H, W> w;
             SBPuzzleNoHole<H, W> n;
 
-            PuzzleUnion(const SBPuzzleWHole<H, W> &wh) : w(wh) {}
+            PuzzleUnion(const SBPuzzle<H, W> &wh) : w(wh) {}
             PuzzleUnion(const SBPuzzleNoHole<H, W> &nh) : n(nh) {}
             PuzzleUnion(const array<uint8_t, H*W> &tiles) : w(tiles) {}
             // initialize nohole by default, change if not the case
@@ -655,7 +655,7 @@ namespace sbpuzzle {
 
         template <typename Action, typename Dummy = void>
         struct PADelegate {
-            static std::vector<Action> f(const SBPuzzle &p);
+            static std::vector<Action> f(const SBPuzzleUnion &p);
         };
 
         static void throw_tterror() {
@@ -665,12 +665,12 @@ namespace sbpuzzle {
 
     template <psize_t H, psize_t W>
     template <typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Dummy> {
-        static auto f(const SBPuzzle<H, W> &p) {
+    struct SBPuzzleUnion<H, W>::PADelegate<TileSwapAction, Dummy> {
+        static auto f(const SBPuzzleUnion<H, W> &p) {
             switch(p.tag) {
-                case SBPuzzle<H, W>::TypeTag::W_HOLE:   
+                case SBPuzzleUnion<H, W>::TypeTag::W_HOLE:   
                     return p.puzzle.w.template possible_actions<TileSwapAction>();
-                case SBPuzzle<H, W>::TypeTag::NO_HOLE:  
+                case SBPuzzleUnion<H, W>::TypeTag::NO_HOLE:  
                     return p.puzzle.n.template possible_actions<TileSwapAction>();
             }
             return p.puzzle.n.template possible_actions<TileSwapAction>();
@@ -683,16 +683,16 @@ namespace sbpuzzle {
 // add hashability
 namespace std {
     template <sbpuzzle::psize_t H, sbpuzzle::psize_t W>
-    struct hash<sbpuzzle::SBPuzzleWHole<H, W>> 
-        : sbpuzzle::details::hash<sbpuzzle::SBPuzzleWHole<H, W>> {};
+    struct hash<sbpuzzle::SBPuzzle<H, W>> 
+        : sbpuzzle::details::hash<sbpuzzle::SBPuzzle<H, W>> {};
 
     template <sbpuzzle::psize_t H, sbpuzzle::psize_t W>
     struct hash<sbpuzzle::SBPuzzleNoHole<H, W>> 
         : sbpuzzle::details::hash<sbpuzzle::SBPuzzleNoHole<H, W>> {};
     
     template <sbpuzzle::psize_t H, sbpuzzle::psize_t W>
-    struct hash<sbpuzzle::SBPuzzle<H, W>> 
-        : sbpuzzle::details::hash<sbpuzzle::SBPuzzle<H, W>> {};
+    struct hash<sbpuzzle::SBPuzzleUnion<H, W>> 
+        : sbpuzzle::details::hash<sbpuzzle::SBPuzzleUnion<H, W>> {};
 }
 
 #endif

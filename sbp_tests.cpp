@@ -26,7 +26,7 @@ constexpr int OPTIMAL_MOVES = 6645;
 //-------------------------------------------------------------------------------
 
 using namespace std;
-typedef sbpuzzle::SBPuzzleWHole<H, W> Puzzle;
+typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::PDB<H, W> PDB;
 typedef sbpuzzle::DPDB<H, W> DPDB;

@@ -35,7 +35,7 @@ constexpr size_t DEFAULT_WORKER_THREAD_COUNT = 0;
 constexpr size_t DEFAULT_PRINT_EVERY_COUNT = 1000;
 
 // typedefs for practicality & readability
-typedef sbpuzzle::SBPuzzleWHole<H, W> Puzzle;
+typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::PDB<H, W> PDB;
 typedef sbpuzzle::CRDPDB<H, W> CRDPDB;

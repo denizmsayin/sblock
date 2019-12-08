@@ -17,7 +17,7 @@
 constexpr uint8_t H = __H, W = __W;
 
 // typedefs for practicality & readability
-typedef sbpuzzle::SBPuzzleWHole<H, W> Puzzle;
+typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::PDB<H, W> PDB;
 typedef sbpuzzle::CRDPDB<H, W> CRDPDB;

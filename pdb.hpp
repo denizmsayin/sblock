@@ -20,7 +20,7 @@ namespace sbpuzzle {
 
         virtual uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const = 0;
 
-        uint8_t lookup(const SBPuzzleWHole<H, W> &p) const {
+        uint8_t lookup(const SBPuzzle<H, W> &p) const {
             return lookup(p.get_tiles());
         }
 
