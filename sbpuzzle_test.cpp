@@ -19,9 +19,9 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 1;
-constexpr int H = 5, W = 5;
-const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp5x5.db";
+constexpr int N = 1000;
+constexpr int H = 4, W = 4;
+const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp4x4.db";
 
 //-------------------------------------------------------------------------------
 
@@ -168,7 +168,10 @@ int main() {
         */
         // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
-        auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic, true>(puzzles[i], 0.8);
+        search2::BHFWrapper<Puzzle, DPDBHeuristic> bhf;
+        auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 0.7, 16, bhf);
+
+        // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
         // auto r = search2::a_star_search<Puzzle, TSA, TorchRegHeuristic, true>(puzzles[i]);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;

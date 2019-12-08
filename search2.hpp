@@ -339,6 +339,132 @@ namespace search2 {
             return 0;
         }
 
+
+    template <class Puzzle, class Action, class BatchHeuristicFunc, bool Track = false>
+    SearchResult batch_weighted_a_star_search(const Puzzle &start, 
+                                              double weight, 
+                                              size_t batch_size, 
+                                              BatchHeuristicFunc bhf=BatchHeuristicFunc()) 
+    {
+        // BatchHeuristicFunc: bhf(const std::vector<Puzzle> &v, OutputItr out_values)
+        // Since the standard library PQ does not have a decrease-key operation, we have
+        // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
+        // a node with a better cost, and simply discard visited nodes when popping
+        // from the queue, as we are guaranteed to have found the shortest path to
+        // a visited node. 
+        // A* does not have such a strong guarantee. We are certain that we will find 
+        // the shortest path to the GOAL, but not each and every state. Thus it is
+        // possible to find a shorter path to a state that has already been visited.
+        // To deal with this, we also need to keep track of the smallest cost we have
+        // found for each state so far. If we find a path with a lower cost, we simply
+        // have to act as if that state was not visited.
+        
+        // set up an expanded node counter and its tracker
+        size_t exp_ctr = 0;
+        SeriesTracker<size_t>::Options opts;
+        opts.print_every = 10000;
+        opts.name_str = "Nodes expanded";
+        SeriesTracker<size_t> t(&exp_ctr, opts);
+
+        // set up the search
+        std::unordered_map<Puzzle, int> visited;
+        std::priority_queue<SearchNode<Puzzle>, 
+                            std::vector<SearchNode<Puzzle>>, 
+                            SearchNodeComparator<Puzzle>> pq;
+
+        // vectors and manipulators
+        // why two sets of vectors rather than search nodes?
+        // since bhf accepts a vector of puzzles, no extra copying
+        std::vector<Puzzle> to_eval, extra;
+        to_eval.reserve(batch_size); extra.reserve(batch_size);
+
+        std::vector<int> te_costs, ex_costs;
+        te_costs.reserve(batch_size); ex_costs.reserve(batch_size);
+
+        std::vector<int> f_values;
+        f_values.reserve(batch_size);
+
+        // important note: bhf must make sure the values
+        // put inside f_values are properly cast to integral
+        // insert the first element
+        int start_f = 0;
+        bhf(std::vector<Puzzle> {start}, &start_f); // raw pointer as iterator!
+        pq.emplace(start, 0, start_f);
+ 
+        while(!pq.empty()) {
+
+            // select as many as batch size nodes for expansion
+            while(!pq.empty() && to_eval.size() < batch_size) {
+                auto node = pq.top(); pq.pop();
+                const auto &p = node.puzzle;
+                if(p.is_solved()) 
+                    return SearchResult(node.path_cost, exp_ctr);
+                auto lookup = visited.find(p);
+                if(lookup == visited.end() || node.path_cost < lookup->second) {
+                    visited.emplace(p, node.path_cost);
+                    ++exp_ctr;
+                    if(Track) t.track();
+                    for(auto action : p.template possible_actions<Action>()) {
+                        Puzzle new_p = p;
+                        int step_cost = new_p.apply_action(action);
+                        int new_path_cost = node.path_cost + step_cost;
+                        if(new_p.is_solved())
+                            return SearchResult(new_path_cost, exp_ctr);
+                        auto lookup = visited.find(new_p);
+                        if(lookup == visited.end() || new_path_cost < lookup->second) {
+                            // since we don't want to partially expand a node, extra expansions
+                            // from the last expanded node have to be inserted into an extra
+                            // vector, that will be swapped with the evaluation vec at the end
+                            if(to_eval.size() < batch_size) {
+                                to_eval.emplace_back(new_p);
+                                te_costs.emplace_back(new_path_cost);
+                            } else {
+                                extra.emplace_back(new_p);
+                                ex_costs.emplace_back(new_path_cost);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // now, to_eval contains at most batch_size nodes to evaluate
+            // we simply have to evaluate them and put them in the pq
+            bhf(to_eval, f_values.begin());
+
+            // then emplace everything
+            for(size_t i = 0, size = to_eval.size(); i < size; ++i) {
+                int path_cost = te_costs[i];
+                int new_est_cost = static_cast<int>(weight * path_cost) + f_values[i];
+                pq.emplace(to_eval[i], path_cost, new_est_cost);
+            }
+
+            // finally, clear to_eval and push back as many extras as possible
+            to_eval.clear();
+            te_costs.clear();
+            while(to_eval.size() < batch_size && !extra.empty()) {
+                to_eval.emplace_back(extra.back()); extra.pop_back();
+                te_costs.emplace_back(ex_costs.back()); ex_costs.pop_back();
+            }
+        }
+        details::throw_unreachable();
+        return SearchResult(0, exp_ctr);
+    }
+
+    // wrapper class transforming single valued heuristic function to batch
+    template <class Puzzle, class HF>
+    class BHFWrapper {
+    public:
+        BHFWrapper(HF _hf=HF()) : hf(_hf) {}
+
+        template <class OutputIterator>
+        void operator()(const std::vector<Puzzle> &v, OutputIterator itr) {
+            std::transform(v.begin(), v.end(), itr, hf);
+        }
+    private:
+        HF hf;
+    };
+
+
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
     SearchResult weighted_a_star_search(const Puzzle &p, double w, HeuristicFunc hf=HeuristicFunc()) {
         // Since the standard library PQ does not have a decrease-key operation, we have
@@ -352,6 +478,7 @@ namespace search2 {
         // To deal with this, we also need to keep track of the smallest cost we have
         // found for each state so far. If we find a path with a lower cost, we simply
         // have to act as if that state was not visited.
+        if(p.is_solved()) return SearchResult(0, 0);
         std::unordered_map<Puzzle, int> visited;
         std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
         pq.emplace(p, 0, hf(p));
@@ -367,8 +494,6 @@ namespace search2 {
             // we act as if not visited if the cost is smaller than the prev one too
             auto lookup = visited.find(p);
             if(lookup == visited.end() || node.path_cost < lookup->second) {
-                if(p.is_solved())
-                    return SearchResult(node.path_cost, exp_ctr);
                 visited.emplace(p, node.path_cost);
                 exp_ctr++; 
                 if(Track) t.track();
@@ -377,6 +502,8 @@ namespace search2 {
                     Puzzle new_p = p;
                     int step_cost = new_p.apply_action(action);
                     int new_path_cost = node.path_cost + step_cost;
+                    if(new_p.is_solved())
+                        return SearchResult(new_path_cost, exp_ctr);
                     auto lookup = visited.find(new_p);
                     if(lookup == visited.end() || new_path_cost < lookup->second) {
                         int new_est_cost = static_cast<int>(w * new_path_cost) + hf(new_p);
