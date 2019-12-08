@@ -10,14 +10,13 @@
 #include <unordered_map>
 #include <unistd.h>
 
-#include "search.hpp"
 #include "search2.hpp"
-#include "search_queues.hpp"
 #include "sbpuzzle.hpp"
 #include "pdb.hpp"
 #include "dpdb.hpp"
 #include "reflectdpdb.hpp"
 #include "combineddb.hpp"
+#include "heuristics.hpp"
 
 #ifndef __H
 #define __H 3
@@ -202,30 +201,6 @@ SearchType str2searchtype(const std::string &s) {
     return map[s];
 }
 
-enum class HeuristicType {
-    MISPL,
-    MANHATTAN,
-    PDB,
-    RDB,
-    CDB,
-    DLMODEL
-};
-
-HeuristicType str2heuristictype(const std::string &s) {
-    typedef HeuristicType T;
-    static std::unordered_map<std::string, HeuristicType> map {
-        {"mispl", T::MISPL},
-        {"manhattan", T::MANHATTAN},
-        {"pdb", T::PDB},
-        {"rdb", T::RDB},
-        {"cdb", T::CDB},
-        {"dlmodel", T::DLMODEL}
-    };
-    return map[s];
-}
-
-
-
 int main(int argc, char *argv[]) {
     unsigned seed = 42;
     size_t num_puzzles = 1;
@@ -258,54 +233,47 @@ int main(int argc, char *argv[]) {
     for(int i = 0; i < num_puzzles; i++) 
         puzzles.push_back(create_solvable_puzzle<H, W>(rng));
 
+    using namespace sbpuzzle;
     SearchType search_type = str2searchtype(search_type_str);
     HeuristicType heuristic = str2heuristictype(heuristic_str);
 
-//    auto t1 = std::chrono::high_resolution_clock::now();
-//    int num_moves = 0;
-//    size_t num_nodes = 0;
-//    for(int i = 0; i < num_puzzles; i++) {
-//        /*
-//        int m1 = search2::a_star_search<SBPuzzle<H, W>, TSA, 
-//                                        ManhattanHeuristic<H, W>>(puzzles[i]); 
-//        #ifdef USEDB
-//        int m2 = search2::a_star_search<SBPuzzle<H, W>, TSA, 
-//                                        DPDBHeuristic<H, W>>(puzzles[i]); 
-//        #endif
-//        if(m1 != m2) {
-//            cout << "DB Result: " << m2 << ", MD Result: " << m1 << endl;
-//            cout << puzzles[i] << endl;
-//            cout << "**********************" << endl;
-//        }
-//        */
-//        // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
-//        // std::cout << puzzles[i] << std::endl;
-//        search2::BHFWrapper<Puzzle, DPDBHeuristic> bhf;
-//        // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
-//
-//        // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
-//        auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, BTorchHeuristic, true>(puzzles[i], 1.0, 8192);
-//        // auto r = search2::weighted_a_star_search<Puzzle, TSA, TorchHeuristic, true>(puzzles[i], 0.1);
-//        // std::cout << "Solved in " << m << " moves." << std::endl;
-//        num_moves += r.cost;
-//        // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
-//        // num_moves += search2::a_star_search<Puzzle, TSA, ManhattanHeuristic>(puzzles[i]);
-//        // num_moves += moves.size();
-//        num_nodes += r.nodes_expanded; // search2::get_node_counter<Puzzle>();
-//        // search2::reset_node_counter<SBPuzzle<H, W>>();
-//        cout << '\r' << (i+1) << "/" << N << flush;
-//    }
-//    cout << '\r';
-//    auto t2 = chrono::high_resolution_clock::now();
-//
-//    chrono::duration<double, std::milli> fp_ms = t2 - t1;
-//
-//    double avg_moves = static_cast<double>(num_moves) / N;
-//    double avg_nodes = static_cast<double>(num_nodes) / N;
-//    cout << "Solved " << N << " puzzles in " << fp_ms.count() / N << " milliseconds on "
-//         << "average with " << avg_moves << " moves and " << avg_nodes 
-//         << " nodes expanded on average." << endl;
-//
+    // the search functions require virtual dispatch of the heuristic function,
+    // however since the templates are written with value (and not pointer) types
+    // in mind, it is necessary to use a reference to Heuristic rather than a pointer
+    std::unique_ptr<Heuristic<H, W>> hp = heuristic_factory<H, W>(heuristic);
+    Heuristic<H, W> &hf = *hp;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    int num_moves = 0;
+    size_t num_nodes = 0;
+    for(int i = 0; i < num_puzzles; i++) {
+        using namespace search2;
+        auto r = a_star_search<Puzzle, TSA>(puzzles[i], hf);
+        // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
+
+        // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
+        // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, BTorchHeuristic, true>(puzzles[i], 1.0, 8192);
+        // auto r = search2::weighted_a_star_search<Puzzle, TSA, TorchHeuristic, true>(puzzles[i], 0.1);
+        // std::cout << "Solved in " << m << " moves." << std::endl;
+        num_moves += r.cost;
+        // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
+        // num_moves += search2::a_star_search<Puzzle, TSA, ManhattanHeuristic>(puzzles[i]);
+        // num_moves += moves.size();
+        num_nodes += r.nodes_expanded; // search2::get_node_counter<Puzzle>();
+        // search2::reset_node_counter<SBPuzzle<H, W>>();
+        std::cout << '\r' << (i+1) << "/" << num_puzzles << std::flush;
+    }
+    std::cout << '\r';
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+
+    double avg_moves = static_cast<double>(num_moves) / num_puzzles;
+    double avg_nodes = static_cast<double>(num_nodes) / num_puzzles;
+    std::cout << "Solved " << num_puzzles << " puzzles in " << fp_ms.count() / num_puzzles 
+              << " milliseconds on average with " << avg_moves << "moves and " << avg_nodes
+              << " nodes expanded on average." << std::endl;
+
 //    cout << "Equals: " << gequal << '/' << goffs.size() << "\n";
 
     return 0;

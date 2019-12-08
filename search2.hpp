@@ -458,7 +458,7 @@ namespace search2 {
 
         template <class OutputIterator>
         void operator()(const std::vector<Puzzle> &v, OutputIterator itr) {
-            std::transform(v.begin(), v.end(), itr, hf);
+            std::transform(v.begin(), v.end(), itr, std::ref(hf));
         }
     private:
         HF hf;
@@ -466,7 +466,7 @@ namespace search2 {
 
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult weighted_a_star_search(const Puzzle &p, double w, HeuristicFunc hf=HeuristicFunc()) {
+    SearchResult weighted_a_star_search(const Puzzle &p, double w, HeuristicFunc&& hf) {
         // Since the standard library PQ does not have a decrease-key operation, we have
         // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
         // a node with a better cost, and simply discard visited nodes when popping
@@ -517,9 +517,21 @@ namespace search2 {
     }
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
+    SearchResult weighted_a_star_search(const Puzzle &p, double w) {
+        return weighted_a_star_search(p, w, HeuristicFunc());
+    }
+
+    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
     SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, hf);
     }
+
+    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
+    SearchResult a_star_search(const Puzzle &p, HeuristicFunc&& hf) {
+        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, std::forward<HeuristicFunc>(hf));
+    }
+
+
 
     namespace details {
 

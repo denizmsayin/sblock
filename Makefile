@@ -25,7 +25,7 @@ PREFIX=$(CXX) $(IFLAGS) $(CXXFLAGS) $(EXTRAFLAGS)
 POSTFIX=$(LFLAGS)
 
 sbpuzzle_test: sbpuzzle_test.cpp sblock_utils.cpp
-	$(PREFIX) $^ -o $(BINPATH)$@.out $(LFLAGS)
+	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out $(LFLAGS)
 
 generate_dpdb: generate_dpdb.cpp sblock_utils.cpp
 	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out $(LFLAGS)
