@@ -24,7 +24,7 @@ constexpr int N = 1;
 constexpr int H = 4, W = 4;
 const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp4x4.db";
 
-const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_l2.pt";
+const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_ce.pt";
 torch::jit::script::Module gmodule;
 torch::Device DEVICE(torch::kCPU);
 
@@ -108,7 +108,7 @@ std::vector<int64_t> goffs;
 class TorchRegHeuristic {
 public:
     uint64_t operator()(const Puzzle &p) {
-        uint64_t r = p.torch_reg_model_heuristic(gmodule, DEVICE);
+        uint64_t r = p.torch_classifier_model_heuristic(gmodule, DEVICE);
         /*
         uint64_t dbc = DPDBHeuristic()(p);
         std::cout << r << " " << dbc << "\n";

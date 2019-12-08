@@ -283,9 +283,9 @@ namespace sbpuzzle {
 
         #ifdef W_TORCH
         template <size_t S>
-        uint8_t tiles_forward_reg(const array<uint8_t, S> &inp, 
-                                  torch::jit::script::Module &module,
-                                  const torch::Device &input_dev)
+        at::Tensor tiles_forward(const array<uint8_t, S> &inp, 
+                                 torch::jit::script::Module &module,
+                                 const torch::Device &input_dev)
         {
             // one hot encode to float32
             std::array<float, S*S> enc;
@@ -294,10 +294,30 @@ namespace sbpuzzle {
             std::vector<torch::jit::IValue> inputs;
             inputs.push_back(torch::from_blob(&enc[0], {1, S*S}).to(input_dev));
 
-            // single value at the output
-            float output = module.forward(inputs).toTensor().item().toFloat();
+            at::Tensor output = module.forward(inputs).toTensor();
+            return output;
+        }
+
+        template <size_t S>
+        uint8_t tiles_forward_reg(const array<uint8_t, S> &inp, 
+                                  torch::jit::script::Module &module,
+                                  const torch::Device &input_dev)
+        {
+            float output = tiles_forward(inp, module, input_dev).item().toFloat();
             return static_cast<uint8_t>(round(output));
         }
+        
+        template <size_t S>
+        uint8_t tiles_forward_classifier(const array<uint8_t, S> &inp, 
+                                         torch::jit::script::Module &module,
+                                         const torch::Device &input_dev)
+        {
+            auto output_tensor = tiles_forward(inp, module, input_dev);
+            uint8_t dist = static_cast<uint8_t>(at::argmax(output_tensor).item().toInt());
+            return dist;
+        }
+
+
         #endif
 
     }
@@ -392,6 +412,12 @@ namespace sbpuzzle {
                                                   const torch::Device &dev) const 
                 {
                     return details::tiles_forward_reg<details::SIZE<H, W>>(tiles, module, dev);
+                }
+
+                uint8_t torch_classifier_model_heuristic(torch::jit::script::Module &module,
+                                                         const torch::Device &dev) const 
+                {
+                    return details::tiles_forward_classifier<details::SIZE<H, W>>(tiles, module, dev);
                 }
                 #endif
 
