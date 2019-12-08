@@ -339,7 +339,7 @@ namespace search2 {
             return 0;
         }
 
-    template <class Puzzle, class Action, class HeuristicFunc>
+    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
     SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         // Since the standard library PQ does not have a decrease-key operation, we have
         // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
@@ -356,6 +356,10 @@ namespace search2 {
         std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
         pq.emplace(p, 0, hf(p));
         size_t exp_ctr = 0;
+        SeriesTracker<size_t>::Options opts;
+        opts.print_every = 10000;
+        opts.name_str = "Nodes expanded";
+        SeriesTracker<size_t> t(&exp_ctr, opts);
         while(!pq.empty()) {
             auto node = pq.top(); pq.pop();
             const auto &p = node.puzzle;
@@ -366,7 +370,9 @@ namespace search2 {
                 if(p.is_solved())
                     return SearchResult(node.path_cost, exp_ctr);
                 visited.emplace(p, node.path_cost);
-                exp_ctr++;
+                exp_ctr++; 
+                if(Track) t.track();
+                // std::cout << '\r' << static_cast<int>(node.path_cost) << " " << static_cast<int>(node.est_cost);
                 for(auto action : p.template possible_actions<Action>()) {
                     Puzzle new_p = p;
                     int step_cost = new_p.apply_action(action);

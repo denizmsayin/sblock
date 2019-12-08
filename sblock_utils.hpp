@@ -43,6 +43,7 @@ public:
         Options(Options &&o) = default;
     };
 
+    SeriesTracker() = default;
     SeriesTracker(const Arithmetic *to_track);
     SeriesTracker(const Arithmetic *to_track, const Options &opts);
 

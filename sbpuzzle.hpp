@@ -47,6 +47,11 @@
 #include <iostream>
 #include <iomanip>
 
+#ifdef W_TORCH
+#include <cmath>
+#include <torch/script.h>
+#endif
+
 // TODO: consider alternatives to returning a vector for possible_actions()
 // a custom iterator-like type would work nicely if it can be made light-weight
 
@@ -129,71 +134,71 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
-            std::ostream& tiles_stream(
-                    std::ostream &s, 
-                    const array<uint8_t, H*W> &tiles) 
-            {
-                // custom comparator that does not care about the _X value, takes it as min
-                auto cmp = [](uint8_t a, uint8_t b) -> bool {
-                    // _X (don't care) values are replaced by 0
-                    a = (a == _X) ? 0 : a;
-                    b = (b == _X) ? 0 : b;
-                    return a < b;
-                };
-                const uint8_t *max = std::max_element(tiles.begin(), tiles.end(), cmp);
-                uint8_t num_digits = (*max > 99) ? 3 : ((*max > 9) ? 2 : 1); 
-                int num_dashes = W * (num_digits + 3) + 1;
-                std::string dash_str(num_dashes, '-');
-                std::string empty_str(num_digits - 1, ' ');
-                for(size_t i = 0, k = 0; i < H; i++) {
-                    s << dash_str << std::endl;
-                    for(size_t j = 0; j < W; j++) {
-                        s << "| "; 
-                        if(tiles[k] == _X)
-                            s << empty_str << "X ";
-                        else 
-                            s << std::setw(num_digits) << static_cast<int>(tiles[k]) << " ";
-                        ++k;
-                    }
-                    s << "|" << std::endl;
+        std::ostream& tiles_stream(
+                std::ostream &s, 
+                const array<uint8_t, H*W> &tiles) 
+        {
+            // custom comparator that does not care about the _X value, takes it as min
+            auto cmp = [](uint8_t a, uint8_t b) -> bool {
+                // _X (don't care) values are replaced by 0
+                a = (a == _X) ? 0 : a;
+                b = (b == _X) ? 0 : b;
+                return a < b;
+            };
+            const uint8_t *max = std::max_element(tiles.begin(), tiles.end(), cmp);
+            uint8_t num_digits = (*max > 99) ? 3 : ((*max > 9) ? 2 : 1); 
+            int num_dashes = W * (num_digits + 3) + 1;
+            std::string dash_str(num_dashes, '-');
+            std::string empty_str(num_digits - 1, ' ');
+            for(size_t i = 0, k = 0; i < H; i++) {
+                s << dash_str << std::endl;
+                for(size_t j = 0; j < W; j++) {
+                    s << "| "; 
+                    if(tiles[k] == _X)
+                        s << empty_str << "X ";
+                    else 
+                        s << std::setw(num_digits) << static_cast<int>(tiles[k]) << " ";
+                    ++k;
                 }
-                s << dash_str;
-                return s;
+                s << "|" << std::endl;
             }
+            s << dash_str;
+            return s;
+        }
 
         template <psize_t H, psize_t W>
-            uint64_t tiles_manhattan_distance_to_solution(const array<uint8_t, H*W> &tiles) {
-                uint64_t dist = 0;
-                for(size_t size = tiles.size(), i = 0; i < size; ++i) {
-                    if(tiles[i] != _X && tiles[i] != HOLE<H, W>) {
-                        // open to optimisation, but no need
-                        uint8_t row = i / W, col = i % W;
-                        uint8_t actual_row = tiles[i] / W, actual_col = tiles[i] % W;
-                        dist += abs(row - actual_row) + abs(col - actual_col);
-                    }
+        uint64_t tiles_manhattan_distance_to_solution(const array<uint8_t, H*W> &tiles) {
+            uint64_t dist = 0;
+            for(size_t size = tiles.size(), i = 0; i < size; ++i) {
+                if(tiles[i] != _X && tiles[i] != HOLE<H, W>) {
+                    // open to optimisation, but no need
+                    uint8_t row = i / W, col = i % W;
+                    uint8_t actual_row = tiles[i] / W, actual_col = tiles[i] % W;
+                    dist += abs(row - actual_row) + abs(col - actual_col);
                 }
-                return dist;
             }
+            return dist;
+        }
 
         template <psize_t H, psize_t W>
-            void tiles_mark_valid_moves(uint8_t p, array<bool, 4> &directions) {
-                int rem = p % W;
-                directions[0] = p >= W; // up
-                directions[1] = rem < W-1; // right
-                directions[2] = p < SIZE<H, W> - W; // down
-                directions[3] = rem > 0; // left
-            }
+        void tiles_mark_valid_moves(uint8_t p, array<bool, 4> &directions) {
+            int rem = p % W;
+            directions[0] = p >= W; // up
+            directions[1] = rem < W-1; // right
+            directions[2] = p < SIZE<H, W> - W; // down
+            directions[3] = rem > 0; // left
+        }
 
         template <psize_t H, psize_t W>
-            size_t count_inversions(const array<uint8_t, H*W> &tiles) {
-                size_t inv = 0;
-                for(size_t i = 0, size = tiles.size(); i < size; ++i) 
-                    if(tiles[i] != HOLE<H, W>) 
-                        for(size_t j = i+1; j < size; ++j) 
-                            if(tiles[j] != HOLE<H, W> && tiles[i] > tiles[j]) 
-                                ++inv;
-                return inv;
-            }
+        size_t count_inversions(const array<uint8_t, H*W> &tiles) {
+            size_t inv = 0;
+            for(size_t i = 0, size = tiles.size(); i < size; ++i) 
+                if(tiles[i] != HOLE<H, W>) 
+                    for(size_t j = i+1; j < size; ++j) 
+                        if(tiles[j] != HOLE<H, W> && tiles[i] > tiles[j]) 
+                            ++inv;
+            return inv;
+        }
 
         // simple struct to inherit from while extending std::hash
         // for our defined types, since they all have a hash() func
@@ -207,70 +212,93 @@ namespace sbpuzzle {
 
         // template polymorphic goal_state base function
         template <class P, psize_t H, psize_t W>
-            P goal_state(const array<uint8_t, H*W> &tiles) {
-                // this function should not be called often, so it seems
-                // to me it makes more sense to reconstruct the mask array
-                // here rather than store it in each puzzle instance
-                array<bool, SIZE<H, W>> mask;
-                tiles_reconstruct_mask<H, W>(tiles, mask);
-                array<uint8_t, SIZE<H, W>> tiles2;
-                tiles_correct_fill<H, W>(tiles2, mask);
-                return P(tiles2, mask);
-            }
+        P goal_state(const array<uint8_t, H*W> &tiles) {
+            // this function should not be called often, so it seems
+            // to me it makes more sense to reconstruct the mask array
+            // here rather than store it in each puzzle instance
+            array<bool, SIZE<H, W>> mask;
+            tiles_reconstruct_mask<H, W>(tiles, mask);
+            array<uint8_t, SIZE<H, W>> tiles2;
+            tiles_correct_fill<H, W>(tiles2, mask);
+            return P(tiles2, mask);
+        }
 
         // hole propagation & variants for the no-hole puzzle version
         template <psize_t H, psize_t W>
-            void tiles_prop_hole(array<uint8_t, H*W> &tiles, uint8_t i) {
-                array<bool, 4> valid;
-                tiles_mark_valid_moves<H, W>(i, valid);
-                for(auto dir = 0; dir < 4; ++dir) {
-                    if(valid[dir]) {
-                        auto np = i + OFFSETS<W>[dir];
-                        if(tiles[np] == _X) {
-                            tiles[np] = HOLE<H, W>;
-                            tiles_prop_hole<H, W>(tiles, np);
-                        }
+        void tiles_prop_hole(array<uint8_t, H*W> &tiles, uint8_t i) {
+            array<bool, 4> valid;
+            tiles_mark_valid_moves<H, W>(i, valid);
+            for(auto dir = 0; dir < 4; ++dir) {
+                if(valid[dir]) {
+                    auto np = i + OFFSETS<W>[dir];
+                    if(tiles[np] == _X) {
+                        tiles[np] = HOLE<H, W>;
+                        tiles_prop_hole<H, W>(tiles, np);
                     }
                 }
             }
+        }
 
         // re-do hole propagation after a hole position update
         template <psize_t H, psize_t W>
-            void tiles_reprop_hole(array<uint8_t, H*W> &tiles, uint8_t new_hole_pos) {
-                for(size_t i = 0, size = tiles.size(); i < size; ++i)
-                    if(tiles[i] == HOLE<H, W>)
-                        tiles[i] = _X;
-                tiles[new_hole_pos] = HOLE<H, W>;
-                tiles_prop_hole<H, W>(tiles, new_hole_pos);
-            }
+        void tiles_reprop_hole(array<uint8_t, H*W> &tiles, uint8_t new_hole_pos) {
+            for(size_t i = 0, size = tiles.size(); i < size; ++i)
+                if(tiles[i] == HOLE<H, W>)
+                    tiles[i] = _X;
+            tiles[new_hole_pos] = HOLE<H, W>;
+            tiles_prop_hole<H, W>(tiles, new_hole_pos);
+        }
 
         // collapse hole for extended index calculation by DPDB
         template <psize_t H, psize_t W>
-            void tiles_collapse_hole(array<uint8_t, H*W> &tiles) {
-                bool hole_found = false;
-                // only leave the hole at the first position
-                for(size_t i = 0, size = tiles.size(); i < size; ++i) {
-                    if(tiles[i] == HOLE<H, W>) {
-                        if(hole_found)
-                            tiles[i] = _X;
-                        else
-                            hole_found = true;
-                    }
+        void tiles_collapse_hole(array<uint8_t, H*W> &tiles) {
+            bool hole_found = false;
+            // only leave the hole at the first position
+            for(size_t i = 0, size = tiles.size(); i < size; ++i) {
+                if(tiles[i] == HOLE<H, W>) {
+                    if(hole_found)
+                        tiles[i] = _X;
+                    else
+                        hole_found = true;
                 }
             }
+        }
 
         template <psize_t H, psize_t W, class OutputIterator>
-            void tiles_fill_group(const std::array<bool, H*W> &group_mask, 
-                    const std::array<uint8_t, H*W> &tiles, 
-                    OutputIterator itr)
-            {
-                for(size_t i = 0, size = tiles.size(); i < size; ++i)
-                    if(tiles[i] != _X && group_mask[tiles[i]])
-                        *itr++ = tiles[i];
-            }
+        void tiles_fill_group(const std::array<bool, H*W> &group_mask, 
+                const std::array<uint8_t, H*W> &tiles, 
+                OutputIterator itr)
+        {
+            for(size_t i = 0, size = tiles.size(); i < size; ++i)
+                if(tiles[i] != _X && group_mask[tiles[i]])
+                    *itr++ = tiles[i];
+        }
 
+        template <size_t S, typename T>
+        void one_hot_encode(const array<uint8_t, S> &inp, array<T, S*S> &out) {
+            out.fill(static_cast<T>(0));
+            for(size_t i = 0; i < S; ++i)
+                out[i * S + inp[i]] = static_cast<T>(1);
+        }
 
+        #ifdef W_TORCH
+        template <size_t S>
+        uint8_t tiles_forward_reg(const array<uint8_t, S> &inp, 
+                                  torch::jit::script::Module &module,
+                                  const torch::Device &input_dev)
+        {
+            // one hot encode to float32
+            std::array<float, S*S> enc;
+            one_hot_encode(inp, enc);
+            // create a tensor, default options are fine
+            std::vector<torch::jit::IValue> inputs;
+            inputs.push_back(torch::from_blob(&enc[0], {1, S*S}).to(input_dev));
 
+            // single value at the output
+            float output = module.forward(inputs).toTensor().item().toFloat();
+            return static_cast<uint8_t>(round(output));
+        }
+        #endif
 
     }
 
@@ -358,6 +386,14 @@ namespace sbpuzzle {
                     hole_pos = a.tpos;
                     return 1; // cost is always unit
                 }
+
+                #ifdef W_TORCH
+                uint8_t torch_reg_model_heuristic(torch::jit::script::Module &module,
+                                                  const torch::Device &dev) const 
+                {
+                    return details::tiles_forward_reg<details::SIZE<H, W>>(tiles, module, dev);
+                }
+                #endif
 
             protected:
                 // only callable by derived classes

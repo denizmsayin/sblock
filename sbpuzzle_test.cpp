@@ -7,6 +7,8 @@
 #include <string>
 #include <numeric>
 
+#define W_TORCH
+
 #include "search.hpp"
 #include "search2.hpp"
 #include "search_queues.hpp"
@@ -18,10 +20,13 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 1000;
+constexpr int N = 1;
 constexpr int H = 4, W = 4;
-const std::string dbfile = "databases/dp4x4.db";
+const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp4x4.db";
 
+const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_l2.pt";
+torch::jit::script::Module gmodule;
+torch::Device DEVICE(torch::kCPU);
 
 //-------------------------------------------------------------------------------
 
@@ -97,6 +102,27 @@ public:
     }
 };
 
+size_t gequal = 0;
+std::vector<int64_t> goffs;
+
+class TorchRegHeuristic {
+public:
+    uint64_t operator()(const Puzzle &p) {
+        uint64_t r = p.torch_reg_model_heuristic(gmodule, DEVICE);
+        /*
+        uint64_t dbc = DPDBHeuristic()(p);
+        std::cout << r << " " << dbc << "\n";
+        */
+        /* auto ar = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(p);
+        int64_t actual = ar.cost;
+        goffs.emplace_back(actual - r);
+        if(r == actual)
+            ++gequal;
+        */
+        return r;
+    }
+};
+
 /*
 bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
     bool eq = false;
@@ -119,6 +145,15 @@ int main() {
     for(int i = 0; i < N; i++) 
         puzzles.push_back(create_solvable_puzzle<H, W>(rng));
 
+    try {
+        gmodule = torch::jit::load(torchfile);
+    } catch(const c10::Error &e) {
+        std::cerr << "Error loading model" << std::endl;
+        return -1;
+    }
+    gmodule.to(DEVICE);
+    std::cout << typeid(at::kCUDA).name() << std::endl;
+
     auto t1 = chrono::high_resolution_clock::now();
     int num_moves = 0;
     size_t num_nodes = 0;
@@ -138,7 +173,8 @@ int main() {
         */
         // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
-        auto r = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
+        // auto r = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
+        auto r = search2::a_star_search<Puzzle, TSA, TorchRegHeuristic, true>(puzzles[i]);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;
         // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
@@ -158,6 +194,8 @@ int main() {
     cout << "Solved " << N << " puzzles in " << fp_ms.count() / N << " milliseconds on "
          << "average with " << avg_moves << " moves and " << avg_nodes 
          << " nodes expanded on average." << endl;
+
+    cout << "Equals: " << gequal << '/' << goffs.size() << "\n";
 
     return 0;
 }
