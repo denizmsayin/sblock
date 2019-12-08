@@ -8,6 +8,8 @@
 #include <array>
 #include <memory>
 
+#include "sbpuzzle.hpp"
+
 namespace sbpuzzle {
 
     namespace details {
@@ -37,6 +39,10 @@ namespace sbpuzzle {
             at::Tensor output = module.forward(inputs).toTensor();
             return convert_output_tensor(output);
         }   
+
+        uint8_t forward(const SBPuzzleWHole<H, W> &p) {
+            return forward(p.get_tiles());
+        }
 
         static std::unique_ptr<DLModel> from_file(const std::string &filename, 
                                                   const torch::Device &dev);

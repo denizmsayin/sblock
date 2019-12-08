@@ -26,7 +26,7 @@ constexpr int OPTIMAL_MOVES = 6645;
 //-------------------------------------------------------------------------------
 
 using namespace std;
-typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
+typedef sbpuzzle::SBPuzzleWHole<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::PDB<H, W> PDB;
 typedef sbpuzzle::DPDB<H, W> DPDB;
@@ -62,7 +62,7 @@ public:
     PDBHeuristic(const PDB *odb) : db(odb) {}
 
     int operator()(const Puzzle &p) {
-        return p.lookup_cost(db);
+        return db->lookup(p);
     }
 
 private:

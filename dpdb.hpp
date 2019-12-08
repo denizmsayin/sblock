@@ -8,8 +8,8 @@
 #include <cstdio>
 #include <queue>
 
-#include "sbpuzzle.hpp"
 #include "pdb.hpp"
+#include "sbpuzzle.hpp"
 #include "sblock_utils.hpp"
 #include "search2.hpp"
 
@@ -92,6 +92,25 @@ namespace sbpuzzle {
             const bool *in_group;
             const uint8_t *tiles;
         };
+
+        template <psize_t H, psize_t W>
+        size_t calculate_table_index(const std::array<uint8_t, H*W> &tiles,
+                                     const std::array<bool, H*W> group_mask,
+                                     uint8_t group_size)
+        {
+            // first, find the combination index
+            auto s = TileCombIterator<H, W>::begin(group_mask, tiles);
+            auto e = TileCombIterator<H, W>::end(group_mask, tiles);
+            size_t comb_i = calculate_combindex(s, e, tiles.size(), group_size);
+            // then the lexicographical index of the group elements
+            std::vector<uint8_t> group_tiles(group_size);
+            details::tiles_fill_group<H, W>(group_mask, tiles, group_tiles.begin());
+            size_t lex_i = calculate_lexindex(group_tiles.begin(), group_tiles.end());
+            // calculate the total index and lookup the table
+            size_t index = comb_i * factorial(group_size) + lex_i;
+            return index;
+        }
+
     }
 
     template <psize_t H, psize_t W>
@@ -112,15 +131,18 @@ namespace sbpuzzle {
         void save(const std::string &filename) const;
 
         uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const;
+        uint8_t lookup(const SBPuzzleBase<H, W> &p) const;
 
         // calculate the index of the given tile configuration for the given group
         // note that DPDB works with the no-hole version of SBPuzzle. extended
         // implies taking into account the hole position, which is used for 
         // the custom BFS inside _generate
-        size_t calculate_table_index(int group_num, const std::array<uint8_t, H*W> &tiles, bool extended=false) const;
     private:
         DPDB(const std::array<uint8_t, H*W> &o_groups);
-        
+       
+        size_t calculate_index(int group_num, const std::array<uint8_t, H*W> &tiles) const;
+        size_t calculate_extended_index(int group_num, const std::array<uint8_t, H*W> &tiles) const;
+
         void init(const std::array<uint8_t, H*W> &o_groups);
         
         template <class OutputIterator>
@@ -356,7 +378,7 @@ namespace sbpuzzle {
         PuzzleType start_state(tiles, in_groups[i]);
         std::queue<Node> q;
         q.emplace(start_state, 0);
-        size_t start_ex_index = start_state.determine_extended_index(i, *this);
+        size_t start_ex_index = calculate_extended_index(i, start_state.get_tiles());
         visited[start_ex_index] = true;
         while(!q.empty()) {
             Node node = q.front(); q.pop(); // get the next node
@@ -364,14 +386,14 @@ namespace sbpuzzle {
             if(node.cost == DIST_MAX)
                 std::cerr << "Warning: cost overflow in DPDB BFS" << std::endl;
             // update cost in table if necessary (with reduced index)
-            size_t index = p.determine_index(i, *this);
+            size_t index = calculate_index(i, p.get_tiles());
             if(node.cost < table[index])
                 table[index] = node.cost;
             // generate neighboring states
             for(const auto &action : p.template possible_actions<ActionType>()) {
                 PuzzleType new_p = p; 
                 uint8_t new_cost = node.cost + new_p.apply_action(action);
-                size_t new_ex_index = new_p.determine_extended_index(i, *this);
+                size_t new_ex_index = calculate_extended_index(i, new_p.get_tiles());
                 if(!visited[new_ex_index]) {
                     // can already be marked as visited before actually
                     // expanding. Why? As soon as a node is added to the open
@@ -440,35 +462,25 @@ namespace sbpuzzle {
     }
 
     template <psize_t H, psize_t W>
-    size_t DPDB<H, W>::calculate_table_index(int i, 
-                                             const std::array<uint8_t, H*W> &o_tiles,
-                                             bool extended) const 
+    size_t DPDB<H, W>::calculate_index(int i, 
+                                       const std::array<uint8_t, H*W> &o_tiles) const
+    {
+        return details::calculate_table_index<H, W>(o_tiles, in_groups[i], group_counts[i]);
+    }
+
+    template <psize_t H, psize_t W>
+    size_t DPDB<H, W>::calculate_extended_index(int i, 
+                                                const std::array<uint8_t, H*W> &o_tiles) const 
     {
         // if extended, we need to account for the hole after collapsing it
         std::array<uint8_t, H*W> tiles = o_tiles; // copying output tiles to keep constness
         std::array<bool, H*W> group_mask = in_groups[i];
         uint8_t group_size = group_counts[i];
-        if(extended) {
-            // collapse the hole and add it to the group
-            details::tiles_collapse_hole<H, W>(tiles);
-            group_mask[details::HOLE<H, W>] = true;
-            ++group_size;
-        }
-        // first, find the combination index
-        auto s = details::TileCombIterator<H, W>::begin(group_mask, tiles);
-        auto e = details::TileCombIterator<H, W>::end(group_mask, tiles);
-        size_t comb_i = calculate_combindex(s, e, SIZE, group_size);
-        // then the lexicographical index of the group elements
-        std::vector<uint8_t> group_tiles(group_size);
-        details::tiles_fill_group<H, W>(group_mask, tiles, group_tiles.begin());
-        size_t lex_i = calculate_lexindex(group_tiles.begin(), group_tiles.end());
-        // calculate the total index and lookup the table
-        size_t index = comb_i * factorial(group_size) + lex_i;
-        /*
-        std::cout << "I=" << index << std::endl;
-        std::cout << "******************************\n";
-        */
-        return index;
+        // collapse the hole and add it to the group
+        details::tiles_collapse_hole<H, W>(tiles);
+        group_mask[details::HOLE<H, W>] = true;
+        ++group_size;
+        return details::calculate_table_index<H, W>(tiles, group_mask, group_size);
     }
 
     /*
@@ -483,11 +495,12 @@ namespace sbpuzzle {
         uint8_t total = 0;
         // for each group
         for(uint8_t i = 0; i < num_groups; ++i) {
-            size_t index = calculate_table_index(i, tiles);
+            size_t index = calculate_index(i, tiles);
             total += tables[i][index];
         }
         return total;
     }
+
 }
 
 #endif

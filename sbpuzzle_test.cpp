@@ -19,7 +19,7 @@
 
 unsigned SEED = 42;
 
-constexpr int N = 1000;
+constexpr int N = 1;
 constexpr int H = 4, W = 4;
 const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp4x4.db";
 
@@ -100,7 +100,7 @@ public:
 class DPDBHeuristic {
 public:
     int operator()(const Puzzle &p) {
-        return p.lookup_cost(&CDB);
+        return static_cast<const PDB<H, W> *>(&CDB)->lookup(p);
     }
 };
 
@@ -108,14 +108,10 @@ size_t gequal = 0;
 std::vector<int64_t> goffs;
 
 #ifdef W_TORCH
-class TorchRegHeuristic {
+class TorchHeuristic {
 public:
     uint64_t operator()(const Puzzle &p) {
-        uint64_t r = p.dlmodel_heuristic(DLMODEL.get());
-        /*
-        uint64_t dbc = DPDBHeuristic()(p);
-        std::cout << r << " " << dbc << "\n";
-        */
+        uint64_t r = DLMODEL->forward(p);
         /* auto ar = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(p);
         int64_t actual = ar.cost;
         goffs.emplace_back(actual - r);
@@ -169,10 +165,10 @@ int main() {
         // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
         search2::BHFWrapper<Puzzle, DPDBHeuristic> bhf;
-        auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 0.7, 16, bhf);
+        // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
 
         // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
-        // auto r = search2::a_star_search<Puzzle, TSA, TorchRegHeuristic, true>(puzzles[i]);
+        auto r = search2::weighted_a_star_search<Puzzle, TSA, TorchHeuristic, true>(puzzles[i], 0.1);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;
         // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);

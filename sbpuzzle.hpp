@@ -47,14 +47,8 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef W_TORCH
-#include "dlmodel.hpp"
-#endif
-
 // TODO: consider alternatives to returning a vector for possible_actions()
 // a custom iterator-like type would work nicely if it can be made light-weight
-
-#include "pdb.hpp"
 
 namespace sbpuzzle {
         
@@ -305,6 +299,10 @@ namespace sbpuzzle {
         class SBPuzzleBase {
             public:
 
+                const std::array<uint8_t, H*W> &get_tiles() const {
+                    return tiles;
+                }
+
                 bool is_solved() const {
                     return details::tiles_in_correct_places<H, W>(tiles);
                 }
@@ -343,28 +341,12 @@ namespace sbpuzzle {
                     return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
                 }
 
-                uint8_t lookup_cost(const PDB<H, W> *pdb) const {
-                    return pdb->lookup(tiles);
-                }
-
-                template <typename PDBType>
-                size_t determine_index(uint8_t group_no, const PDBType &pdb) const {
-                    return pdb.calculate_table_index(group_no, tiles);
-                }
-
                 uint64_t apply_action(TileSwapAction a) {
                     tiles[a.hpos] = tiles[a.tpos]; // move tile over the hole
                     tiles[a.tpos] = HOLE; // tile is now the hole
                     hole_pos = a.tpos;
                     return 1; // cost is always unit
                 }
-
-                #ifdef W_TORCH
-                uint8_t dlmodel_heuristic(DLModel<H*W> *p) const 
-                {
-                    return p->forward(tiles);
-                }
-                #endif
 
             protected:
                 // only callable by derived classes
@@ -501,12 +483,6 @@ namespace sbpuzzle {
             return cost; // cost is always unit
         }
 
-        template <typename PDBType>
-        size_t determine_extended_index(uint8_t group_no, const PDBType &pdb) const {
-            return pdb.calculate_table_index(group_no, Base::tiles, true);
-        }
-
-
     private:
         using Base = SBPuzzleBase<H, W>;
 
@@ -589,9 +565,9 @@ namespace sbpuzzle {
 
         bool is_solved() const {
             switch(tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return puzzle.w.is_solved();
                 case TypeTag::NO_HOLE:  return puzzle.n.is_solved();
-                default: throw_tterror(); return false;
             }
         }
 
@@ -599,67 +575,50 @@ namespace sbpuzzle {
             if(tag != other.tag)
                 throw std::invalid_argument("Puzzle type tags do not match in operator==");
             switch(tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return puzzle.w == other.puzzle.w;
                 case TypeTag::NO_HOLE:  return puzzle.n == other.puzzle.n;
-                default: throw_tterror(); return false;
             }
         }
 
         size_t hash() const {
             switch(tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return puzzle.w.hash();
                 case TypeTag::NO_HOLE:  return puzzle.n.hash();
-                default: throw_tterror(); return 0;
             }
         }
 
         template <psize_t HH, psize_t WW>
         friend std::ostream &operator<<(std::ostream &s, const SBPuzzle<HH, WW> &p) {
             switch(p.tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return s << p.puzzle.w;
                 case TypeTag::NO_HOLE:  return s << p.puzzle.n;
-                default: throw_tterror(); return s;
             }
         }
 
         int manhattan_distance_to_solution() const {
             switch(tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return puzzle.w.manhattan_distance_to_solution();
                 case TypeTag::NO_HOLE:  return puzzle.n.manhattan_distance_to_solution();
-                default: throw_tterror(); return 0;
-            }
-        }
-
-        uint8_t lookup_cost(const PDB<H, W> *pdb) const {
-            switch(tag) {
-                case TypeTag::W_HOLE:   return puzzle.w.lookup_cost(pdb);
-                case TypeTag::NO_HOLE:  return puzzle.n.lookup_cost(pdb);
-                default: throw_tterror(); return 0;
-            }
-        }
-
-        template <typename PDBType>
-        size_t determine_index(uint8_t group_no, const PDBType &pdb) const {
-            switch(tag) {
-                case TypeTag::W_HOLE:   return puzzle.w.determine_index(group_no, pdb);
-                case TypeTag::NO_HOLE:  return puzzle.n.determine_index(group_no, pdb);
-                default: throw_tterror(); return 0;
             }
         }
 
         SBPuzzle goal_state() const {
             switch(tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return SBPuzzle(puzzle.w.goal_state());
                 case TypeTag::NO_HOLE:  return SBPuzzle(puzzle.n.goal_state());
-                default: throw_tterror(); return SBPuzzle(puzzle.w.goal_state());
             }
         }
 
         uint64_t apply_action(TileSwapAction a) {
             switch(tag) {
+                default: throw_tterror();
                 case TypeTag::W_HOLE:   return puzzle.w.apply_action(a);
                 case TypeTag::NO_HOLE:  return puzzle.n.apply_action(a);
-                default: throw_tterror(); return 0;
             }
         }
 
@@ -669,6 +628,13 @@ namespace sbpuzzle {
             return PADelegate<Action>::f(*this); // delegate to the struct
         }
 
+        const std::array<uint8_t, H*W> &get_tiles() const {
+            switch(tag) {
+                default: throw_tterror();
+                case TypeTag::W_HOLE:   return puzzle.w.get_tiles();
+                case TypeTag::NO_HOLE:  return puzzle.n.get_tiles();
+            }
+        }
 
     private:
         enum class TypeTag : uint8_t {

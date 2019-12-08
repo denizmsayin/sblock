@@ -1,8 +1,6 @@
 #ifndef __REFLECTDPDB_HPP__
 #define __REFLECTDPDB_HPP__
 
-#include <cassert>
-
 #include "pdb.hpp"
 #include "dpdb.hpp"
 
@@ -31,7 +29,6 @@ namespace sbpuzzle {
             for(size_t i = 0, size = tiles.size(); i < size; ++i) {
                 uint8_t itile = tiles[i] / W, jtile = tiles[i] % W;
                 uint8_t rtile = jtile * W + itile;
-                assert(rtile != _X); // shouldn't take masked tiles
                 size_t ipos = i / W, jpos = i % W;
                 size_t rpos = jpos * W + ipos;
                 o_tiles[rpos] = rtile;
@@ -45,6 +42,7 @@ namespace sbpuzzle {
         details::tiles_reflect<H, W>(tiles, rtiles);
         return db.lookup(rtiles);
     }
+
 }
 
 
