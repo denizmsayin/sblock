@@ -4,7 +4,9 @@
 *.swp
 *.swo
 
-build/
+release
+debug
+
 massif.out.*
 
 # Prerequisites

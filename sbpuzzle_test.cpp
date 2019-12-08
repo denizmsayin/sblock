@@ -39,9 +39,9 @@ CombinedDB<H, W> CDB(_DBS);
 
 #ifdef W_TORCH
 #include "dlmodel.hpp"
-const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_ce.pt";
-auto device = torch::kCPU;
-std::unique_ptr<DLModel<H*W>> DLMODEL = DLModel<H*W>::from_file(torchfile, device);
+const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_l2.pt";
+auto device = torch::kCUDA;
+std::unique_ptr<DLModel<H, W>> DLMODEL = DLModel<H, W>::from_file(torchfile, device);
 #endif
 
 using namespace std;
@@ -121,6 +121,20 @@ public:
         return r;
     }
 };
+
+class BTorchHeuristic {
+public:
+    template <typename OutItr>
+    void operator()(const std::vector<Puzzle> &p, OutItr i) {
+        DLMODEL->forward(p, i);
+        /* auto ar = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(p);
+        int64_t actual = ar.cost;
+        goffs.emplace_back(actual - r);
+        if(r == actual)
+            ++gequal;
+        */
+    }
+};
 #endif
 
 /*
@@ -168,7 +182,8 @@ int main() {
         // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
 
         // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
-        auto r = search2::weighted_a_star_search<Puzzle, TSA, TorchHeuristic, true>(puzzles[i], 0.1);
+        auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, BTorchHeuristic, true>(puzzles[i], 1.0, 8192);
+        // auto r = search2::weighted_a_star_search<Puzzle, TSA, TorchHeuristic, true>(puzzles[i], 0.1);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;
         // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);

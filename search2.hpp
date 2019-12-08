@@ -362,7 +362,7 @@ namespace search2 {
         // set up an expanded node counter and its tracker
         size_t exp_ctr = 0;
         SeriesTracker<size_t>::Options opts;
-        opts.print_every = 10000;
+        opts.print_every = 1000000;
         opts.name_str = "Nodes expanded";
         SeriesTracker<size_t> t(&exp_ctr, opts);
 
