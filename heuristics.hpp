@@ -39,12 +39,12 @@ namespace sbpuzzle {
 // actual class implementations
 namespace sbpuzzle {
 
-    template <psize_t H, psize_t W, typename OutItr = uint8_t *>
+    template <psize_t H, psize_t W>
     class Heuristic {
     public:
         virtual uint8_t operator()(const SBPuzzle<H, W> &h) = 0;
 
-        virtual void operator()(const std::vector<SBPuzzle<H, W>> &p, OutItr o) {
+        virtual void operator()(const std::vector<SBPuzzle<H, W>> &p, std::vector<int> &o) {
             search2::BHFWrapper<SBPuzzle<H, W>, Heuristic&>(*this)(p, o);
         }
     };

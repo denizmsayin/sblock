@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
     // create n random puzzles
     auto rng = std::default_random_engine(seed);
     std::vector<Puzzle> puzzles;
-    for(int i = 0; i < num_puzzles; i++) 
+    for(size_t i = 0; i < num_puzzles; i++) 
         puzzles.push_back(create_solvable_puzzle<H, W>(rng));
 
     using namespace sbpuzzle;
@@ -246,9 +246,10 @@ int main(int argc, char *argv[]) {
     auto t1 = std::chrono::high_resolution_clock::now();
     int num_moves = 0;
     size_t num_nodes = 0;
-    for(int i = 0; i < num_puzzles; i++) {
+    for(size_t i = 0; i < num_puzzles; i++) {
         using namespace search2;
         auto r = a_star_search<Puzzle, TSA>(puzzles[i], hf);
+        // auto r = batch_weighted_a_star_search<Puzzle, TSA>(puzzles[i], 1.0, 1, hf);
         // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
 
         // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
@@ -271,7 +272,7 @@ int main(int argc, char *argv[]) {
     double avg_moves = static_cast<double>(num_moves) / num_puzzles;
     double avg_nodes = static_cast<double>(num_nodes) / num_puzzles;
     std::cout << "Solved " << num_puzzles << " puzzles in " << fp_ms.count() / num_puzzles 
-              << " milliseconds on average with " << avg_moves << "moves and " << avg_nodes
+              << " milliseconds on average with " << avg_moves << " moves and " << avg_nodes
               << " nodes expanded on average." << std::endl;
 
 //    cout << "Equals: " << gequal << '/' << goffs.size() << "\n";

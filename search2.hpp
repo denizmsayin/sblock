@@ -344,9 +344,9 @@ namespace search2 {
     SearchResult batch_weighted_a_star_search(const Puzzle &start, 
                                               double weight, 
                                               size_t batch_size, 
-                                              BatchHeuristicFunc bhf=BatchHeuristicFunc()) 
+                                              BatchHeuristicFunc&& bhf) 
     {
-        // BatchHeuristicFunc: bhf(const std::vector<Puzzle> &v, OutputItr out_values)
+        // BatchHeuristicFunc: bhf(const std::vector<Puzzle> &in, std::vector<int> &out)
         // Since the standard library PQ does not have a decrease-key operation, we have
         // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
         // a node with a better cost, and simply discard visited nodes when popping
@@ -387,9 +387,9 @@ namespace search2 {
         // important note: bhf must make sure the values
         // put inside f_values are properly cast to integral
         // insert the first element
-        int start_f = 0;
-        bhf(std::vector<Puzzle> {start}, &start_f); // raw pointer as iterator!
-        pq.emplace(start, 0, start_f);
+        bhf(std::vector<Puzzle> {start}, f_values); // raw pointer as iterator!
+        pq.emplace(start, 0, f_values[0]);
+        f_values.clear();
  
         while(!pq.empty()) {
 
@@ -429,7 +429,7 @@ namespace search2 {
 
             // now, to_eval contains at most batch_size nodes to evaluate
             // we simply have to evaluate them and put them in the pq
-            bhf(to_eval, f_values.begin());
+            bhf(to_eval, f_values);
 
             // then emplace everything
             for(size_t i = 0, size = to_eval.size(); i < size; ++i) {
@@ -450,15 +450,24 @@ namespace search2 {
         return SearchResult(0, exp_ctr);
     }
 
+    template <class Puzzle, class Action, class BatchHeuristicFunc, bool Track = false>
+    SearchResult batch_weighted_a_star_search(const Puzzle &start, 
+                                              double weight, 
+                                              size_t batch_size) 
+    {
+        return batch_weighted_a_star_search<Puzzle, Action, BatchHeuristicFunc, Track>(
+                start, weight, batch_size, BatchHeuristicFunc());
+    }
+
+
     // wrapper class transforming single valued heuristic function to batch
     template <class Puzzle, class HF>
     class BHFWrapper {
     public:
         BHFWrapper(HF _hf=HF()) : hf(_hf) {}
 
-        template <class OutputIterator>
-        void operator()(const std::vector<Puzzle> &v, OutputIterator itr) {
-            std::transform(v.begin(), v.end(), itr, std::ref(hf));
+        void operator()(const std::vector<Puzzle> &v, std::vector<int> &out) {
+            std::transform(v.begin(), v.end(), out.end(), std::ref(hf));
         }
     private:
         HF hf;
@@ -522,8 +531,8 @@ namespace search2 {
     }
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
-        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, hf);
+    SearchResult a_star_search(const Puzzle &p) {
+        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, HeuristicFunc());
     }
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
