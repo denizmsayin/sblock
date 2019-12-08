@@ -6,6 +6,7 @@
 #include <chrono>
 #include <string>
 #include <numeric>
+#include <memory>
 
 #define W_TORCH
 
@@ -17,6 +18,7 @@
 #include "dpdb.hpp"
 #include "reflectdpdb.hpp"
 #include "combineddb.hpp"
+#include "dlmodel.hpp"
 
 unsigned SEED = 42;
 
@@ -25,8 +27,7 @@ constexpr int H = 4, W = 4;
 const std::string dbfile = "/home/deniz/HDD/Documents/self/sblock/databases/dp4x4.db";
 
 const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_ce.pt";
-torch::jit::script::Module gmodule;
-torch::Device DEVICE(torch::kCPU);
+auto device = torch::kCUDA;
 
 //-------------------------------------------------------------------------------
 
@@ -41,6 +42,8 @@ DPDB<H, W> DB = DPDB<H, W>::from_file(dbfile);
 ReflectDPDB<H, W> RDB(DB);
 std::vector<const PDB<H, W> *> _DBS {&DB, &RDB};
 CombinedDB<H, W> CDB(_DBS);
+
+std::unique_ptr<DLModel<H*W>> DLMODEL = DLModel<H*W>::from_file(torchfile, device);
 
 using namespace std;
 using TSA = sbpuzzle::TileSwapAction;
@@ -108,7 +111,7 @@ std::vector<int64_t> goffs;
 class TorchRegHeuristic {
 public:
     uint64_t operator()(const Puzzle &p) {
-        uint64_t r = p.torch_classifier_model_heuristic(gmodule, DEVICE);
+        uint64_t r = p.dlmodel_heuristic(DLMODEL.get());
         /*
         uint64_t dbc = DPDBHeuristic()(p);
         std::cout << r << " " << dbc << "\n";
@@ -145,15 +148,6 @@ int main() {
     for(int i = 0; i < N; i++) 
         puzzles.push_back(create_solvable_puzzle<H, W>(rng));
 
-    try {
-        gmodule = torch::jit::load(torchfile);
-    } catch(const c10::Error &e) {
-        std::cerr << "Error loading model" << std::endl;
-        return -1;
-    }
-    gmodule.to(DEVICE);
-    std::cout << typeid(at::kCUDA).name() << std::endl;
-
     auto t1 = chrono::high_resolution_clock::now();
     int num_moves = 0;
     size_t num_nodes = 0;
@@ -173,7 +167,7 @@ int main() {
         */
         // auto r = search2::breadth_first_search<Puzzle, TSA>(puzzles[i]);
         // std::cout << puzzles[i] << std::endl;
-        // auto r = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
+        // auto r = search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
         auto r = search2::a_star_search<Puzzle, TSA, TorchRegHeuristic, true>(puzzles[i]);
         // std::cout << "Solved in " << m << " moves." << std::endl;
         num_moves += r.cost;

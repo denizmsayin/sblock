@@ -48,8 +48,7 @@
 #include <iomanip>
 
 #ifdef W_TORCH
-#include <cmath>
-#include <torch/script.h>
+#include "dlmodel.hpp"
 #endif
 
 // TODO: consider alternatives to returning a vector for possible_actions()
@@ -273,53 +272,6 @@ namespace sbpuzzle {
                 if(tiles[i] != _X && group_mask[tiles[i]])
                     *itr++ = tiles[i];
         }
-
-        template <size_t S, typename T>
-        void one_hot_encode(const array<uint8_t, S> &inp, array<T, S*S> &out) {
-            out.fill(static_cast<T>(0));
-            for(size_t i = 0; i < S; ++i)
-                out[i * S + inp[i]] = static_cast<T>(1);
-        }
-
-        #ifdef W_TORCH
-        template <size_t S>
-        at::Tensor tiles_forward(const array<uint8_t, S> &inp, 
-                                 torch::jit::script::Module &module,
-                                 const torch::Device &input_dev)
-        {
-            // one hot encode to float32
-            std::array<float, S*S> enc;
-            one_hot_encode(inp, enc);
-            // create a tensor, default options are fine
-            std::vector<torch::jit::IValue> inputs;
-            inputs.push_back(torch::from_blob(&enc[0], {1, S*S}).to(input_dev));
-
-            at::Tensor output = module.forward(inputs).toTensor();
-            return output;
-        }
-
-        template <size_t S>
-        uint8_t tiles_forward_reg(const array<uint8_t, S> &inp, 
-                                  torch::jit::script::Module &module,
-                                  const torch::Device &input_dev)
-        {
-            float output = tiles_forward(inp, module, input_dev).item().toFloat();
-            return static_cast<uint8_t>(round(output));
-        }
-        
-        template <size_t S>
-        uint8_t tiles_forward_classifier(const array<uint8_t, S> &inp, 
-                                         torch::jit::script::Module &module,
-                                         const torch::Device &input_dev)
-        {
-            auto output_tensor = tiles_forward(inp, module, input_dev);
-            uint8_t dist = static_cast<uint8_t>(at::argmax(output_tensor).item().toInt());
-            return dist;
-        }
-
-
-        #endif
-
     }
 
     // publicly accessible value for _X
@@ -408,16 +360,9 @@ namespace sbpuzzle {
                 }
 
                 #ifdef W_TORCH
-                uint8_t torch_reg_model_heuristic(torch::jit::script::Module &module,
-                                                  const torch::Device &dev) const 
+                uint8_t dlmodel_heuristic(DLModel<H*W> *p) const 
                 {
-                    return details::tiles_forward_reg<details::SIZE<H, W>>(tiles, module, dev);
-                }
-
-                uint8_t torch_classifier_model_heuristic(torch::jit::script::Module &module,
-                                                         const torch::Device &dev) const 
-                {
-                    return details::tiles_forward_classifier<details::SIZE<H, W>>(tiles, module, dev);
+                    return p->forward(tiles);
                 }
                 #endif
 
