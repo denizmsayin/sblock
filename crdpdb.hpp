@@ -17,6 +17,11 @@ namespace sbpuzzle {
     class CRDPDB : public PDB<H, W> {
     public:
 
+        // using an rvalue reference because deep-copying 
+        // a whole db would be expensive & unnecessary
+        CRDPDB(DPDB<H, W> &&o_dpdb)
+            : dpdb(o_dpdb), rdb(dpdb), cdb(std::vector<const PDB<H, W> *> {&dpdb, &rdb}) {}
+
         static CRDPDB from_file(const std::string &filename) {
             return CRDPDB(DPDB<H, W>::from_file(filename));
         }
@@ -31,13 +36,8 @@ namespace sbpuzzle {
 
     private:
 
-        // using an rvalue reference because deep-copying 
-        // a whole db would be expensive & unnecessary
-        CRDPDB(DPDB<H, W> &&o_dpdb)
-            : dpdb(o_dpdb), rdb(dpdb), cdb(std::vector<const PDB<H, W> *> {&dpdb, &rdb}) {}
-
         DPDB<H, W> dpdb;
-        ReflectDPDB<H, W> rdb;
+        ReflectDPDBDependent<H, W> rdb;
         CombinedDB<H, W> cdb;
     };
     

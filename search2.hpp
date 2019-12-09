@@ -17,6 +17,8 @@
 #include "sblock_utils.hpp"
 #include "search_queues.hpp"
 
+
+
 // TODO: update all comments
 // add the option for path remembering, will require fast dynamic allocations
 // along with the previous update, consider adding backtracking search as an alternative
@@ -340,11 +342,18 @@ namespace search2 {
         }
 
 
+    // I am very confused about what to pass as parameters. I'd be up for passing
+    // all HeuristicFunctions by const-reference, but there are cases where my heuristic
+    // functions are stateful and can't be const. For example the DLModel case, where
+    // the jit::script::Module does not remain const during inference. However, I have
+    // all the freedom I need since HeuristicFunc is a template parameter, it can be
+    // passed by non-const ref if I need it by specificying it as such
+
     template <class Puzzle, class Action, class BatchHeuristicFunc, bool Track = false>
     SearchResult batch_weighted_a_star_search(const Puzzle &start, 
                                               double weight, 
                                               size_t batch_size, 
-                                              BatchHeuristicFunc&& bhf) 
+                                              BatchHeuristicFunc bhf=BatchHeuristicFunc()) 
     {
         // BatchHeuristicFunc: bhf(const std::vector<Puzzle> &in, std::vector<int> &out)
         // Since the standard library PQ does not have a decrease-key operation, we have
@@ -450,14 +459,17 @@ namespace search2 {
         return SearchResult(0, exp_ctr);
     }
 
+    /*
     template <class Puzzle, class Action, class BatchHeuristicFunc, bool Track = false>
     SearchResult batch_weighted_a_star_search(const Puzzle &start, 
                                               double weight, 
-                                              size_t batch_size) 
+                                              size_t batch_size,
+                                              BatchHeuristicFunc bhf) 
     {
         return batch_weighted_a_star_search<Puzzle, Action, BatchHeuristicFunc, Track>(
-                start, weight, batch_size, BatchHeuristicFunc());
+                start, weight, batch_size, bhf);
     }
+    */
 
 
     // wrapper class transforming single valued heuristic function to batch
@@ -475,7 +487,9 @@ namespace search2 {
 
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult weighted_a_star_search(const Puzzle &p, double w, HeuristicFunc&& hf) {
+    SearchResult weighted_a_star_search(const Puzzle &p, double w, 
+                                        HeuristicFunc hf=HeuristicFunc()) 
+    {
         // Since the standard library PQ does not have a decrease-key operation, we have
         // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
         // a node with a better cost, and simply discard visited nodes when popping
@@ -525,20 +539,26 @@ namespace search2 {
         return SearchResult(0, exp_ctr);
     }
 
+    /*
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult weighted_a_star_search(const Puzzle &p, double w) {
-        return weighted_a_star_search(p, w, HeuristicFunc());
+    SearchResult weighted_a_star_search(const Puzzle &p, double w, 
+                                        HeuristicFunc hf=HeuristicFunc()) 
+    {
+        return weighted_a_star_search(p, w, hf);
     }
+    */
 
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult a_star_search(const Puzzle &p) {
-        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, HeuristicFunc());
+    SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
+        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, hf);
     }
 
+    /*
     template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult a_star_search(const Puzzle &p, HeuristicFunc&& hf) {
-        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, std::forward<HeuristicFunc>(hf));
+    SearchResult a_star_search(const Puzzle &p, HeuristicFunc &hf) {
+        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, hf);
     }
+    */
 
 
 

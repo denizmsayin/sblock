@@ -30,7 +30,7 @@ typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 typedef sbpuzzle::TileSwapAction Action;
 typedef sbpuzzle::PDB<H, W> PDB;
 typedef sbpuzzle::DPDB<H, W> DPDB;
-typedef sbpuzzle::ReflectDPDB<H, W> ReflectDPDB;
+typedef sbpuzzle::ReflectDPDBDependent<H, W> ReflectDPDB;
 typedef sbpuzzle::CombinedDB<H, W> CombinedDB;
 typedef sbpuzzle::CRDPDB<H, W> CRDPDB;
 
@@ -69,11 +69,11 @@ private:
     const PDB *db;
 };
 
-template <typename F, typename... Args>
-void test_function(const vector<Puzzle> &puzzles, F f, Args&&... args) {
+template <typename F>
+void test_function(const vector<Puzzle> &puzzles, F f) {
     int num_moves = 0;
     for(size_t i = 0, size = puzzles.size(); i < size; ++i) {
-        auto r = f(puzzles[i], args...);
+        auto r = f(puzzles[i]);
         num_moves += r.cost;
         cout << '\r' << i << '/' << size << flush;
     }
@@ -85,11 +85,17 @@ void test_function(const vector<Puzzle> &puzzles, F f, Args&&... args) {
 }
 
 void test_db(const std::vector<Puzzle> &puzzles, const PDB *db) {
+        PDBHeuristic dbh(db);
+
         cout << "Testing A* with DB..." << endl;
-        test_function(puzzles, search2::a_star_search<Puzzle, Action, PDBHeuristic>, PDBHeuristic(db));
+        test_function(puzzles, [&](const Puzzle &p) { 
+                return search2::a_star_search<Puzzle, Action>(p, dbh); 
+        });
 
         cout << "Testing IDA* with DB..." << endl;
-        test_function(puzzles, search2::iterative_deepening_a_star<Puzzle, Action, PDBHeuristic>, PDBHeuristic(db));
+        test_function(puzzles, [&](const Puzzle &p) {
+                return search2::iterative_deepening_a_star<Puzzle, Action>(p, dbh);
+        });
 }
 
 int main() {
@@ -105,7 +111,9 @@ int main() {
     cout << "**************************************" << endl;
 
     cout << "Testing A* with Manhattan Distance..." << endl;
-    test_function(puzzles, search2::a_star_search<Puzzle, Action, ManhattanHeuristic>, ManhattanHeuristic());
+    test_function(puzzles, [](const Puzzle &p) {
+            return search2::a_star_search<Puzzle, Action, ManhattanHeuristic>(p);
+    });
     cout << "**************************************" << endl;
 
     /*

@@ -160,6 +160,15 @@ namespace sbpuzzle {
         }
 
         template <psize_t H, psize_t W>
+        uint64_t tiles_count_misplaced(const array<uint8_t, H*W> &tiles) {
+            uint64_t dist = 0;
+            for(size_t size = tiles.size(), i = 0; i < size; ++i) 
+                if(tiles[i] != _X && tiles[i] != HOLE<H, W> && tiles[i] != i)
+                    ++dist;
+            return dist;
+        }
+
+        template <psize_t H, psize_t W>
         uint64_t tiles_manhattan_distance_to_solution(const array<uint8_t, H*W> &tiles) {
             uint64_t dist = 0;
             for(size_t size = tiles.size(), i = 0; i < size; ++i) {
@@ -339,6 +348,10 @@ namespace sbpuzzle {
 
                 int manhattan_distance_to_solution() const {
                     return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
+                }
+
+                int num_misplaced_tiles() const {
+                    return details::tiles_count_misplaced<H, W>(tiles);
                 }
 
                 uint64_t apply_action(TileSwapAction a) {

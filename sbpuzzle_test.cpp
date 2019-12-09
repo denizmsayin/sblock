@@ -149,22 +149,37 @@ bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
 }
 */
 
+// takes a vector {"1", "2", "3"} and returns a string representation "{1, 2, 3}"
+std::string make_string_list(const std::vector<std::string> &strings) {
+    if(strings.empty()) return "{}";
+    std::string acc = std::accumulate(strings.begin()+1, strings.end(), 
+                                      std::string("{") + strings[0],
+                                      [](const auto &s1, const auto &s2) { 
+                                          return s1 + ", " + s2;
+                                      });
+    return acc + "}";
+}
+
 void show_usage() {
+    std::string hstring = make_string_list(sbpuzzle::HEURISTIC_STRINGS);
     std::cout 
         << "Usage: ./exe_file [-h] [-r seed] [-n num-puzzles] [-s search-type] [-h heuristic]\n"
         << "                  [-f file] [-w weight] [-b batch_size] [-g]\n"
         << "       -?             show this help message\n"
         << "       -r SEED        seed value used to generate puzzles, default is 42\n"
         << "       -n NUM_PUZZLES the number of puzzles to randomly generate, default is 1\n"
-        << "       -s SEARCH_TYPE the type of search to use: {bfs, iddfs, a*, ida*, wa*, bwa*}\n"
+        << "       -s SEARCH_TYPE the type of search to use: {bfs, iddfs, a*, ida*, wa* bwa*}\n"
         << "                      default is bfs\n"
-        << "       -h HEURISTIC   heuristic to use: {mispl, manhattan, pdb, rdb, cdb, dlmodel}\n"
-        << "                      mispl: number of misplaced tiles in the puzzle\n"
-        << "                      manhattan: manhattan distance to the solved state\n"
-        << "                      pdb: disjoint pattern database (from file)\n"
-        << "                      rdb: disjoint pattern database, reflected\n"
-        << "                      cdb: disjoint pattern database, combined with reflection\n"
-        << "                      dlmodel: TorchScript deep learning model\n"
+
+    // auto-print heuristic strings from those registered in heuristics.hpp
+        << "       -h HEURISTIC   heuristic to use: " << hstring << "\n";
+    for(const auto &k : sbpuzzle::HEURISTIC_STRINGS) {
+        auto itr = sbpuzzle::HEURISTIC_DESCR_MAP.find(k);
+        std::cout 
+        << "                      " << itr->first << ": " << itr->second << "\n";
+    }
+
+    std::cout 
         << "                      only relevant if the search type is one of the A* types\n"
         << "                      default is manhattan\n"
         << "       -f FILE        file to load data from, only necessary for the pdb/rdb/cdb\n"
@@ -211,6 +226,9 @@ int main(int argc, char *argv[]) {
     size_t batch_size = 1;
     bool use_gpu = false;
 
+    if(argc == 1)
+        std::cout << "For argument help: ./exe_file -?\n";
+
     int ch;
     while((ch = getopt(argc, argv, "?r:n:s:h:f:w:b:g")) != -1) {
         switch(ch) {
@@ -235,12 +253,19 @@ int main(int argc, char *argv[]) {
 
     using namespace sbpuzzle;
     SearchType search_type = str2searchtype(search_type_str);
-    HeuristicType heuristic = str2heuristictype(heuristic_str);
+
+    HeuristicType heuristic;
+    try {
+        heuristic = str2heuristictype(heuristic_str);
+    } catch(const std::out_of_range &ex) {
+        std::cerr << "Error: invalid heuristic type string.\n";
+        return -1;
+    }
 
     // the search functions require virtual dispatch of the heuristic function,
     // however since the templates are written with value (and not pointer) types
     // in mind, it is necessary to use a reference to Heuristic rather than a pointer
-    std::unique_ptr<Heuristic<H, W>> hp = heuristic_factory<H, W>(heuristic);
+    std::unique_ptr<Heuristic<H, W>> hp = heuristic_factory<H, W>(heuristic, file_path);
     Heuristic<H, W> &hf = *hp;
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -248,7 +273,7 @@ int main(int argc, char *argv[]) {
     size_t num_nodes = 0;
     for(size_t i = 0; i < num_puzzles; i++) {
         using namespace search2;
-        auto r = a_star_search<Puzzle, TSA>(puzzles[i], hf);
+        auto r = a_star_search<Puzzle, TSA>(puzzles[i], std::ref(hf));
         // auto r = batch_weighted_a_star_search<Puzzle, TSA>(puzzles[i], 1.0, 1, hf);
         // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
 
