@@ -514,8 +514,12 @@ namespace search2 {
         BHFWrapper(HF _hf=HF()) : hf(_hf) {}
 
         void operator()(const std::vector<Puzzle> &v, std::vector<int> &out) {
-            std::transform(v.begin(), v.end(), out.end(), std::ref(hf));
+            if(out.empty())
+                std::transform(v.begin(), v.end(), std::back_inserter(out), std::ref(hf));
+            else 
+                std::transform(v.begin(), v.end(), out.begin(), std::ref(hf));
         }
+
     private:
         HF hf;
     };

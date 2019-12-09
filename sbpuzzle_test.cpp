@@ -25,8 +25,11 @@
 #define __W 3
 #endif
 
+// TODO: merge this and generate_solutions.cpp into a single epic frontend
+
 // program constants
 constexpr uint8_t H = __H, W = __W;
+const std::string EVAL_HEURISTIC_STR = "H";
 
 //-------------------------------------------------------------------------------
 
@@ -55,7 +58,9 @@ std::string make_string_list(const std::vector<std::string> &strings) {
 }
 
 void show_usage() {
-    std::string sstring = make_string_list(search2::SEARCH_STRINGS);
+    std::vector<std::string> ext(search2::SEARCH_STRINGS);
+    ext.emplace_back(EVAL_HEURISTIC_STR); // empty string for no search
+    std::string sstring = make_string_list(ext);
     std::string hstring = make_string_list(sbpuzzle::HEURISTIC_STRINGS);
     std::cout 
         << "Usage: ./exe_file [-h] [-r seed] [-n num-puzzles] [-s search-type] [-h heuristic]\n"
@@ -64,7 +69,8 @@ void show_usage() {
         << "       -r SEED        seed value used to generate puzzles, default is 42\n"
         << "       -n NUM_PUZZLES the number of puzzles to randomly generate, default is 1\n"
         << "       -s SEARCH_TYPE the type of search to use: " << sstring << "\n"
-        << "                      default is bfs\n"
+        << "                      default is bfs. " << EVAL_HEURISTIC_STR << " implies\n"
+        << "                      generating heuristic values, rather than solving the puzzle.\n"
 
     // auto-print heuristic strings from those registered in heuristics.hpp
         << "       -h HEURISTIC   heuristic to use: " << hstring << "\n";
@@ -143,37 +149,49 @@ int main(int argc, char *argv[]) {
     std::unique_ptr<Heuristic<H, W>> hp = heuristic_factory<H, W>(heuristic, file_path, use_gpu);
     Heuristic<H, W> &hf = *hp;
     
-    SearchType search_type;
-    try {
-        search_type = str2searchtype(search_type_str);
-    } catch(const std::out_of_range &ex) {
-        std::cerr << "Error: invalid search type string.\n";
-        return -1;
+
+    if(search_type_str != EVAL_HEURISTIC_STR) {
+        SearchType search_type;
+        try {
+            search_type = str2searchtype(search_type_str);
+        } catch(const std::out_of_range &ex) {
+            std::cerr << "Error: invalid search type string.\n";
+            return -1;
+        }
+
+        auto search_function = search_factory<Puzzle, TSA, Heuristic<H, W> &, true>(search_type);
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        int num_moves = 0;
+        size_t num_nodes = 0;
+        for(size_t i = 0; i < num_puzzles; i++) {
+            using namespace search2;
+            auto r = search_function(puzzles[i], weight, batch_size, std::ref(hf));
+            num_moves += r.cost;
+            num_nodes += r.nodes_expanded;
+            std::cout << '\r' << (i+1) << "/" << num_puzzles << std::flush;
+        }
+ 
+        std::cout << '\r';
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+
+        double avg_moves = static_cast<double>(num_moves) / num_puzzles;
+        double avg_nodes = static_cast<double>(num_nodes) / num_puzzles;
+        std::cout << "Solved " << num_puzzles << " puzzles in " << fp_ms.count() / num_puzzles 
+                  << " milliseconds on average with " << avg_moves << " moves and " << avg_nodes
+                  << " nodes expanded on average." << std::endl;
+
+    } else {
+        // use the batch version of the heuristic
+        std::vector<int> costs;
+        hf(puzzles, costs);
+        int total_cost = std::accumulate(costs.begin(), costs.end(), 0);
+        std::cout << "Evaluated " << num_puzzles << " puzzles, resulting in an average of "
+                  << static_cast<double>(total_cost) / num_puzzles << " heuristic cost."
+                  << std::endl;
     }
-
-    auto search_function = search_factory<Puzzle, TSA, Heuristic<H, W> &, true>(search_type);
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-    int num_moves = 0;
-    size_t num_nodes = 0;
-    for(size_t i = 0; i < num_puzzles; i++) {
-        using namespace search2;
-        auto r = search_function(puzzles[i], weight, batch_size, std::ref(hf));
-        num_moves += r.cost;
-        num_nodes += r.nodes_expanded;
-        std::cout << '\r' << (i+1) << "/" << num_puzzles << std::flush;
-    }
-    
-    std::cout << '\r';
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
-
-    double avg_moves = static_cast<double>(num_moves) / num_puzzles;
-    double avg_nodes = static_cast<double>(num_nodes) / num_puzzles;
-    std::cout << "Solved " << num_puzzles << " puzzles in " << fp_ms.count() / num_puzzles 
-              << " milliseconds on average with " << avg_moves << " moves and " << avg_nodes
-              << " nodes expanded on average." << std::endl;
-
+   
     return 0;
 }
