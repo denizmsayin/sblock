@@ -307,7 +307,7 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
         class SBPuzzleBase {
             public:
-
+                
                 const std::array<uint8_t, H*W> &get_tiles() const {
                     return tiles;
                 }
@@ -336,7 +336,7 @@ namespace sbpuzzle {
                     return details::tiles_stream<HH, WW>(s, p.tiles);
                 }
 
-                std::ostream &stream_binary(std::ostream &s) const {
+                std::ostream &to_binary_stream(std::ostream &s) const {
                     const char *out_ptr = reinterpret_cast<const char *>(&tiles[0]);
                     size_t out_size = tiles.size() * sizeof(tiles[0]);
                     return s.write(out_ptr, out_size);
@@ -409,6 +409,13 @@ namespace sbpuzzle {
 
         SBPuzzle(const SBPuzzle &other) = default;
         SBPuzzle &operator=(const SBPuzzle &other) = default;
+
+        static SBPuzzle from_binary_stream(std::istream &stream) {
+            // TODO: could use istream iterators?
+            array<uint8_t, H*W> tiles;
+            stream.read(reinterpret_cast<char *>(tiles.data()), tiles.size());
+            return SBPuzzle(tiles);
+        }
 
         SBPuzzle goal_state() const { 
             return details::goal_state<SBPuzzle<H, W>, H, W>(Base::tiles);

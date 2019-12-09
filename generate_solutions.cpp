@@ -107,12 +107,12 @@ void solver_thread_routine(const PDB *db) {
         // solve the puzzle using A* search
         search2::SearchResult r = 
             search2::a_star_search<Puzzle, Action>(p, [&](const auto &p) { 
-                    return p.lookup_cost(db);
+                    return db->lookup(p);
             });
         // enqueue the solution and wake up the writer if necessary
         {
             std::scoped_lock lock(m_gsolutions);
-            gsolutions.emplace(p, r.cost);
+            gsolutions.emplace(p, cost);
         }
         --gpuzzles_to_solve; // decrement puzzle count
         // wake the writer since a solution has been found
@@ -151,7 +151,7 @@ void writer_thread_routine(std::fstream &stream, size_t print_every) {
         // the lock on solutions is unlocked, can write safely
         while(!sols.empty()) {
             const Solution &s = sols.front();
-            s.puzzle.stream_binary(stream) << s.cost;
+            s.puzzle.to_binary_stream(stream) << s.cost;
             stream.flush();
             sols.pop();
             // track the number of solutions written
