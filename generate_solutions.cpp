@@ -112,7 +112,7 @@ void solver_thread_routine(const PDB *db) {
         // enqueue the solution and wake up the writer if necessary
         {
             std::scoped_lock lock(m_gsolutions);
-            gsolutions.emplace(p, cost);
+            gsolutions.emplace(p, r.cost);
         }
         --gpuzzles_to_solve; // decrement puzzle count
         // wake the writer since a solution has been found

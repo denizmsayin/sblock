@@ -135,8 +135,9 @@ namespace sbpuzzle {
         using details::RegressionModel;
         using details::ClassificationModel;
         torch::jit::script::Module m = torch::jit::load(file_path);
+        m.to(dev);
         // pass an empty tensor through the module to determine the output size
-        std::vector<torch::jit::IValue> dummy_inputs {torch::empty({1, H*H*W*W})};
+        std::vector<torch::jit::IValue> dummy_inputs {torch::empty({1, H*H*W*W}).to(dev)};
         auto dummy_out = m.forward(dummy_inputs).toTensor();
         int64_t out_size = at::size(dummy_out, -1);
         if(out_size == 1)

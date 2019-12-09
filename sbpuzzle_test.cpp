@@ -153,6 +153,10 @@ int main(int argc, char *argv[]) {
         char *tiles_ptr = reinterpret_cast<char *>(tiles.data());
         size_t tiles_size = tiles.size() * sizeof(tiles[0]);
         std::ifstream infile(in_path, std::ifstream::in | std::ifstream::binary);
+        if(!infile.is_open()) {
+            std::cerr << "Error: could not open input file.\n";
+            return -1;
+        }
         while(infile.read(tiles_ptr, tiles_size)) { // while tiles can be read
             puzzles.emplace_back(tiles); // insert the puzzle 
             infile.ignore(1); // ignore the stored cost character
@@ -182,8 +186,13 @@ int main(int argc, char *argv[]) {
     // create a function to write the output
     bool outfile_exists = (out_path != "");
     std::ofstream outfile; 
-    if(outfile_exists) 
-        outfile = std::ofstream(out_path, std::ofstream::out | std::ofstream::binary);
+    if(outfile_exists) {
+        outfile.open(out_path, std::ofstream::out | std::ofstream::binary);
+        if(!outfile.is_open()) {
+            std::cerr << "Error: could not open output file.\n";
+            return -1;
+        }
+    }
     auto writer = [&](const Puzzle &p, uint8_t cost) {
         if(outfile_exists)
             p.to_binary_stream(outfile) << cost;
