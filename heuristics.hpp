@@ -125,16 +125,29 @@ namespace sbpuzzle {
         std::unique_ptr<PDB<H, W>> db;
     };
 
-    /*
+    #ifdef W_TORCH
     template <psize_t H, psize_t W>
     class DLModelHeuristic : public Heuristic<H, W> {
     public:
-        DLModelHeuristic(
-    */
+        DLModelHeuristic(std::unique_ptr<DLModel<H, W>> &&p) : model(std::move(p)) {}
+
+        uint8_t operator()(const SBPuzzle<H, W> &p) {
+            return model->forward(p);
+        }
+
+        void operator()(const std::vector<SBPuzzle<H, W>> &p, std::vector<int> &o) {
+            return model->template forward<float, int>(p, o);
+        }
+
+    private:
+        std::unique_ptr<DLModel<H, W>> model;
+    };
+    #endif
 
     template <psize_t H, psize_t W>
     std::unique_ptr<Heuristic<H, W>> heuristic_factory(HeuristicType type, 
-                                                       const std::string &file_path="") {
+                                                       const std::string &file_path="",
+                                                       bool use_gpu=false) {
         typedef HeuristicType T;
         Heuristic<H, W> *p = nullptr;
         switch(type) {
@@ -153,7 +166,15 @@ namespace sbpuzzle {
                                         new CRDPDB<H, W>(
                                             DPDB<H, W>::from_file(file_path)));
                                 break;
-            default:            throw std::invalid_argument("Unknown heuristic type");
+            #ifdef W_TORCH
+            case T::DLMODEL:    
+            { 
+                torch::Device dev = use_gpu ? torch::kCUDA : torch::kCPU;
+                p = new DLModelHeuristic(DLModel<H, W>::from_file(file_path, dev));
+                break;
+            }
+            #endif
+            default:            throw std::invalid_argument("Unknown heuristic type. If using dlmodel, did you compile with -DW_TORCH?");
         }
         return std::unique_ptr<Heuristic<H, W>>(p);
     }

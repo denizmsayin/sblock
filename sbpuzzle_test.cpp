@@ -28,17 +28,7 @@
 // program constants
 constexpr uint8_t H = __H, W = __W;
 
-
 //-------------------------------------------------------------------------------
-
-using namespace sbpuzzle;
-
-#ifdef W_TORCH
-#include "dlmodel.hpp"
-const std::string torchfile = "/home/deniz/HDD/Documents/CENG783/Project/supervised/small_l2.pt";
-auto device = torch::kCUDA;
-std::unique_ptr<DLModel<H, W>> DLMODEL = DLModel<H, W>::from_file(torchfile, device);
-#endif
 
 typedef sbpuzzle::TileSwapAction TSA;
 typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
@@ -53,102 +43,6 @@ Puzzle create_solvable_puzzle(URNG &&rng) {
     return Puzzle(tiles);
 }
 
-/*
-template <int H, int W, class URNG>
-SBPuzzle<H, W> create_solvable_masked_puzzle(URNG &&rng) {
-    SBPuzzle<H, W> puzzle;
-    bool mask[H*W];
-    for(int i = 0, size = H*W; i < size; ++i)
-        mask[i] = true;
-    mask[H*W-1] = false;
-    do {
-        puzzle.shuffle(rng);
-    } while(!puzzle.is_solvable());
-    return SBPuzzle<H, W>(puzzle, mask);
-}
-*/
-
-class ZeroHeuristic {
-public:
-    constexpr uint64_t operator()(const Puzzle &p) {
-        return 0;
-    }
-};
-
-/*
-template <int H, int W>
-class MisplacedTilesHeuristic {
-public:
-    int operator()(const SBPuzzle<H, W> &p) {
-        return p.num_misplaced_tiles();
-    }
-};
-*/
-/*
-class ManhattanHeuristic {
-public:
-    uint64_t operator()(const Puzzle &p) {
-        return p.manhattan_distance_to_solution();
-    }
-};
-
-class DPDBHeuristic {
-public:
-    int operator()(const Puzzle &p) {
-        return static_cast<const PDB<H, W> *>(&CDB)->lookup(p);
-    }
-};
-*/
-
-size_t gequal = 0;
-std::vector<int64_t> goffs;
-
-#ifdef W_TORCH
-class TorchHeuristic {
-public:
-    uint64_t operator()(const Puzzle &p) {
-        uint64_t r = DLMODEL->forward(p);
-        /* auto ar = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(p);
-        int64_t actual = ar.cost;
-        goffs.emplace_back(actual - r);
-        if(r == actual)
-            ++gequal;
-        */
-        return r;
-    }
-};
-
-class BTorchHeuristic {
-public:
-    template <typename OutItr>
-    void operator()(const std::vector<Puzzle> &p, OutItr i) {
-        DLMODEL->forward(p, i);
-        /* auto ar = search2::a_star_search<Puzzle, TSA, DPDBHeuristic>(p);
-        int64_t actual = ar.cost;
-        goffs.emplace_back(actual - r);
-        if(r == actual)
-            ++gequal;
-        */
-    }
-};
-#endif
-
-/*
-bool check_equality(const vector<Dir> &m1, const vector<Dir> &m2) {
-    bool eq = false;
-    if(m1.size() == m2.size()) {
-        int size = m1.size();
-        eq = true;
-        for(int i = 0; i < size; i++)
-            if(m1[i] != m2[i]) {
-                eq = false;
-                break;
-            }
-    }
-    return eq;
-}
-*/
-
 // takes a vector {"1", "2", "3"} and returns a string representation "{1, 2, 3}"
 std::string make_string_list(const std::vector<std::string> &strings) {
     if(strings.empty()) return "{}";
@@ -161,6 +55,7 @@ std::string make_string_list(const std::vector<std::string> &strings) {
 }
 
 void show_usage() {
+    std::string sstring = make_string_list(search2::SEARCH_STRINGS);
     std::string hstring = make_string_list(sbpuzzle::HEURISTIC_STRINGS);
     std::cout 
         << "Usage: ./exe_file [-h] [-r seed] [-n num-puzzles] [-s search-type] [-h heuristic]\n"
@@ -168,7 +63,7 @@ void show_usage() {
         << "       -?             show this help message\n"
         << "       -r SEED        seed value used to generate puzzles, default is 42\n"
         << "       -n NUM_PUZZLES the number of puzzles to randomly generate, default is 1\n"
-        << "       -s SEARCH_TYPE the type of search to use: {bfs, iddfs, a*, ida*, wa* bwa*}\n"
+        << "       -s SEARCH_TYPE the type of search to use: " << sstring << "\n"
         << "                      default is bfs\n"
 
     // auto-print heuristic strings from those registered in heuristics.hpp
@@ -194,27 +89,6 @@ void show_usage() {
         ;
 }
 
-enum class SearchType {
-    BFS,
-    IDDFS,
-    ASTAR,
-    ID_ASTAR,
-    WEIGHTED_ASTAR,
-    BATCH_WEIGHTED_ASTAR
-};
-
-SearchType str2searchtype(const std::string &s) {
-    typedef SearchType T;
-    static std::unordered_map<std::string, SearchType> map {
-        {"bfs", T::BFS},
-        {"iddfs", T::IDDFS},
-        {"a*", T::ASTAR},
-        {"ida*", T::ID_ASTAR},
-        {"wa*", T::WEIGHTED_ASTAR},
-        {"bwa*", T::BATCH_WEIGHTED_ASTAR}
-    };
-    return map[s];
-}
 
 int main(int argc, char *argv[]) {
     unsigned seed = 42;
@@ -230,7 +104,7 @@ int main(int argc, char *argv[]) {
         std::cout << "For argument help: ./exe_file -?\n";
 
     int ch;
-    while((ch = getopt(argc, argv, "?r:n:s:h:f:w:b:g")) != -1) {
+    while((ch = getopt(argc, argv, "?gr:n:s:h:f:w:b:")) != -1) {
         switch(ch) {
             case '?':   show_usage(); return 0;
             case 'r':   seed = std::stoul(optarg); break;
@@ -240,8 +114,9 @@ int main(int argc, char *argv[]) {
             case 'f':   file_path = optarg; break;
             case 'w':   weight = std::stod(optarg); break;
             case 'b':   batch_size = std::stoull(optarg); break;
-            case 'g':   use_gpu = true;
-            default:    std::cerr << "Unexpected argument. Try ./exe_file -?\n"; return -1;
+            case 'g':   use_gpu = true; break;
+            default:    std::cerr << "Unexpected argument (" << static_cast<char>(ch) << "). " 
+                                  << "Try ./exe_file -?\n"; return -1;
         }
     }
 
@@ -252,7 +127,7 @@ int main(int argc, char *argv[]) {
         puzzles.push_back(create_solvable_puzzle<H, W>(rng));
 
     using namespace sbpuzzle;
-    SearchType search_type = str2searchtype(search_type_str);
+    using namespace search2;
 
     HeuristicType heuristic;
     try {
@@ -265,30 +140,30 @@ int main(int argc, char *argv[]) {
     // the search functions require virtual dispatch of the heuristic function,
     // however since the templates are written with value (and not pointer) types
     // in mind, it is necessary to use a reference to Heuristic rather than a pointer
-    std::unique_ptr<Heuristic<H, W>> hp = heuristic_factory<H, W>(heuristic, file_path);
+    std::unique_ptr<Heuristic<H, W>> hp = heuristic_factory<H, W>(heuristic, file_path, use_gpu);
     Heuristic<H, W> &hf = *hp;
+    
+    SearchType search_type;
+    try {
+        search_type = str2searchtype(search_type_str);
+    } catch(const std::out_of_range &ex) {
+        std::cerr << "Error: invalid search type string.\n";
+        return -1;
+    }
+
+    auto search_function = search_factory<Puzzle, TSA, Heuristic<H, W> &, true>(search_type);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     int num_moves = 0;
     size_t num_nodes = 0;
     for(size_t i = 0; i < num_puzzles; i++) {
         using namespace search2;
-        auto r = a_star_search<Puzzle, TSA>(puzzles[i], std::ref(hf));
-        // auto r = batch_weighted_a_star_search<Puzzle, TSA>(puzzles[i], 1.0, 1, hf);
-        // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, decltype(bhf)>(puzzles[i], 1.0, 16, bhf);
-
-        // auto r = search2::weighted_a_star_search<Puzzle, TSA, DPDBHeuristic>(puzzles[i], 0.7);
-        // auto r = search2::batch_weighted_a_star_search<Puzzle, TSA, BTorchHeuristic, true>(puzzles[i], 1.0, 8192);
-        // auto r = search2::weighted_a_star_search<Puzzle, TSA, TorchHeuristic, true>(puzzles[i], 0.1);
-        // std::cout << "Solved in " << m << " moves." << std::endl;
+        auto r = search_function(puzzles[i], weight, batch_size, std::ref(hf));
         num_moves += r.cost;
-        // num_moves += search2::iterative_deepening_a_star<Puzzle, TSA, DPDBHeuristic>(puzzles[i]);
-        // num_moves += search2::a_star_search<Puzzle, TSA, ManhattanHeuristic>(puzzles[i]);
-        // num_moves += moves.size();
-        num_nodes += r.nodes_expanded; // search2::get_node_counter<Puzzle>();
-        // search2::reset_node_counter<SBPuzzle<H, W>>();
+        num_nodes += r.nodes_expanded;
         std::cout << '\r' << (i+1) << "/" << num_puzzles << std::flush;
     }
+    
     std::cout << '\r';
     auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -299,8 +174,6 @@ int main(int argc, char *argv[]) {
     std::cout << "Solved " << num_puzzles << " puzzles in " << fp_ms.count() / num_puzzles 
               << " milliseconds on average with " << avg_moves << " moves and " << avg_nodes
               << " nodes expanded on average." << std::endl;
-
-//    cout << "Equals: " << gequal << '/' << goffs.size() << "\n";
 
     return 0;
 }

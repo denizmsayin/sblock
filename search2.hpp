@@ -17,6 +17,39 @@
 #include "sblock_utils.hpp"
 #include "search_queues.hpp"
 
+namespace search2 {
+    enum class SearchType {
+        BFS,
+        IDDFS,
+        ASTAR,
+        ID_ASTAR,
+        WEIGHTED_ASTAR,
+        BATCH_WEIGHTED_ASTAR
+    };
+
+    SearchType str2searchtype(const std::string &s) {
+        typedef SearchType T;
+        static const std::unordered_map<std::string, SearchType> map {
+            {"bfs", T::BFS},
+                {"iddfs", T::IDDFS},
+                {"a*", T::ASTAR},
+                {"ida*", T::ID_ASTAR},
+                {"wa*", T::WEIGHTED_ASTAR},
+                {"bwa*", T::BATCH_WEIGHTED_ASTAR}
+        };
+        return map.at(s);
+    }
+
+    // why not auto-generate from the maps? because they are unordered
+    const std::vector<std::string> SEARCH_STRINGS {
+        "bfs",
+        "iddfs",
+        "a*",
+        "ida*",
+        "wa*",
+        "bwa*"
+    };
+}
 
 
 // TODO: update all comments
@@ -258,16 +291,17 @@ namespace search2 {
     };
 
     template <class Puzzle, class Action>
-        IDFSResult depth_limited_dfs(const Puzzle &p, int depth) {
+        IDFSResult depth_limited_dfs(const Puzzle &p, int depth, int *exp_ctr) {
             if(p.is_solved()) {
                 return IDFSResult::FOUND;
             } else if(depth == 0) {
                 return IDFSResult::CUTOFF;
             } else {
+                ++(*exp_ctr);
                 bool cutoff = false;
                 for(auto action : p.template possible_actions<Action>()) {
                     Puzzle new_p = p; new_p.apply_action(action);
-                    IDFSResult result = depth_limited_dfs<Puzzle, Action>(new_p, depth-1);
+                    IDFSResult result = depth_limited_dfs<Puzzle, Action>(new_p, depth-1, exp_ctr);
                     if(result == IDFSResult::CUTOFF)
                         cutoff = true;
                     else if(result != IDFSResult::NOT_FOUND) 
@@ -281,19 +315,20 @@ namespace search2 {
         }
 
     template <class Puzzle, class Action>
-        int iterative_deepening_dfs(const Puzzle &p) {
-            static int LIMIT = 1000000;
-            for(int depth = 0; depth < LIMIT; depth++) {
-                IDFSResult result = depth_limited_dfs<Puzzle, Action>(p, depth);
-                if(result == IDFSResult::FOUND)
-                    return depth;
-                else if(result == IDFSResult::NOT_FOUND) {
-                    details::throw_unreachable();
-                    return 0;
-                }
+    SearchResult iterative_deepening_dfs(const Puzzle &p) {
+        static int LIMIT = 1000000;
+        int exp_ctr = 0;
+        for(int depth = 0; depth < LIMIT; depth++) {
+            IDFSResult result = depth_limited_dfs<Puzzle, Action>(p, depth, &exp_ctr);
+            if(result == IDFSResult::FOUND)
+                return SearchResult(depth, exp_ctr);
+            else if(result == IDFSResult::NOT_FOUND) {
+                details::throw_unreachable();
+                return SearchResult(0, 0);
             }
-            throw std::invalid_argument("The goal state could not be reached in 1M steps");
         }
+        throw std::invalid_argument("The goal state could not be reached in 1M steps");
+    }
 
 
     namespace details {
@@ -821,9 +856,38 @@ namespace search2 {
         return SearchResult(0, exp_ctr);
     }
 
+    namespace details {
+        template <class Puzzle, class Action, class HF>
+        using GeneralizedSearchFn = SearchResult (*)(const Puzzle &, double, size_t, HF);
+    }
 
-
-
+    template <class P, class A, class HF, bool TR = false>
+    details::GeneralizedSearchFn<P, A, HF> search_factory(SearchType type) {
+        typedef SearchType T;
+        switch(type) {
+            case T::BFS:                    return [](const P &p, double w, size_t b, HF hf) {
+                                                return breadth_first_search<P, A>(p);
+                                            };
+            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
+                                                return iterative_deepening_dfs<P, A>(p);
+                                            };
+            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
+                                                return a_star_search<P, A, HF, TR>(p, hf);
+                                            };
+            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
+                                                return iterative_deepening_a_star<P, A, HF>(p, hf);
+                                            };
+            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
+                                                return weighted_a_star_search<P, A, HF, TR>
+                                                       (p, w, hf);
+                                            };
+            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
+                                                return batch_weighted_a_star_search<P, A, HF, TR>
+                                                       (p, w, b, hf);
+                                            };
+            default:                        throw std::invalid_argument("Unknown search type.");
+        }
+    }
 
 }
 #endif
