@@ -19,6 +19,9 @@ size_t calculate_combindex(Iterator begin, Iterator end, int x, int n);
 template <typename RandomAccessIterator>
 size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end);
 
+template <typename T1, typename T2>
+void one_hot_encode(const T1 *inp, size_t s, T2 *out);
+
 size_t hash_byte_array(const uint8_t *a, size_t s);
 
 // templated class declarations
@@ -75,6 +78,13 @@ std::ostream& operator<<(std::ostream &os, const NumWrapper<A, true> &w);
 
 template <typename A>
 std::ostream& operator<<(std::ostream &os, const NumWrapper<A, false> &w);
+
+template <typename T1, typename T2>
+void one_hot_encode(const T1 *inp, size_t s, T2 *out) {
+    std::fill(out, out + s*s, static_cast<T2>(0));
+    for(size_t i = 0; i < s; ++i)
+        out[i * s + static_cast<size_t>(inp[i])] = static_cast<T2>(1);
+}
 
 // Now, we need a function to calculate the index of combination. Examples:
 // 0: XXXOOO XXXOO XXOOO XXXXO XOOOO XXXXX OOOOO

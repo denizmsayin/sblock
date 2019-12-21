@@ -213,7 +213,6 @@ namespace sbpuzzle {
             }
         };
 
-
         // template polymorphic goal_state base function
         template <class P, psize_t H, psize_t W>
         P goal_state(const array<uint8_t, H*W> &tiles) {
@@ -416,6 +415,12 @@ namespace sbpuzzle {
             // TODO: could use istream iterators?
             array<uint8_t, H*W> tiles;
             stream.read(reinterpret_cast<char *>(tiles.data()), tiles.size());
+            return SBPuzzle(tiles);
+        }
+
+        static SBPuzzle no_mask_goal_state() {
+            array<uint8_t, H*W> tiles;
+            std::iota(tiles.begin(), tiles.end(), 0);
             return SBPuzzle(tiles);
         }
 
