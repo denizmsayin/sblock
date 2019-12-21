@@ -42,3 +42,6 @@ cmp_solution_files: cmp_solution_files.cpp sblock_utils.cpp
 check_solution_file: check_solution_file.cpp sblock_utils.cpp
 	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out $(LFLAGS)
 
+train_davi: train_davi.cpp sblock_utils.cpp
+	$(PREFIX) $(HW) $^ -o $(BINPATH)$@_$(PH)x$(PW).out $(LFLAGS)
+

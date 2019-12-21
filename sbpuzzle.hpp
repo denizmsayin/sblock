@@ -50,6 +50,8 @@
 // TODO: consider alternatives to returning a vector for possible_actions()
 // a custom iterator-like type would work nicely if it can be made light-weight
 
+#include "sblock_utils.hpp"
+
 namespace sbpuzzle {
         
     using std::array;
