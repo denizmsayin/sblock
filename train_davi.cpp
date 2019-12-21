@@ -17,10 +17,11 @@ const std::string TMP_NET_FILE_PATH = ".train_davi_tmp_net.pt";
 const std::string TMP_OPTIM_FILE_PATH = ".train_davi_tmp_optim.pt";
 const size_t DEFAULT_NUM_ITERATIONS = 1000;
 const size_t DEFAULT_BATCH_SIZE = 1024;
+const size_t DEFAULT_SCRAMBLE_MAX = 100;
 const unsigned DEFAULT_SEED = 42;
 const float DEFAULT_LEARNING_RATE = 0.01;
 const float DEFAULT_LOSS_THRESHOLD = 0.05;
-const size_t DEFAULT_PRINT_EVERY = 1000;
+const size_t DEFAULT_PRINT_EVERY = 500;
 
 #ifndef __H
 #define __H 3
@@ -103,18 +104,18 @@ int main() {
     size_t num_iterations = DEFAULT_NUM_ITERATIONS;
     size_t batch_size = DEFAULT_BATCH_SIZE;
     size_t print_every = DEFAULT_PRINT_EVERY;
-    size_t scramble_max = 2;
+    size_t scramble_max = DEFAULT_SCRAMBLE_MAX;
     unsigned seed = DEFAULT_SEED;
     float learning_rate = DEFAULT_LEARNING_RATE;
     float loss_threshold = DEFAULT_LOSS_THRESHOLD; // std::numeric_limits<float>::max();
 
-    num_iterations = 1000000;
+    num_iterations = 100000;
 
     auto rng = std::default_random_engine(seed);
 
     Puzzle goal_state = Puzzle::no_mask_goal_state();
 
-    torch::Device device(torch::kCPU);
+    torch::Device device(torch::kCUDA);
 
     std::shared_ptr<Net> main_net(new Net()), 
                          cur_net(new Net());
@@ -127,6 +128,7 @@ int main() {
     torch::optim::Adam cur_optimizer(cur_net->parameters(), 
                                      torch::optim::AdamOptions(learning_rate));
 
+    size_t scramble_top = 2;
     const int64_t S = H * W,
                   Ssq = S * S;
     const size_t num_puzzles = batch_size;
@@ -135,7 +137,7 @@ int main() {
     std::vector<bool> is_goal_state(num_puzzles);
     std::vector<float> encoded(num_puzzles * Ssq); // for holding one hot encodings of neighbors
     for(size_t step = 0; step < num_iterations; ++step) {
-        std::uniform_int_distribution<int64_t> move_distr(1, scramble_max);
+        std::uniform_int_distribution<int64_t> move_distr(1, scramble_top);
         std::vector<Puzzle> puzzles;
         std::vector<size_t> nmoves;
         fill_scrambled_puzzles<H, W>(num_puzzles, move_distr, rng, puzzles, nmoves);
@@ -215,20 +217,21 @@ int main() {
 
         float floss = loss.item<float>();
 
-        std::vector<int64_t> dists;
-        for(size_t pi = 0; pi < num_puzzles; ++pi) {
-            auto result = search2::a_star_search<Puzzle, TSA, ManhH>(puzzles[pi]);
-            dists.emplace_back(result.cost);
-        }
-
+        size_t ndisplay = 8;
         if(step % print_every == 0) {
-            std::cout << "Step: [" << step << '/' << "
+            std::cout << "Step: [" << step << '/' << num_iterations << "]\n";
+
+            std::vector<int64_t> dists;
+            for(size_t pi = 0; pi < ndisplay; ++pi) {
+                auto result = search2::a_star_search<Puzzle, TSA, ManhH>(puzzles[pi]);
+                dists.emplace_back(result.cost);
+            }
 
             std::cout << "Distances: ";
-            stream_itr(std::cout, dists.begin(), dists.begin()+8) << std::endl;
+            stream_itr(std::cout, dists.begin(), dists.begin()+ndisplay) << std::endl;
 
             std::cout << "Preds: ";
-            stream_itr(std::cout, est_costs.begin(), est_costs.begin()+8) << std::endl;
+            stream_itr(std::cout, est_costs.begin(), est_costs.begin()+ndisplay) << std::endl;
 
 
             std::cout << "Loss: " << floss << std::endl;
@@ -236,8 +239,8 @@ int main() {
 
         // update main net if loss is less than the threshold
         if(floss < loss_threshold) {
-            ++scramble_max;
-            std::cout << "Update done, scramble max: " << scramble_max << ".\n";
+            scramble_top = std::min(scramble_top+1, scramble_max);
+            // std::cout << "Update done, scramble max: " << scramble_top << ".\n";
             torch::save(cur_net, TMP_NET_FILE_PATH);
             torch::load(main_net, TMP_NET_FILE_PATH);
         }
