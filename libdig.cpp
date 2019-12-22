@@ -29,8 +29,8 @@ extern "C" {
         dig->init_batch(smin, smax);
     }
 
-    void DIG_get_batch_states(DIG *dig, float *out_encoded) {
-        dig->get_batch_states(out_encoded);
+    void DIG_get_batch_states(DIG *dig, float *out_encoded, bool *out_is_goal) {
+        dig->get_batch_states(out_encoded, out_is_goal);
     }
 
     bool DIG_has_more_neighbors(DIG *dig) {

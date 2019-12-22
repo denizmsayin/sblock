@@ -14,7 +14,7 @@ def load(so_path):
 
     libdig.DIG_init_batch.argtypes = [c_void_p, c_long, c_long]
 
-    libdig.DIG_get_batch_states.argtypes = [c_void_p, c_char_p]
+    libdig.DIG_get_batch_states.argtypes = [c_void_p, c_char_p, c_char_p]
 
     libdig.DIG_has_more_neighbors.restype = c_bool
     libdig.DIG_has_more_neighbors.argtypes = [c_void_p]

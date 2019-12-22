@@ -81,10 +81,12 @@ namespace sbpuzzle {
         }
 
         // C-style output parameter for interfacing
-        void get_batch_states(float *out_encoded) const {
+        void get_batch_states(float *out_encoded, bool *out_is_goal) const {
             for(size_t i = 0; i < batch_size; ++i)
                 one_hot_encode<uint8_t, float>(puzzles[i].get_tiles().data(), PUZZLE_SIZE,
                                                &out_encoded[i * ONE_HOT_ENCODED_SIZE]);
+            std::transform(puzzles.begin(), puzzles.end(), out_is_goal,
+                           [](const Puzzle &p) { return p == GOAL_STATE; });
         }
 
         bool has_more_neighbors() const {
