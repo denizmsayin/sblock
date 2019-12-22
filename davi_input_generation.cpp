@@ -11,11 +11,18 @@
 #include "heuristics.hpp"
 #include "sblock_utils.hpp"
 
+#ifndef __H
+#define __H 3
+#endif
+#ifndef __W
+#define __W 3
+#endif
+
 using sbpuzzle::psize_t;
 
-template <psize_t H, psize_t W>
-using Puzzle = sbpuzzle::SBPuzzle<H, W>;
+constexpr psize_t H = __H, W = __W;
 
+using Puzzle = sbpuzzle::SBPuzzle<H, W>;
 using TSA = sbpuzzle::TileSwapAction;
 
 // Goal: generate input for models that will be trained in pytorch
