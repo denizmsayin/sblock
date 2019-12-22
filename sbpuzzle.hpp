@@ -332,9 +332,8 @@ namespace sbpuzzle {
                     return details::tiles_hash<H, W>(tiles);
                 }
 
-                template <psize_t HH, psize_t WW>
-                friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<HH, WW> &p) {
-                    return details::tiles_stream<HH, WW>(s, p.tiles);
+                friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<H, W> &p) {
+                    return details::tiles_stream<H, W>(s, p.tiles);
                 }
 
                 std::ostream &to_binary_stream(std::ostream &s) const {
