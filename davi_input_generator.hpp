@@ -1,6 +1,7 @@
 #ifndef __DAVI_INPUT_GENERATOR_HPP__
 #define __DAVI_INPUT_GENERATOR_HPP__
 
+#include <iostream>
 #include <vector>
 #include <array>
 #include <random>
@@ -81,19 +82,38 @@ namespace sbpuzzle {
         }
 
         // C-style output parameter for interfacing
-        void get_batch_states(float *out_encoded, bool *out_is_goal) const {
+        void get_batch_states(void *out, bool *out_is_goal) const {
+            #ifdef ONE_HOT
+            float *out_encoded = static_cast<float *>(out);
             for(size_t i = 0; i < batch_size; ++i)
                 one_hot_encode<uint8_t, float>(puzzles[i].get_tiles().data(), PUZZLE_SIZE,
                                                &out_encoded[i * ONE_HOT_ENCODED_SIZE]);
+            #else 
+            uint8_t *out_states = static_cast<uint8_t *>(out);
+            for(size_t i = 0; i < batch_size; ++i)
+                std::copy(puzzles[i].get_tiles().begin(), puzzles[i].get_tiles().end(), &out_states[i * PUZZLE_SIZE]);
+            #endif
             std::transform(puzzles.begin(), puzzles.end(), out_is_goal,
-                           [](const Puzzle &p) { return p == GOAL_STATE; });
+                           [](const SBPuzzle<H, W> &p) -> bool { return p == GOAL_STATE; });
+            /*
+            for(size_t i = 0; i < batch_size; ++i) {
+                std::cout << puzzles[i] << std::endl;
+                for(size_t j = i * PUZZLE_SIZE; j < (i+1)*PUZZLE_SIZE; ++j) {
+                    std::cout << static_cast<int>(out_states[j]) << " ";
+                }
+                std::cout << std::endl;
+            }
+            for(size_t i = 0; i < batch_size; ++i)
+                std::cout << out_is_goal[i] << " ";
+            std::cout << std::endl;
+            */
         }
 
         bool has_more_neighbors() const {
             return action_index < max_action_index;
         }
             
-        void get_next_neighbors(float *out_encoded,
+        void get_next_neighbors(void *out,
                                 bool *out_exists,
                                 bool *out_is_goal)
         {
@@ -109,9 +129,15 @@ namespace sbpuzzle {
                 } else { // mark as non-existant
                     out_exists[i] = false;
                 }
+                #ifdef ONE_HOT
                 // one hot encode the neighbor
+                float *out_encoded = static_cast<float *>(out);
                 one_hot_encode(p.get_tiles().data(), PUZZLE_SIZE,
                                &out_encoded[i * ONE_HOT_ENCODED_SIZE]);
+                #else
+                uint8_t *out_states = static_cast<uint8_t *>(out);
+                std::copy(p.get_tiles().begin(), p.get_tiles().end(), &out_states[i * PUZZLE_SIZE]);
+                #endif
             }
             ++action_index;
         }
