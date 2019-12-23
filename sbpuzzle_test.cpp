@@ -33,7 +33,8 @@ const std::string EVAL_HEURISTIC_STR = "H";
 
 //-------------------------------------------------------------------------------
 
-typedef sbpuzzle::TileSwapAction TSA;
+// typedef sbpuzzle::TileSwapAction Action;
+typedef sbpuzzle::DirectionAction Action;
 typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 
 template <int H, int W, class URNG>
@@ -208,7 +209,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        auto search_function = search_factory<Puzzle, TSA, Heuristic<H, W> &, true>(search_type);
+        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &, true>(search_type);
 
         auto t1 = std::chrono::high_resolution_clock::now();
         int num_moves = 0;

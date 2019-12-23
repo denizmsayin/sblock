@@ -61,9 +61,45 @@ namespace sbpuzzle {
 
         TileSwapAction(uint8_t t, uint8_t h) : tpos(t), hpos(h) {}
 
-        TileSwapAction inverse(TileSwapAction a) {
+        static TileSwapAction reverse(TileSwapAction a) {
             return TileSwapAction(a.hpos, a.tpos);
         }
+
+        bool operator==(TileSwapAction a) const {
+            return a.hpos == hpos && a.tpos == tpos;
+        }
+
+        bool operator!=(TileSwapAction a) const {
+            return a.hpos != hpos || a.tpos != tpos;
+        }
+    };
+
+    namespace details {
+        enum class Direction : uint8_t {
+            UP, RIGHT, DOWN, LEFT
+        };
+
+        std::array<Direction, 4> DIRECTION_REVERSE {
+            Direction::DOWN,
+            Direction::LEFT,
+            Direction::UP,
+            Direction::RIGHT
+        };
+    }
+
+    struct DirectionAction {
+        using Direction = details::Direction;
+
+        Direction dir;
+
+        DirectionAction(Direction d) : dir(d) {}
+
+        static DirectionAction reverse(DirectionAction a) {
+            return details::DIRECTION_REVERSE[static_cast<uint8_t>(a.dir)];
+        }
+
+        bool operator==(DirectionAction d) const { return dir == d.dir; }
+        bool operator!=(DirectionAction d) const { return dir != d.dir; }
     };
 
     typedef uint8_t psize_t;
@@ -365,6 +401,12 @@ namespace sbpuzzle {
                     return 1; // cost is always unit
                 }
 
+                uint64_t apply_action(DirectionAction d) {
+                    int8_t off = details::OFFSETS<W>[static_cast<uint8_t>(d.dir)];
+                    uint8_t tile_pos = hole_pos + off;
+                    return apply_action(TileSwapAction(tile_pos, hole_pos));
+                }
+
                 // a small optimized function for applying a sequence of actions
                 void apply_action_sequence(const std::vector<TileSwapAction> &as) {
                     for(auto a : as)
@@ -475,6 +517,21 @@ namespace sbpuzzle {
         }
     };
 
+    // PADelegate specialization for the DirectionAction class
+    template <psize_t H, psize_t W>
+    template <typename Dummy>
+    struct SBPuzzle<H, W>::PADelegate<DirectionAction, Dummy> {
+        static auto f(const SBPuzzle<H, W> &p) {
+            auto hp = p.hole_pos;
+            std::vector<DirectionAction> actions;
+            std::array<bool, 4> valid;
+            details::tiles_mark_valid_moves<H, W>(hp, valid);
+            for(size_t dir = 0; dir < 4; ++dir)
+                if(valid[dir])
+                    actions.emplace_back(static_cast<details::Direction>(dir));
+            return actions;
+        }
+    };
     /*                                                           */
    
     // The derived class for the case where the hole is not masked

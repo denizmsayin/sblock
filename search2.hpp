@@ -291,28 +291,28 @@ namespace search2 {
     };
 
     template <class Puzzle, class Action>
-        IDFSResult depth_limited_dfs(const Puzzle &p, int depth, int *exp_ctr) {
-            if(p.is_solved()) {
-                return IDFSResult::FOUND;
-            } else if(depth == 0) {
-                return IDFSResult::CUTOFF;
-            } else {
-                ++(*exp_ctr);
-                bool cutoff = false;
-                for(auto action : p.template possible_actions<Action>()) {
-                    Puzzle new_p = p; new_p.apply_action(action);
-                    IDFSResult result = depth_limited_dfs<Puzzle, Action>(new_p, depth-1, exp_ctr);
-                    if(result == IDFSResult::CUTOFF)
-                        cutoff = true;
-                    else if(result != IDFSResult::NOT_FOUND) 
-                        return IDFSResult::FOUND;
-                }
-                if(cutoff)
-                    return IDFSResult::CUTOFF;
-                else
-                    return IDFSResult::NOT_FOUND;
+    IDFSResult depth_limited_dfs(const Puzzle &p, int depth, int *exp_ctr) {
+        if(p.is_solved()) {
+            return IDFSResult::FOUND;
+        } else if(depth == 0) {
+            return IDFSResult::CUTOFF;
+        } else {
+            ++(*exp_ctr);
+            bool cutoff = false;
+            for(auto action : p.template possible_actions<Action>()) {
+                Puzzle new_p = p; new_p.apply_action(action);
+                IDFSResult result = depth_limited_dfs<Puzzle, Action>(new_p, depth-1, exp_ctr);
+                if(result == IDFSResult::CUTOFF)
+                    cutoff = true;
+                else if(result != IDFSResult::NOT_FOUND) 
+                    return IDFSResult::FOUND;
             }
+            if(cutoff)
+                return IDFSResult::CUTOFF;
+            else
+                return IDFSResult::NOT_FOUND;
         }
+    }
 
     template <class Puzzle, class Action>
     SearchResult iterative_deepening_dfs(const Puzzle &p) {
@@ -607,7 +607,8 @@ namespace search2 {
         template <class Puzzle, class Action, class HeuristicFunc>
         int cost_limited_dfs(const SearchNode<Puzzle> &node, 
                              int cost_limit, 
-                             size_t *exp_ctr, 
+                             size_t *exp_ctr,
+                             const Action *prev_action_reverse = nullptr,
                              HeuristicFunc hf=HeuristicFunc()) 
         {
             if(node.est_cost > cost_limit)
@@ -618,15 +619,20 @@ namespace search2 {
                 ++(*exp_ctr);
                 int min_exceeding_cost = std::numeric_limits<int>::max();
                 for(auto action : node.puzzle.template possible_actions<Action>()) {
-                    Puzzle new_p = node.puzzle; 
-                    int new_path_cost = node.path_cost + new_p.apply_action(action);
-                    int new_est_cost = new_path_cost + hf(new_p);
-                    SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
-                    int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit, exp_ctr, hf);
-                    if(result <= cost_limit) // found
-                        return result;
-                    else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
-                        min_exceeding_cost = result;
+                    if(prev_action_reverse == nullptr || 
+                       *prev_action_reverse != action) 
+                    {
+                        Puzzle new_p = node.puzzle; 
+                        int new_path_cost = node.path_cost + new_p.apply_action(action);
+                        int new_est_cost = new_path_cost + hf(new_p);
+                        SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
+                        Action rev_action = Action::reverse(action);
+                        int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit, exp_ctr, &rev_action, hf);
+                        if(result <= cost_limit) // found
+                            return result;
+                        else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
+                            min_exceeding_cost = result;
+                    }
                 }
                 return min_exceeding_cost;
             }
@@ -640,7 +646,7 @@ namespace search2 {
         SearchNode<Puzzle> start_node(p, 0, cost_limit);
         size_t exp_ctr = 0;
         while(true) {
-            int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit, &exp_ctr, hf);
+            int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit, &exp_ctr, nullptr, hf);
             if(result <= cost_limit) 
                 return SearchResult(result, exp_ctr);
             cost_limit = result;
