@@ -193,6 +193,10 @@ namespace sbpuzzle {
             directions[3] = rem > 0; // left
         }
 
+        inline uint8_t inv_action_index(uint8_t i) {
+            return (i + 2) & 3; // 0 -> 2, 1 -> 3, 2 -> 0, 3 -> 1
+        }
+
         template <psize_t H, psize_t W>
         size_t count_inversions(const array<uint8_t, H*W> &tiles) {
             size_t inv = 0;
@@ -359,6 +363,14 @@ namespace sbpuzzle {
                     tiles[a.tpos] = HOLE; // tile is now the hole
                     hole_pos = a.tpos;
                     return 1; // cost is always unit
+                }
+
+                // a small optimized function for applying a sequence of actions
+                void apply_action_sequence(const std::vector<TileSwapAction> &as) {
+                    for(auto a : as)
+                        tiles[a.hpos] = tiles[a.tpos];
+                    tiles[as.back().tpos] = HOLE;
+                    hole_pos = as.back().tpos;
                 }
 
             protected:

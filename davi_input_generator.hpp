@@ -32,28 +32,68 @@ namespace sbpuzzle {
                                     std::vector<SBPuzzle<H, W>> &puzzles_out, // prellocated
                                     std::vector<size_t> *num_moves_out = nullptr) // preallocated
         {
+            // distributions for picking moves
+            static std::uniform_int_distribution<int64_t> ad2(0, 1);
+            static std::uniform_int_distribution<int64_t> ad3(0, 2);
+            static std::uniform_int_distribution<int64_t> ad4(0, 3);
             using TSA = TileSwapAction;
             // fill a constant tile array with goal state values
             std::array<uint8_t, H*W> goal_tiles;
             std::iota(goal_tiles.begin(), goal_tiles.end(), 0);
+            // a buffer array to hold the action sequence
+            std::vector<TSA> action_sequence;
+            action_sequence.reserve(move_distribution.max());
+            // std::cout << "MDM: " << move_distribution.max() << std::endl;
             for(size_t i = 0; i < num_puzzles; ++i) {
                 // create a goal state puzzle and select a number of moves
                 SBPuzzle<H, W> puzzle(goal_tiles);
                 int64_t num_moves = move_distribution(rng);
                 // randomly apply a move to the puzzle num_moves times
+                // first, generate num_moves valid moves
+                uint8_t hp = HOLE<H, W>;
+                std::array<bool, 4> is_valid;
+                std::array<uint8_t, 4> valid_actions;
+                uint8_t num_valid = 0, prev_action_inverse_index = -1;
                 for(int64_t j = 0; j < num_moves; ++j) {
-                    // TODO: perhaps prevent backtracking of previous move? 
-                    // might help just a little
-                    std::vector<TSA> actions = puzzle.template possible_actions<TSA>();
-                    std::uniform_int_distribution<int64_t> 
-                        action_index_distr(0, actions.size()-1);
-                    int64_t action_i = action_index_distr(rng);
-                    puzzle.apply_action(actions[action_i]);
+                    num_valid = 0;
+                    tiles_mark_valid_moves<H, W>(hp, is_valid);
+                    // accumulate valid moves, trust the compiler's unrolling
+                    for(uint8_t k = 0; k < 4; ++k)
+                        if(is_valid[k])
+                            valid_actions[num_valid++] = k;
+                    // select a random action index
+                    uint8_t random_index = 0;
+                    switch(num_valid) {
+                        case 2: random_index = ad2(rng); break;
+                        case 3: random_index = ad3(rng); break;
+                        case 4: random_index = ad4(rng); break;
+                        default: throw std::runtime_error("Unexpected amount of valid moves");
+                    }
+                    uint8_t action_index = valid_actions[random_index];
+                    // if the inverse action was previously done, select the next one instead
+                    if(prev_action_inverse_index == action_index) 
+                        action_index = valid_actions[(random_index + 1) % num_valid];
+                    // add the action to the list 
+                    uint8_t tile_pos = hp + OFFSETS<W>[action_index];
+                    action_sequence.emplace_back(tile_pos, hp);
+                    hp = tile_pos; // update hole position
+                    prev_action_inverse_index = inv_action_index(action_index);
                 }
+                // now that the action sequence is ready, apply it to the puzzle
+                puzzle.apply_action_sequence(action_sequence);
+                /*
+                // debugging code
+                for(auto a : action_sequence)
+                    std::cout << ((int)a.tpos) << "-" << ((int)a.hpos) << " ";
+                std::cout << std::endl;
+                std::cout << puzzle << std::endl;
+                */
                 // add the puzzle
                 if(num_moves_out != nullptr)
                     (*num_moves_out)[i] = num_moves;
                 puzzles_out[i] = puzzle;
+                // clear the action sequence for reuse
+                action_sequence.clear();
             }
         }
     }
