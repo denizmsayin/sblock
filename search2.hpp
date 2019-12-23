@@ -611,23 +611,33 @@ namespace search2 {
                              const Action *prev_action_reverse = nullptr,
                              HeuristicFunc hf=HeuristicFunc()) 
         {
-            if(node.est_cost > cost_limit)
+            if(node.est_cost > cost_limit) { // return the cutoff cost
                 return node.est_cost;
-            else if(node.puzzle.is_solved()) {
+            } else if(node.puzzle.is_solved()) { // return the solution
                 return node.path_cost;;
             } else {
-                ++(*exp_ctr);
-                int min_exceeding_cost = std::numeric_limits<int>::max();
+                ++(*exp_ctr); // increment the expansion counter
+                int min_exceeding_cost = std::numeric_limits<int>::max(); 
                 for(auto action : node.puzzle.template possible_actions<Action>()) {
+                    // if no previous action was input, continue
+                    // otherwise, do not perform the reverse of the previous action
+                    // as it leads back to the same node and slows down
                     if(prev_action_reverse == nullptr || 
                        *prev_action_reverse != action) 
                     {
+                        // generate parameters for a recursive call
                         Puzzle new_p = node.puzzle; 
                         int new_path_cost = node.path_cost + new_p.apply_action(action);
                         int new_est_cost = new_path_cost + hf(new_p);
                         SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
                         Action rev_action = Action::reverse(action);
-                        int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, cost_limit, exp_ctr, &rev_action, hf);
+                        // call cost limited dfs on the neighbor
+                        int result = 
+                            cost_limited_dfs<Puzzle, Action, HeuristicFunc>(new_node, 
+                                                                            cost_limit, 
+                                                                            exp_ctr, 
+                                                                            &rev_action, 
+                                                                            hf);
                         if(result <= cost_limit) // found
                             return result;
                         else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
@@ -646,7 +656,11 @@ namespace search2 {
         SearchNode<Puzzle> start_node(p, 0, cost_limit);
         size_t exp_ctr = 0;
         while(true) {
-            int result = details::cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, cost_limit, &exp_ctr, nullptr, hf);
+            int result = cost_limited_dfs<Puzzle, Action, HeuristicFunc>(start_node, 
+                                                                         cost_limit, 
+                                                                         &exp_ctr, 
+                                                                         nullptr, // prev action
+                                                                         hf);
             if(result <= cost_limit) 
                 return SearchResult(result, exp_ctr);
             cost_limit = result;
