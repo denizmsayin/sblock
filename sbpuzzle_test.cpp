@@ -116,6 +116,8 @@ int main(int argc, char *argv[]) {
     size_t batch_size = 1;
     bool use_gpu = false;
 
+    search2::TRACKER_OPTS.do_track = true;
+
     if(argc == 1)
         std::cout << "For argument help: ./exe_file -?\n";
 
@@ -209,7 +211,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &, true>(search_type);
+        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &>(search_type);
 
         auto t1 = std::chrono::high_resolution_clock::now();
         int num_moves = 0;

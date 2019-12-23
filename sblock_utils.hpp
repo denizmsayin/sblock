@@ -29,6 +29,7 @@ template <typename Arithmetic>
 class SeriesTracker {
 public:
     struct Options {
+        bool do_track;
         std::ostream &stream;
         double alpha;
         Arithmetic print_every; // 0 implies disabled
@@ -36,10 +37,10 @@ public:
         std::string name_str;
         bool no_newline;
 
-        Options(Arithmetic pe=static_cast<Arithmetic>(1000), double a=0.0, 
+        Options(bool dt=true, Arithmetic pe=static_cast<Arithmetic>(1000), double a=0.0, 
                 bool ss=true, std::ostream &s=std::cout, 
                 const std::string &ns = "Value") 
-            : stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns), 
+            : do_track(dt), stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns), 
               no_newline(true) {}
 
         Options(const Options &o) = default;
@@ -62,6 +63,50 @@ private:
     static constexpr size_t STRING_BUF_SIZE = 100;
 
     void record();
+};
+
+template <typename Arithmetic>
+class SeriesTrackedValue {
+public:
+    SeriesTrackedValue(Arithmetic initial_value) : value(initial_value), tracker(&value) {}
+    SeriesTrackedValue(Arithmetic initial_value, 
+                       const typename SeriesTracker<Arithmetic>::Options &opts)
+        : value(initial_value), tracker(&value, opts) {}
+
+   
+    Arithmetic get_value() const { return value; }
+
+    // TODO: add many more overloads to make this like a transparent numeric type
+
+    // do not support chained assignment
+    void operator+=(Arithmetic added) {
+        value += added;
+        tracker.track();
+    }
+
+    void operator-=(Arithmetic subbed) {
+        value -= subbed;
+        tracker.track();
+    }
+
+    void operator*=(Arithmetic mul) {
+        value *= mul;
+        tracker.track();
+    }
+
+    void operator/=(Arithmetic div) {
+        value /= div;
+        tracker.track();
+    }
+
+    void operator++()       { *this += 1; }
+    void operator++(int)    { *this += 1; }
+    void operator--()       { *this -= 1; }
+    void operator--(int)    { *this -= 1; }
+
+private:
+    Arithmetic value;
+    SeriesTracker<Arithmetic> tracker;
 };
 
 // thin wrapper around integral types to allow for different printing 
@@ -218,7 +263,7 @@ void SeriesTracker<A>::record() {
 
 template <typename A>
 void SeriesTracker<A>::track() {
-    if(options.print_every != static_cast<A>(0)) {
+    if(options.do_track && options.print_every != static_cast<A>(0)) {
         A diff = *tracked - rec_value;
         if(diff >= options.print_every) {
             auto now = std::chrono::high_resolution_clock::now();

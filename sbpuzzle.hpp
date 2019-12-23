@@ -481,9 +481,22 @@ namespace sbpuzzle {
             return details::goal_state<SBPuzzle<H, W>, H, W>(Base::tiles);
         }
 
+        template <class Action, class Iterator>
+        void fill_possible_actions(Iterator out) const {
+            PADelegate<Action, Iterator>::f(*this, out); // delegate to the struct
+        }
+
+        // NOTE: while this function is only a thin wrapper around
+        // fill_possible_actions and should ideally be a base class 
+        // function with fill_possible_actions being virtual, this
+        // is not possible simply due to templated virtual functions
+        // being unavailable. Instead, this definition will be 
+        // copied to every derived class
         template <class Action>
         std::vector<Action> possible_actions() const {
-            return PADelegate<Action>::f(*this); // delegate to the struct
+            std::vector<Action> actions;
+            fill_possible_actions<Action>(std::back_inserter(actions));
+            return actions;
         }
 
     private:
@@ -495,41 +508,37 @@ namespace sbpuzzle {
         // it is not possible to FULLY specialize the wrapper struct either, only partially.
         // Which is why we need a struct with the actual template parameter and a dummy one.
         // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
-        template <typename Action, typename Dummy = void>
+        template <typename Action, typename Iterator, typename Dummy = void>
         struct PADelegate {
-            static std::vector<Action> f(const SBPuzzle &p);
+            static void f(const SBPuzzle &p, Iterator out);
         };
     };
  
     // PADelegate specialization for the TileSwapAction class
     template <psize_t H, psize_t W>
-    template <typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Dummy> {
-        static auto f(const SBPuzzle<H, W> &p) {
+    template <typename Iterator, typename Dummy>
+    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Iterator, Dummy> {
+        static void f(const SBPuzzle<H, W> &p, Iterator out) {
             auto hp = p.hole_pos;
-            std::vector<TileSwapAction> actions;
             std::array<bool, 4> valid;
             details::tiles_mark_valid_moves<H, W>(hp, valid);
             for(size_t dir = 0; dir < 4; ++dir)
                 if(valid[dir])
-                    actions.emplace_back(hp + details::OFFSETS<W>[dir], hp);
-            return actions;
+                    *out++ = TileSwapAction(hp + details::OFFSETS<W>[dir], hp);
         }
     };
 
     // PADelegate specialization for the DirectionAction class
     template <psize_t H, psize_t W>
-    template <typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<DirectionAction, Dummy> {
-        static auto f(const SBPuzzle<H, W> &p) {
+    template <typename Iterator, typename Dummy>
+    struct SBPuzzle<H, W>::PADelegate<DirectionAction, Iterator, Dummy> {
+        static void f(const SBPuzzle<H, W> &p, Iterator out) {
             auto hp = p.hole_pos;
-            std::vector<DirectionAction> actions;
             std::array<bool, 4> valid;
             details::tiles_mark_valid_moves<H, W>(hp, valid);
             for(size_t dir = 0; dir < 4; ++dir)
                 if(valid[dir])
-                    actions.emplace_back(static_cast<details::Direction>(dir));
-            return actions;
+                    *out++ = DirectionAction(static_cast<details::Direction>(dir));
         }
     };
     /*                                                           */
@@ -567,15 +576,22 @@ namespace sbpuzzle {
             return details::goal_state<SBPuzzleNoHole<H, W>, H, W>(Base::tiles);
         }
 
-        template <class Action>
-        std::vector<Action> possible_actions() const {
-            return PADelegate<Action>::f(*this); // delegate to the struct
-        }
-
         uint64_t apply_action(TileSwapAction a) {
             uint64_t cost = Base::apply_action(a);
             reprop_hole(); // repropagate the hole
             return cost; // cost is always unit
+        }
+
+        template <class Action, class Iterator>
+        void fill_possible_actions(Iterator out) const {
+            PADelegate<Action, Iterator>::f(*this, out); // delegate to the struct
+        }
+
+        template <class Action>
+        std::vector<Action> possible_actions() const {
+            std::vector<Action> actions;
+            fill_possible_actions<Action>(std::back_inserter(actions));
+            return actions;
         }
 
     private:
@@ -591,18 +607,17 @@ namespace sbpuzzle {
             details::tiles_reprop_hole<H, W>(Base::tiles, Base::hole_pos);
         }
 
-        template <typename Action, typename Dummy = void>
+        template <typename Action, typename Iterator, typename Dummy = void>
         struct PADelegate {
-            static std::vector<Action> f(const SBPuzzleNoHole &p);
+            static void f(const SBPuzzleNoHole &p, Iterator out);
         };
     };
 
     // PADelegate specialization for the TileSwapAction class
     template <psize_t H, psize_t W>
-    template <typename Dummy>
-    struct SBPuzzleNoHole<H, W>::PADelegate<TileSwapAction, Dummy> {
-        static auto f(const SBPuzzleNoHole<H, W> &p) {
-            std::vector<TileSwapAction> actions;
+    template <typename Iterator, typename Dummy>
+    struct SBPuzzleNoHole<H, W>::PADelegate<TileSwapAction, Iterator, Dummy> {
+        static void f(const SBPuzzleNoHole<H, W> &p, Iterator out) {
             // check around propagated hole tiles
             for(size_t i = 0; i < p.SIZE; ++i) {
                 if(p.tiles[i] == p.HOLE) { // only actual tiles
@@ -612,13 +627,12 @@ namespace sbpuzzle {
                         if(valid[dir]) {
                             auto np = i + details::OFFSETS<W>[dir]; // candidate swap position
                             if(p.tiles[np] != p.HOLE) // can swap if the neighbor is a tile
-                                actions.emplace_back(np, i);
+                                *out++ = TileSwapAction(np, i);
                             // No need to check for _X, since holes propagate over those
                         }
                     }
                 }
             }
-            return actions;
         }
     };
 
