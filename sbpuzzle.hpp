@@ -229,6 +229,24 @@ namespace sbpuzzle {
             directions[3] = rem > 0; // left
         }
 
+        // optimized version of mark_valid_moves for random generation
+        template <psize_t H, psize_t W>
+        uint8_t tiles_insert_valid_moves(uint8_t p, array<uint8_t, 4> &directions) {
+            constexpr static uint8_t W1 = W - 1;
+            constexpr static uint8_t SZW = SIZE<H, W> - W;
+            uint8_t i = 0;
+            uint8_t rem = p % W;
+            if(p >= W)
+                directions[i++] = 0;
+            if(rem < W1)
+                directions[i++] = 1;
+            if(p < SZW)
+                directions[i++] = 2;
+            if(rem > 0)
+                directions[i++] = 3;
+            return i;
+        }
+
         inline uint8_t inv_action_index(uint8_t i) {
             return (i + 2) & 3; // 0 -> 2, 1 -> 3, 2 -> 0, 3 -> 1
         }
