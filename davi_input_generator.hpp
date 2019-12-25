@@ -25,31 +25,6 @@
 namespace sbpuzzle {
     namespace details {
 
-        // optimized version of mark_valid_moves for random generation
-        // pretty low-level
-        template <psize_t H, psize_t W>
-        const uint8_t *tiles_get_valid_moves(uint8_t p) {
-            // cached results, last value holds the size [2, 3, 4], 0 if uninit
-            // other four values hold the results
-            static uint8_t cached_results[SIZE<H, W>][5] = {};
-            constexpr static uint8_t W1 = W - 1;
-            constexpr static uint8_t SZW = SIZE<H, W> - W;
-            if(cached_results[p][4] == 0) {
-                uint8_t i = 0;
-                uint8_t rem = p % W;
-                if(p >= W)
-                    cached_results[p][i++] = 0;
-                if(rem < W1)
-                    cached_results[p][i++] = 1;
-                if(p < SZW)
-                    cached_results[p][i++] = 2;
-                if(rem > 0)
-                    cached_results[p][i++] = 3;
-                cached_results[p][4] = i; // store the size
-            }
-            uint8_t *cached_dirs = cached_results[p];
-            return cached_dirs;
-        }
 
         template <psize_t H, psize_t W, class URNG, class Distribution>
         static void fill_scrambled_puzzles(size_t num_puzzles,
@@ -58,7 +33,7 @@ namespace sbpuzzle {
                                     std::vector<SBPuzzle<H, W>> &puzzles_out, // prellocated
                                     std::vector<size_t> *num_moves_out = nullptr) // preallocated
         {
-            // distributions for picking moves
+            // distribution for picking moves, lcm of 2, 3 and 4
             static std::uniform_int_distribution<int64_t> ad2(0, 1);
             static std::uniform_int_distribution<int64_t> ad3(0, 2);
             static std::uniform_int_distribution<int64_t> ad4(0, 3);
@@ -86,10 +61,18 @@ namespace sbpuzzle {
                         case 4: random_index = ad4(rng); break;
                         default: throw std::runtime_error("Unexpected amount of valid moves");
                     }
-                    uint8_t action_index = valid_actions[random_index];
                     // if the inverse action was previously done, select the next one instead
-                    if(prev_action_inverse_index == action_index) 
-                        action_index = valid_actions[(random_index + 1) % num_valid];
+                    random_index = (prev_action_inverse_index == valid_actions[random_index]) ?
+                                   random_index + 1 : random_index;
+                    // cmove is faster than modulo with a variable
+                    random_index = (random_index == num_valid) ? 0 : random_index;
+                    uint8_t action_index = valid_actions[random_index];
+                    /*
+                    if(prev_action_inverse_index == action_index) {
+                        random_index = (random_index == num_valid - 1) ? 0 : random_index;
+                        action_index = valid_actions[random_index + 1];
+                    }
+                    */
                     // compute the tile position and apply the move
                     uint8_t tp = hp + OFFSETS<W>[action_index];
                     tiles[hp] = tiles[tp];
