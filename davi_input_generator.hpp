@@ -51,10 +51,10 @@ namespace sbpuzzle {
                 // randomly apply a move to the puzzle num_moves times
                 // first, generate num_moves valid moves
                 uint8_t hp = HOLE<H, W>;
-                std::array<uint8_t, 4> valid_actions;
-                uint8_t num_valid = 0, prev_action_inverse_index = -1;
+                uint8_t prev_action_inverse_index = -1;
                 for(int64_t j = 0; j < num_moves; ++j) {
-                    num_valid = tiles_insert_valid_moves<H, W>(hp, valid_actions);
+                    const uint8_t *valid_actions = tiles_get_valid_moves<H, W>(hp);
+                    uint8_t num_valid = valid_actions[4];
                     // select a random action index
                     uint8_t random_index = 0;
                     switch(num_valid) {
