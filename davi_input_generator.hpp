@@ -25,6 +25,32 @@
 namespace sbpuzzle {
     namespace details {
 
+        // optimized version of mark_valid_moves for random generation
+        // pretty low-level
+        template <psize_t H, psize_t W>
+        const uint8_t *tiles_get_valid_moves(uint8_t p) {
+            // cached results, last value holds the size [2, 3, 4], 0 if uninit
+            // other four values hold the results
+            static uint8_t cached_results[SIZE<H, W>][5] = {};
+            constexpr static uint8_t W1 = W - 1;
+            constexpr static uint8_t SZW = SIZE<H, W> - W;
+            if(cached_results[p][4] == 0) {
+                uint8_t i = 0;
+                uint8_t rem = p % W;
+                if(p >= W)
+                    cached_results[p][i++] = 0;
+                if(rem < W1)
+                    cached_results[p][i++] = 1;
+                if(p < SZW)
+                    cached_results[p][i++] = 2;
+                if(rem > 0)
+                    cached_results[p][i++] = 3;
+                cached_results[p][4] = i; // store the size
+            }
+            uint8_t *cached_dirs = cached_results[p];
+            return cached_dirs;
+        }
+
         template <psize_t H, psize_t W, class URNG, class Distribution>
         static void fill_scrambled_puzzles(size_t num_puzzles,
                                     Distribution &move_distribution,
@@ -40,13 +66,10 @@ namespace sbpuzzle {
             // fill a constant tile array with goal state values
             std::array<uint8_t, H*W> goal_tiles;
             std::iota(goal_tiles.begin(), goal_tiles.end(), 0);
-            // a buffer array to hold the action sequence
-            std::vector<TSA> action_sequence;
-            action_sequence.reserve(move_distribution.max());
             // std::cout << "MDM: " << move_distribution.max() << std::endl;
             for(size_t i = 0; i < num_puzzles; ++i) {
                 // create a goal state puzzle and select a number of moves
-                SBPuzzle<H, W> puzzle(goal_tiles);
+                std::array<uint8_t, H*W> tiles = goal_tiles;
                 int64_t num_moves = move_distribution(rng);
                 // randomly apply a move to the puzzle num_moves times
                 // first, generate num_moves valid moves
@@ -56,7 +79,7 @@ namespace sbpuzzle {
                     const uint8_t *valid_actions = tiles_get_valid_moves<H, W>(hp);
                     uint8_t num_valid = valid_actions[4];
                     // select a random action index
-                    uint8_t random_index = 0;
+                    uint8_t random_index;
                     switch(num_valid) {
                         case 2: random_index = ad2(rng); break;
                         case 3: random_index = ad3(rng); break;
@@ -67,14 +90,13 @@ namespace sbpuzzle {
                     // if the inverse action was previously done, select the next one instead
                     if(prev_action_inverse_index == action_index) 
                         action_index = valid_actions[(random_index + 1) % num_valid];
-                    // add the action to the list 
-                    uint8_t tile_pos = hp + OFFSETS<W>[action_index];
-                    action_sequence.emplace_back(tile_pos, hp);
-                    hp = tile_pos; // update hole position
+                    // compute the tile position and apply the move
+                    uint8_t tp = hp + OFFSETS<W>[action_index];
+                    tiles[hp] = tiles[tp];
+                    hp = tp; // update hole position
                     prev_action_inverse_index = inv_action_index(action_index);
                 }
                 // now that the action sequence is ready, apply it to the puzzle
-                puzzle.apply_action_sequence(action_sequence);
                 /*
                 // debugging code
                 for(auto a : action_sequence)
@@ -85,9 +107,7 @@ namespace sbpuzzle {
                 // add the puzzle
                 if(num_moves_out != nullptr)
                     (*num_moves_out)[i] = num_moves;
-                puzzles_out[i] = puzzle;
-                // clear the action sequence for reuse
-                action_sequence.clear();
+                puzzles_out[i] = SBPuzzle<H, W>(tiles);
             }
         }
     }

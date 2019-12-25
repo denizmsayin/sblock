@@ -229,32 +229,6 @@ namespace sbpuzzle {
             directions[3] = rem > 0; // left
         }
 
-        // optimized version of mark_valid_moves for random generation
-        // pretty low-level
-        template <psize_t H, psize_t W>
-        const uint8_t *tiles_get_valid_moves(uint8_t p) {
-            // cached results, last value holds the size [2, 3, 4], 0 if uninit
-            // other four values hold the results
-            static uint8_t cached_results[SIZE<H, W>][5] = {};
-            constexpr static uint8_t W1 = W - 1;
-            constexpr static uint8_t SZW = SIZE<H, W> - W;
-            if(cached_results[p][4] == 0) {
-                uint8_t i = 0;
-                uint8_t rem = p % W;
-                if(p >= W)
-                    cached_results[p][i++] = 0;
-                if(rem < W1)
-                    cached_results[p][i++] = 1;
-                if(p < SZW)
-                    cached_results[p][i++] = 2;
-                if(rem > 0)
-                    cached_results[p][i++] = 3;
-                cached_results[p][4] = i; // store the size
-            }
-            uint8_t *cached_dirs = cached_results[p];
-            return cached_dirs;
-        }
-
         inline uint8_t inv_action_index(uint8_t i) {
             return (i + 2) & 3; // 0 -> 2, 1 -> 3, 2 -> 0, 3 -> 1
         }
