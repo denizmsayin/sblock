@@ -8,6 +8,7 @@
 #include <limits>
 #include <string>
 #include <memory>
+#include <cmath>
 
 #include "sbpuzzle.hpp"
 #include "sblock_utils.hpp"
@@ -37,7 +38,6 @@ namespace sbpuzzle {
             static std::uniform_int_distribution<int64_t> ad2(0, 1);
             static std::uniform_int_distribution<int64_t> ad3(0, 2);
             static std::uniform_int_distribution<int64_t> ad4(0, 3);
-            using TSA = TileSwapAction;
             // fill a constant tile array with goal state values
             std::array<uint8_t, H*W> goal_tiles;
             std::iota(goal_tiles.begin(), goal_tiles.end(), 0);
@@ -67,18 +67,13 @@ namespace sbpuzzle {
                     // cmove is faster than modulo with a variable
                     random_index = (random_index == num_valid) ? 0 : random_index;
                     uint8_t action_index = valid_actions[random_index];
-                    /*
-                    if(prev_action_inverse_index == action_index) {
-                        random_index = (random_index == num_valid - 1) ? 0 : random_index;
-                        action_index = valid_actions[random_index + 1];
-                    }
-                    */
                     // compute the tile position and apply the move
                     uint8_t tp = hp + OFFSETS<W>[action_index];
                     tiles[hp] = tiles[tp];
                     hp = tp; // update hole position
                     prev_action_inverse_index = inv_action_index(action_index);
                 }
+                tiles[hp] = HOLE<H, W>;
                 // now that the action sequence is ready, apply it to the puzzle
                 /*
                 // debugging code
@@ -93,7 +88,41 @@ namespace sbpuzzle {
                 puzzles_out[i] = SBPuzzle<H, W>(tiles);
             }
         }
+
+        // generate a weighted discrete distribution
+        // weight by sqrt(scramble_max - scramble_min + 1)
+        template <typename OutputIterator>
+        void fill_scrambling_weights(int64_t min, int64_t max, OutputIterator out) {
+            int64_t size = max - min + 1;
+            double sum = 0.0;
+            OutputIterator itr = out;
+            std::vector<double> unnormalized_weights(size);
+            for(int64_t i = 0; i < size; ++i) 
+                // sum += (unnormalized_weights[i] = 1.0/size);//sqrt(i + min));
+                sum += (unnormalized_weights[i] = sqrt(i + min));//sqrt(i + min));
+            for(int64_t i = 0; i < size; ++i)
+                *itr++ = unnormalized_weights[i] / sum;
+        }
+
+        template <typename IntType>
+        class OffsetDiscreteDistribution {
+        public:
+            template <typename InputItr>
+            OffsetDiscreteDistribution(InputItr wstart, InputItr wend, IntType off) 
+                : distr(wstart, wend), offset(off) {}
+
+            template <typename RNG>
+            IntType operator()(RNG &rng) {
+                return distr(rng) + offset;
+            }
+
+        private:
+            std::discrete_distribution<IntType> distr;
+            IntType offset;
+        };
+
     }
+
 
     template <psize_t H, psize_t W>
     class DaviInputGenerator {
@@ -105,7 +134,13 @@ namespace sbpuzzle {
 
         void init_batch(int64_t scramble_min, int64_t scramble_max) {
             // create a set of scrambled puzzles
-            std::uniform_int_distribution<int64_t> move_distr(scramble_min, scramble_max);
+            // try a weighted distribution instead of uniform
+            // weight by sqrt(scramble_max - scramble_min + 1)
+            std::vector<double> weights;
+            details::fill_scrambling_weights(scramble_min, scramble_max, 
+                                             std::back_inserter(weights));
+            details::OffsetDiscreteDistribution<int64_t> 
+                move_distr(weights.begin(), weights.end(), scramble_min);
             details::fill_scrambled_puzzles<H, W>(batch_size, move_distr, rng, puzzles);
             // generate possible actions for each puzzle and mark the max number of moves
             max_action_index = 0;

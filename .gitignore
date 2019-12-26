@@ -5,6 +5,7 @@
 *.swo
 
 test.cpp
+testd.cpp
 
 release
 debug
