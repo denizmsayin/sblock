@@ -72,7 +72,7 @@ namespace sbpuzzle {
         constexpr pcell_t _X = std::numeric_limits<pcell_t>::max();
 
         template <psize_t W>
-        static constexpr psize_t OFFSETS[] = {static_cast<psize_t>(-W), +1, +W, static_cast<psize_t>(-1)};
+        static constexpr spsize_t OFFSETS[] = {-W, +1, +W, -1};
         // offset applied to moves allowed by tiles_mark_valid_moves
 
         template <psize_t H, psize_t W>
@@ -84,6 +84,18 @@ namespace sbpuzzle {
         enum class Direction : uint8_t {
             UP, RIGHT, DOWN, LEFT
         };
+
+        std::ostream &operator<<(std::ostream &os, Direction dir) {
+            switch(dir) {
+                case Direction::UP:     os << "U"; break;
+                case Direction::RIGHT:  os << "R"; break;
+                case Direction::DOWN:   os << "D"; break;
+                case Direction::LEFT:   os << "L"; break;
+                default: throw std::runtime_error("Unexpected direction in operator<<"
+                                                  "(std::ostream &, Direction)");
+            }
+            return os;
+        }
 
         std::array<Direction, 4> DIRECTION_REVERSE {
             Direction::DOWN,
@@ -97,6 +109,34 @@ namespace sbpuzzle {
         struct WTag {
             psize_t w = W;
         };
+
+        // a templated iterator class that goes with my custom generator template
+        template <typename generator, typename value_type>
+        class GeneratorIterator {
+        using Direction = details::Direction;
+        public:
+            using difference_type = int64_t;
+            using pointer = const value_type *;
+            using reference = const value_type &;
+            using iterator_category = std::input_iterator_tag;
+
+            GeneratorIterator(generator *g) : gen(g) {}
+            GeneratorIterator& operator++() { incr(); return *this; }
+            GeneratorIterator operator++(int) { auto ret = *this; incr(); return ret; }
+            bool operator==(GeneratorIterator other) { return gen == other.gen; }
+            bool operator!=(GeneratorIterator other) { return gen != other.gen; }
+            value_type operator*() { return gen->value(); }
+        private:
+            generator *gen;
+
+            void incr() {
+                gen->advance();
+                if(!gen->has_more())
+                    gen = nullptr;
+            }
+        };
+
+
     }
 
     struct TileSwapAction {
@@ -573,40 +613,16 @@ namespace sbpuzzle {
 
         // TODO: think about public/private for the nested classes
         template <class Action>
-        class generator {
+        class Generator {
         public:
-            class iterator {
-            using Direction = details::Direction;
-            public:
-                using difference_type = int64_t;
-                using value_type = Action;
-                using pointer = const Action *;
-                using reference = const Action &;
-                using iterator_category = std::input_iterator_tag;
-
-                iterator(generator *g) : gen(g) {}
-                iterator& operator++() { incr(); return *this; }
-                iterator operator++(int) { auto ret = *this; incr(); return ret; }
-                bool operator==(iterator other) { return gen == other.gen; }
-                bool operator!=(iterator other) { return gen != other.gen; }
-                value_type operator*() { return gen->value(); }
-            private:
-                generator *gen;
-
-                void incr() {
-                    gen->advance();
-                    if(!gen->has_more())
-                        gen = nullptr;
-                }
-            };
-
-            generator(psize_t hp) : rec(&details::DIRECTION_RECORDS<H, W>[hp]), 
+        
+            Generator(psize_t hp) : rec(&details::DIRECTION_RECORDS<H, W>[hp]), 
                 index(hp), i(0) {}
 
-            generator(const generator &) = delete;
-            generator(generator &&) = delete;
+            Generator(const Generator &) = delete;
+            Generator(Generator &&) = delete;
 
-            // standard generator trio
+            // standard Generator trio
             bool has_more() const { return i < rec->size; }
             void advance() { ++i; }
             Action value() const {
@@ -614,8 +630,13 @@ namespace sbpuzzle {
                 return Action(TAG, index, rec->dirs[i]);
             }
 
-            iterator begin() { return iterator(this); }
-            iterator end() const { return iterator(nullptr); }
+            details::GeneratorIterator<Generator, Action> begin() { 
+                return details::GeneratorIterator<Generator, Action>(this); 
+            }
+
+            details::GeneratorIterator<Generator, Action> end() const { 
+                return details::GeneratorIterator<Generator, Action>(nullptr); 
+            }
 
         private:
             // the only necessary state is the hole position
@@ -625,8 +646,8 @@ namespace sbpuzzle {
         };
 
         template <class Action>
-        generator<Action> action_generator() const {
-            return generator<Action>(Base::hole_pos);
+        Generator<Action> action_generator() const {
+            return Generator<Action>(Base::hole_pos);
         }
 
     private:
@@ -687,26 +708,13 @@ namespace sbpuzzle {
         }
         */
 
-    template <class Action>
-    class generator {
-    public:
-        class iterator {
-        public:
-            iterator(const pcell_t *p) : cellp(p) {}
-            iterator& operator++() {
-                return *this;
-            }
-        private:
-            void advance() {
-                while(*cellp != details::HOLE<H, W>) {
+        template <typename Action, typename Dummy = void>
+        class Generator;
 
-                    ;
-                }
-            }
-
-            const pcell_t *cellp;
-        };
-    };
+        template <typename Action>
+        Generator<Action> action_generator() const {
+            return Generator<Action>(*this);
+        }
 
     private:
         using Base = SBPuzzleBase<H, W>;
@@ -729,6 +737,79 @@ namespace sbpuzzle {
             static typename Action::iterator e(const SBPuzzleNoHole &p);
         };
     };
+
+
+    template <psize_t H, psize_t W>
+    template <typename Dummy>
+    class SBPuzzleNoHole<H, W>::Generator<TileSwapAction, Dummy> {
+    public:
+        using GeneratorIterator = details::GeneratorIterator<Generator, TileSwapAction>;
+
+        Generator(const SBPuzzleNoHole<H, W> &puzzle) 
+            : tiles(puzzle.get_tiles().data()), index(0), found_pos(0), i(-1)
+        {
+            advance_until_possible_index();
+            advance();
+        }
+
+        bool has_more() const {
+            return index < details::SIZE<H, W>;
+        }
+
+        void advance() {
+            using namespace details;
+            // invariant: currently on cell where a move has been previously found at i
+            ++i; // advance the index on the current cell
+            while(index < SIZE<H, W>) {
+                const Record &rec = DIRECTION_RECORDS<H, W>[index];
+                // try finding a move on the current cell
+                while(i < rec.size) {
+                    // if there are still cells we can check around this one
+                    Direction dir = rec.dirs[i];
+                    psize_t check_pos = index + OFFSETS<W>[static_cast<uint8_t>(dir)];
+                    if(tiles[check_pos] == HOLE<H, W>) { // can swap tiles if it is a hole
+                        found_pos = check_pos;
+                        return;
+                    }
+                    else {
+                        ++i;
+                    }
+                }
+                // current cell exhausted, get the next cell 
+                ++index; // move one step further
+                advance_until_possible_index();
+                i = 0;
+            }
+
+        }
+
+        TileSwapAction value() const {
+            return TileSwapAction(index, found_pos);
+        }
+
+        GeneratorIterator begin() {
+            return GeneratorIterator(this);
+        }
+
+        GeneratorIterator end() const {
+            return GeneratorIterator(nullptr);
+        }
+
+    private:
+        void advance_until_possible_index() { // move on to the next non-hole tile
+            while(index < details::SIZE<H, W>  // keep moving until a viable tile
+                  && tiles[index] == details::HOLE<H, W>) 
+                ++index;
+        }
+
+        const pcell_t *tiles;
+        psize_t index;
+        psize_t found_pos;
+        uint8_t i;
+
+    };
+
+
 
     /*
     // PADelegate specialization for the TileSwapAction class

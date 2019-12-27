@@ -390,7 +390,7 @@ namespace sbpuzzle {
             if(node.cost < table[index])
                 table[index] = node.cost;
             // generate neighboring states
-            for(const auto &action : p.template possible_actions<ActionType>()) {
+            for(const auto &action : p.template action_generator<ActionType>()) {
                 PuzzleType new_p = p; 
                 uint8_t new_cost = node.cost + new_p.apply_action(action);
                 size_t new_ex_index = calculate_extended_index(i, new_p.get_tiles());

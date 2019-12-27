@@ -4,8 +4,7 @@
 *.swp
 *.swo
 
-test.cpp
-testd.cpp
+test*.cpp
 
 release
 debug
