@@ -135,17 +135,17 @@ namespace search2 {
     // both a puzzle state and extra book-keeping information about it. Also holds some
     // static variables such as a counter for the number of created nodes.
     template <typename Dereferenceable> // i.e. Puzzle *, std::vector<Puzzle>::iterator
-        struct SearchNode {
-            Dereferenceable puzzle;
-            uint8_t path_cost;
-            uint8_t est_cost;
+    struct SearchNode {
+        Dereferenceable puzzle;
+        uint8_t path_cost;
+        uint8_t est_cost;
 
-            SearchNode(const Dereferenceable &p, int pc, int ec) 
-                : puzzle(p), path_cost(pc), est_cost(ec) {}
+        SearchNode(const Dereferenceable &p, int pc, int ec) 
+            : puzzle(p), path_cost(pc), est_cost(ec) {}
 
-            SearchNode(const Dereferenceable &p, int pc) 
-                : puzzle(p), path_cost(pc), est_cost(0) {}
-        };
+        SearchNode(const Dereferenceable &p, int pc) 
+            : puzzle(p), path_cost(pc), est_cost(0) {}
+    };
 
     template <class Puzzle>
     class SearchNodeComparator {
@@ -378,11 +378,19 @@ namespace search2 {
         // set up an expanded node counter and its tracker
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
 
+        // typedefs for the data structures 
+        typedef std::unordered_map<Puzzle, int> hash_table_t;
+        typedef typename hash_table_t::iterator puzzle_ptr_t;
+        typedef SearchNode<puzzle_ptr_t> node_t;
+        typedef SearchNodeComparator<puzzle_ptr_t> comp_t;
+        typedef std::priority_queue<node_t, std::vector<node_t>, comp_t> pqueue_t;
+
         // set up the search
-        std::unordered_map<Puzzle, int> visited;
-        std::priority_queue<SearchNode<Puzzle>, 
-                            std::vector<SearchNode<Puzzle>>, 
-                            SearchNodeComparator<Puzzle>> pq;
+        hash_table_t visited;
+        pqueue_t pq;
+        bool dummy;
+        puzzle_ptr_t itr;
+
 
         // vectors and manipulators
         // why two sets of vectors rather than search nodes?
@@ -400,7 +408,8 @@ namespace search2 {
         // put inside f_values are properly cast to integral
         // insert the first element
         bhf(std::vector<Puzzle> {start}, f_values); // raw pointer as iterator!
-        pq.emplace(start, 0, f_values[0]);
+        std::tie(itr, dummy) = visited.emplace(start, 0);
+        pq.emplace(itr, 0, f_values[0]);
         f_values.clear();
  
         while(!pq.empty()) {
@@ -408,7 +417,8 @@ namespace search2 {
             // select as many as batch size nodes for expansion
             while(!pq.empty() && to_eval.size() < batch_size) {
                 auto node = pq.top(); pq.pop();
-                const auto &p = node.puzzle;
+                const puzzle_ptr_t &map_itr = node.puzzle;
+                const auto &p = map_itr->first; // second is cost
                 if(p.is_solved()) 
                     return SearchResult(node.path_cost, exp_ctr.get_value());
                 auto lookup = visited.find(p);
