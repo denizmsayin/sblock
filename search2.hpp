@@ -241,20 +241,23 @@ namespace search2 {
     }
 
     template <class Puzzle, class Action>
-    SearchResult breadth_first_search(const Puzzle &p) {
+    SearchResult breadth_first_search(const Puzzle &puzzle_start) {
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
-        if(p.is_solved()) return SearchResult(0, exp_ctr.get_value());
+        if(puzzle_start.is_solved()) return SearchResult(0, exp_ctr.get_value());
         std::unordered_set<Puzzle> visited;
         std::queue<SearchNode<Puzzle>> q;
-        q.emplace(p, 0);
-        visited.emplace(p);
-        std::vector<Action> actions;
+        q.emplace(puzzle_start, 0);
+        visited.emplace(puzzle_start);
         while(!q.empty()) {
             ++exp_ctr;
             auto node = q.front(); q.pop();
             const Puzzle &p = node.puzzle;
-            p.template fill_possible_actions<Action>(std::back_inserter(actions));
-            for(const auto &action : actions) {
+            for(auto itr = p.template actions_begin<Action>(),
+                     end = p.template actions_end<Action>();
+                itr != end; 
+                ++itr)
+            {
+                auto action = *itr;
                 Puzzle new_p = p;
                 int new_path_cost = node.path_cost + new_p.apply_action(action);
                 if(new_p.is_solved())
@@ -264,12 +267,12 @@ namespace search2 {
                     q.emplace(new_p, new_path_cost);
                 }
             }
-            actions.clear();
         }
         details::throw_unreachable();
         return SearchResult(0, exp_ctr.get_value());
     }
 
+    /*
     template <class Puzzle, class Action>
     int bfs_double_q(const Puzzle &p) {
         std::queue<Puzzle> q1, q2;
@@ -345,8 +348,9 @@ namespace search2 {
         }
         throw std::invalid_argument("The goal state could not be reached in 1M steps");
     }
+    */
 
-
+    /*
     namespace details {
         template <class Puzzle, class Action>
             int step_single_direction(std::queue<SearchNode<Puzzle>> &queue,
@@ -391,7 +395,7 @@ namespace search2 {
             details::throw_unreachable(); 
             return 0;
         }
-
+    */
 
     // I am very confused about what to pass as parameters. I'd be up for passing
     // all HeuristicFunctions by const-reference, but there are cases where my heuristic
@@ -677,6 +681,7 @@ namespace search2 {
         return SearchResult(0, exp_ctr.get_value());
     }
 
+    /*
     namespace details {
         const int INT_INF = std::numeric_limits<int>::max();
 
@@ -722,55 +727,6 @@ namespace search2 {
             }
     }
 
-    namespace details {
-
-        template <class Puzzle, class Action, class HeuristicFunc>
-            int cost_limited_dfs_nl(const SearchNode<Puzzle> &node, 
-                    std::unordered_map<Puzzle, int> visited,
-                    int cost_limit,
-                    HeuristicFunc hf=HeuristicFunc()) {
-                visited.emplace(node.puzzle, node.path_cost);
-                if(node.est_cost > cost_limit)
-                    return node.est_cost;
-                else if(node.puzzle.is_solved()) {
-                    return node.path_cost;;
-                } else {
-                    int min_exceeding_cost = std::numeric_limits<int>::max();
-                    for(auto action : node.puzzle.template possible_actions<Action>()) {
-                        Puzzle new_p = node.puzzle; 
-                        int new_path_cost = node.path_cost + new_p.apply_action(action);
-                        auto lookup = visited.find(new_p);
-                        if(lookup == visited.end() || new_path_cost < lookup->second) {
-                            int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
-                            SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
-                            int result = cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(new_node, visited, cost_limit, hf);
-                            if(result <= cost_limit) // found
-                                return result;
-                            else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
-                                min_exceeding_cost = result;
-                        }
-                    }
-                    return min_exceeding_cost;
-                }
-            }
-    }
-
-    template <class Puzzle, class Action, class HeuristicFunc>
-        int iterative_deepening_a_star_noloop(const Puzzle &p) {
-            using details::cost_limited_dfs;
-            int cost_limit = HeuristicFunc()(p);
-            SearchNode<Puzzle> start_node(p, 0, cost_limit);
-            while(true) {
-                std::cout << "New cost limit: " << cost_limit << std::endl;
-                std::unordered_map<Puzzle, int> visited;
-                int result = details::cost_limited_dfs_nl<Puzzle, Action, HeuristicFunc>(start_node, visited, cost_limit);
-                if(result <= cost_limit) 
-                    return result;
-                cost_limit = result;
-            }
-            return 0;
-        }
-
     template <class Puzzle, class Action, class HeuristicFunc>
         int recursive_best_first_search(const Puzzle &p) {
             using details::rbfs;
@@ -783,110 +739,7 @@ namespace search2 {
                 details::throw_unreachable();
             return cost;
         }
-
-    namespace details {
-
-        template <class Puzzle, class Action, class HeuristicFunc>
-            int cost_limited_dfs_improved(const SearchNode<Puzzle> &node, 
-                    std::unordered_map<Puzzle, int> &visited,
-                    int cost_limit) 
-            {
-                visited.emplace(node.puzzle, node.path_cost);
-                if(node.est_cost > cost_limit)
-                    return node.est_cost;
-                else if(node.puzzle.is_solved()) {
-                    return node.path_cost;;
-                } else {
-                    int min_exceeding_cost = std::numeric_limits<int>::max();
-                    std::vector<SearchNode<Puzzle>> new_nodes;
-                    for(auto action : node.puzzle.template possible_actions<Action>()) {
-                        Puzzle new_p = node.puzzle; 
-                        int new_path_cost = node.path_cost + new_p.apply_action(action);
-                        auto lookup = visited.find(new_p);
-                        if(lookup == visited.end() || new_path_cost < lookup->second) {
-                            int new_est_cost = new_path_cost + HeuristicFunc()(new_p);
-                            new_nodes.emplace_back(new_p, new_path_cost, new_est_cost);
-                        }
-                    }
-                    // heapify the new nodes and try them one by one starting from the best first
-                    std::sort(new_nodes.begin(), new_nodes.end(), RevSearchNodeComparator<Puzzle>());
-                    for(const auto &new_node : new_nodes) {
-                        int result = cost_limited_dfs_improved<Puzzle, Action, HeuristicFunc>(new_node, visited, cost_limit);
-                        if(result <= cost_limit) // found
-                            return result;
-                        else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
-                            min_exceeding_cost = result;
-                    }
-                    return min_exceeding_cost;
-                }
-            }
-
-    }
-
-    template <class Puzzle, class Action, class HeuristicFunc>
-        int iterative_deepening_a_star_improved(const Puzzle &p) {
-            using details::cost_limited_dfs;
-            int cost_limit = HeuristicFunc()(p);
-            SearchNode<Puzzle> start_node(p, 0, cost_limit);
-            while(true) {
-                std::unordered_map<Puzzle, int> visited;
-                int result = details::cost_limited_dfs_improved<Puzzle, Action, HeuristicFunc>(start_node, visited, cost_limit);
-                if(result <= cost_limit) 
-                    return result;
-                cost_limit = result;
-            }
-            return 0;
-        }
-
-
-    template <class Puzzle, class Action, class HeuristicFunc>
-    SearchResult xa_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
-        // Since the standard library PQ does not have a decrease-key operation, we have
-        // to perform a few tricks. In dijkstra's algorithm, we can simply reinsert
-        // a node with a better cost, and simply discard visited nodes when popping
-        // from the queue, as we are guaranteed to have found the shortest path to
-        // a visited node. 
-        // A* does not have such a strong guarantee. We are certain that we will find 
-        // the shortest path to the GOAL, but not each and every state. Thus it is
-        // possible to find a shorter path to a state that has already been visited.
-        // To deal with this, we also need to keep track of the smallest cost we have
-        // found for each state so far. If we find a path with a lower cost, we simply
-        // have to act as if that state was not visited.
-        std::unordered_map<Puzzle, int> visited;
-        std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
-        pq.emplace(p, 0, hf(p));
-        size_t exp_ctr = 0;
-        SeriesTracker<size_t>::Options opts;
-        opts.print_every = 10000;
-        opts.name_str = "Nodes expanded";
-        SeriesTracker<size_t> t(&exp_ctr, opts);
-        while(!pq.empty()) {
-            auto node = pq.top(); pq.pop();
-            const auto &p = node.puzzle;
-            // check if the state has been visited before
-            // we act as if not visited if the cost is smaller than the prev one too
-            auto lookup = visited.find(p);
-            if(lookup == visited.end() || node.path_cost < lookup->second) {
-                if(p.is_solved())
-                    return SearchResult(node.path_cost, exp_ctr);
-                visited.emplace(p, node.path_cost);
-                exp_ctr++; 
-                // std::cout << '\r' << static_cast<int>(node.path_cost) << " " << static_cast<int>(node.est_cost);
-                for(auto action : p.template possible_actions<Action>()) {
-                    Puzzle new_p = p;
-                    int step_cost = new_p.apply_action(action);
-                    int new_path_cost = node.path_cost + step_cost;
-                    auto lookup = visited.find(new_p);
-                    if(lookup == visited.end() || new_path_cost < lookup->second) {
-                        int new_est_cost = new_path_cost + hf(new_p);
-                        pq.emplace(new_p, new_path_cost, new_est_cost);
-                    }
-                }
-            }
-        }
-        details::throw_unreachable();
-        return SearchResult(0, exp_ctr);
-    }
+    */
 
     namespace details {
         template <class Puzzle, class Action, class HF>
@@ -900,24 +753,24 @@ namespace search2 {
             case T::BFS:                    return [](const P &p, double w, size_t b, HF hf) {
                                                 return breadth_first_search<P, A>(p);
                                             };
-            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
-                                                return iterative_deepening_dfs<P, A>(p);
-                                            };
-            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
-                                                return a_star_search<P, A, HF>(p, hf);
-                                            };
-            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
-                                                return iterative_deepening_a_star<P, A, HF>
-                                                       (p, hf);
-                                            };
-            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
-                                                return weighted_a_star_search<P, A, HF>
-                                                       (p, w, hf);
-                                            };
-            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
-                                                return batch_weighted_a_star_search<P, A, HF>
-                                                       (p, w, b, hf);
-                                            };
+//            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
+//                                                return iterative_deepening_dfs<P, A>(p);
+//                                            };
+//            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
+//                                                return a_star_search<P, A, HF>(p, hf);
+//                                            };
+//            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
+//                                                return iterative_deepening_a_star<P, A, HF>
+//                                                       (p, hf);
+//                                            };
+//            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
+//                                                return weighted_a_star_search<P, A, HF>
+//                                                       (p, w, hf);
+//                                            };
+//            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
+//                                                return batch_weighted_a_star_search<P, A, HF>
+//                                                       (p, w, b, hf);
+//                                            };
             default:                        throw std::invalid_argument("Unknown search type.");
         }
     }

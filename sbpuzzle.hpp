@@ -100,6 +100,25 @@ namespace sbpuzzle {
 
         bool operator==(DirectionAction d) const { return dir == d.dir; }
         bool operator!=(DirectionAction d) const { return dir != d.dir; }
+
+        class iterator {
+        public:
+            iterator(const Direction *d) : dirp(d) {}
+            iterator& operator++() { ++dirp; return *this; }
+            iterator operator++(int) { iterator ret = *this; ++dirp; return ret; }
+            bool operator==(iterator other) { return dirp == other.dirp; }
+            bool operator!=(iterator other) { return dirp != other.dirp; }
+            DirectionAction operator*() { return DirectionAction(*dirp); }
+            // traits
+            using difference_type = ptrdiff_t;
+            using value_type = DirectionAction;
+            using pointer = const DirectionAction *;
+            using reference = const DirectionAction &;
+            using iterator_category = std::input_iterator_tag;
+
+        private:
+            const Direction *dirp;
+        };
     };
 
     typedef uint8_t psize_t;
@@ -507,22 +526,15 @@ namespace sbpuzzle {
             return details::goal_state<SBPuzzle<H, W>, H, W>(Base::tiles);
         }
 
-        template <class Action, class Iterator>
-        void fill_possible_actions(Iterator out) const {
-            PADelegate<Action, Iterator>::f(*this, out); // delegate to the struct
+        template <class Action>
+        typename Action::iterator actions_begin() const {
+            return PADelegate<Action>::b(*this);
         }
 
-        // NOTE: while this function is only a thin wrapper around
-        // fill_possible_actions and should ideally be a base class 
-        // function with fill_possible_actions being virtual, this
-        // is not possible simply due to templated virtual functions
-        // being unavailable. Instead, this definition will be 
-        // copied to every derived class
+
         template <class Action>
-        std::vector<Action> possible_actions() const {
-            std::vector<Action> actions;
-            fill_possible_actions<Action>(std::back_inserter(actions));
-            return actions;
+        typename Action::iterator actions_end() const {
+            return PADelegate<Action>::e(*this);
         }
 
     private:
@@ -534,15 +546,17 @@ namespace sbpuzzle {
         // it is not possible to FULLY specialize the wrapper struct either, only partially.
         // Which is why we need a struct with the actual template parameter and a dummy one.
         // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
-        template <typename Action, typename Iterator, typename Dummy = void>
+        template <typename Action, typename Dummy = void>
         struct PADelegate {
-            static void f(const SBPuzzle &p, Iterator out);
+            static typename Action::iterator b(const SBPuzzle &p);
+            static typename Action::iterator e(const SBPuzzle &p);
         };
     };
- 
+
+    /*
     // PADelegate specialization for the TileSwapAction class
     template <psize_t H, psize_t W>
-    template <typename Iterator, typename Dummy>
+    template <typename Dummy>
     struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Iterator, Dummy> {
         static void f(const SBPuzzle<H, W> &p, Iterator out) {
             auto hp = p.hole_pos;
@@ -553,20 +567,71 @@ namespace sbpuzzle {
                     *out++ = TileSwapAction(hp + details::OFFSETS<W>[dir], hp);
         }
     };
+    */
 
     // PADelegate specialization for the DirectionAction class
     template <psize_t H, psize_t W>
-    template <typename Iterator, typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<DirectionAction, Iterator, Dummy> {
-        static void f(const SBPuzzle<H, W> &p, Iterator out) {
-            auto hp = p.hole_pos;
-            std::array<bool, 4> valid;
-            details::tiles_mark_valid_moves<H, W>(hp, valid);
-            for(size_t dir = 0; dir < 4; ++dir)
-                if(valid[dir])
-                    *out++ = DirectionAction(static_cast<details::Direction>(dir));
+    template <typename Dummy>
+    struct SBPuzzle<H, W>::PADelegate<DirectionAction, Dummy> {
+        using Dir = details::Direction;
+
+        struct Record {
+            Dir dirs[4];
+            uint8_t size;
+
+            Record() : dirs(), size(0) {}
+        };
+
+        /*
+        int rem = p % W;
+            directions[0] = p >= W; // up
+            directions[1] = rem < W-1; // right
+            directions[2] = p < SIZE<H, W> - W; // down
+            directions[3] = rem > 0; // left
+        */
+
+        static std::vector<Record> records; // caches available directions for each position
+
+        static inline void _init_rec_ifnot(uint8_t index) {
+            constexpr static uint8_t W1 = W - 1;
+            constexpr static uint8_t SW = details::SIZE<H, W> - W;
+            Record &rec = records[index];
+            if(rec.size == 0) {
+                uint8_t i = 0;
+                uint8_t rem = index % W;
+                if(index >= W)
+                    rec.dirs[i++] = Dir::UP;
+                if(rem < W1)
+                    rec.dirs[i++] = Dir::RIGHT;
+                if(index < SW)
+                    rec.dirs[i++] = Dir::DOWN;
+                if(rem > 0)
+                    rec.dirs[i++] = Dir::LEFT;
+                rec.size = i;
+            }
+        }
+
+        static inline DirectionAction::iterator _get_dir_ptr(uint8_t index, uint8_t offset) {
+            _init_rec_ifnot(index);
+            return DirectionAction::iterator(records[index].dirs + offset);
+        }
+
+        static inline DirectionAction::iterator b(const SBPuzzle<H, W> &p) {
+            return _get_dir_ptr(p.hole_pos, 0);
+        }
+
+        static inline typename DirectionAction::iterator e(const SBPuzzle<H, W> &p) {
+            return _get_dir_ptr(p.hole_pos, records[p.hole_pos].size);
         }
     };
+
+    // initialize cache as empty with size H*W
+    template <psize_t H, psize_t W>
+    template <typename Dummy>
+    std::vector<typename SBPuzzle<H, W>::template PADelegate<DirectionAction, Dummy>::Record> 
+        SBPuzzle<H, W>::PADelegate<DirectionAction, Dummy>::records(H * W);
+
+
     /*                                                           */
    
     // The derived class for the case where the hole is not masked
