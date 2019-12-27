@@ -275,6 +275,46 @@ namespace sbpuzzle {
             return cached_dirs;
         }
 
+
+        // construct a static vector which holds pre-computed available moves
+        // from each position. The pre-computation is inexpensive because there
+        // are only H*W*4 values to calculate/store
+        struct Record {
+            std::array<Direction, 4> dirs;
+            uint8_t size;
+        };
+
+        // build the vector of records during compile time
+        // there are only H*W*4 entries, very little
+        template <psize_t H, psize_t W>
+        static std::vector<Record> _construct_records() {
+            // for templating the width, tag dispatching
+            constexpr static details::WTag<W> tag; 
+            constexpr static uint8_t W1 = W - 1;
+            constexpr static uint8_t SW = details::SIZE<H, W> - W;
+            using Dir = details::Direction;
+            std::vector<Record> recs(details::SIZE<H, W>);
+            for(psize_t index = 0; index < details::SIZE<H, W>; ++index) {
+                Record &rec = recs[index];
+                psize_t j = 0;
+                psize_t rem = index % W;
+                if(index >= W)
+                    rec.dirs[j++] = Dir::UP;
+                if(rem < W1)
+                    rec.dirs[j++] = Dir::RIGHT;
+                if(index < SW)
+                    rec.dirs[j++] = Dir::DOWN;
+                if(rem > 0)
+                    rec.dirs[j++] = Dir::LEFT;
+                rec.size = j;
+            }
+            return recs;
+        }
+
+        template <psize_t H, psize_t W>
+        const std::vector<Record> DIRECTION_RECORDS = _construct_records<H, W>();
+
+
         inline uint8_t inv_action_index(uint8_t i) {
             return (i + 2) & 3; // 0 -> 2, 1 -> 3, 2 -> 0, 3 -> 1
         }
@@ -536,71 +576,52 @@ namespace sbpuzzle {
         class generator {
         public:
             class iterator {
+            using Direction = details::Direction;
             public:
-                iterator(const Action *a) : actp(a) {}
-                iterator& operator++() { ++actp; return *this; }
-                iterator operator++(int) { auto ret = *this; ++actp; return ret; }
-                bool operator==(iterator other) { return actp == other.actp; }
-                bool operator!=(iterator other) { return actp != other.actp; }
-                Action operator*() { return *actp; }
-
-                using difference_type = ptrdiff_t;
+                using difference_type = int64_t;
                 using value_type = Action;
                 using pointer = const Action *;
                 using reference = const Action &;
                 using iterator_category = std::input_iterator_tag;
+
+                iterator(generator *g) : gen(g) {}
+                iterator& operator++() { incr(); return *this; }
+                iterator operator++(int) { auto ret = *this; incr(); return ret; }
+                bool operator==(iterator other) { return gen == other.gen; }
+                bool operator!=(iterator other) { return gen != other.gen; }
+                value_type operator*() { return gen->value(); }
             private:
-                const Action *actp;
+                generator *gen;
+
+                void incr() {
+                    gen->advance();
+                    if(!gen->has_more())
+                        gen = nullptr;
+                }
             };
 
-            generator(psize_t hp) : hole_pos(hp) {}
-            iterator begin() const { 
-                auto ptr = records[hole_pos].actions.data();
-                return iterator(ptr); 
+            generator(psize_t hp) : rec(&details::DIRECTION_RECORDS<H, W>[hp]), 
+                index(hp), i(0) {}
+
+            generator(const generator &) = delete;
+            generator(generator &&) = delete;
+
+            // standard generator trio
+            bool has_more() const { return i < rec->size; }
+            void advance() { ++i; }
+            Action value() const {
+                constexpr static details::WTag<W> TAG; 
+                return Action(TAG, index, rec->dirs[i]);
             }
-            iterator end() const { 
-                auto ptr = records[hole_pos].actions.data();
-                return iterator(ptr + records[hole_pos].size); 
-            }
+
+            iterator begin() { return iterator(this); }
+            iterator end() const { return iterator(nullptr); }
 
         private:
             // the only necessary state is the hole position
-            psize_t hole_pos;
-
-            // there is also a static vector which holds pre-computed available moves
-            struct Record {
-                std::array<Action, 4> actions;
-                psize_t size;
-            };
-
-            // build the vector of records during compile time
-            // there are only H*W*4 entries, very little
-            static std::vector<Record> _construct_records() {
-                // for templating the width, tag dispatching
-                constexpr static details::WTag<W> tag; 
-                constexpr static uint8_t W1 = W - 1;
-                constexpr static uint8_t SW = details::SIZE<H, W> - W;
-                using Dir = details::Direction;
-                std::vector<Record> recs(details::SIZE<H, W>);
-                for(psize_t index = 0; index < details::SIZE<H, W>; ++index) {
-                    Record &rec = recs[index];
-                    psize_t j = 0;
-                    psize_t rem = index % W;
-                    if(index >= W)
-                        rec.actions[j++] = Action(tag, index, Dir::UP);
-                    if(rem < W1)
-                        rec.actions[j++] = Action(tag, index, Dir::RIGHT);
-                    if(index < SW)
-                        rec.actions[j++] = Action(tag, index, Dir::DOWN);
-                    if(rem > 0)
-                        rec.actions[j++] = Action(tag, index, Dir::LEFT);
-                    rec.size = j;
-                }
-                return recs;
-            }
-
-            const static inline std::vector<Record> records = _construct_records();
-
+            const details::Record *rec;
+            psize_t index;
+            uint8_t i;
         };
 
         template <class Action>
@@ -647,8 +668,8 @@ namespace sbpuzzle {
             return details::goal_state<SBPuzzleNoHole<H, W>, H, W>(Base::tiles);
         }
 
-        uint64_t apply_action(TileSwapAction a) {
-            uint64_t cost = Base::apply_action(a);
+        pcost_t apply_action(TileSwapAction a) {
+            pcost_t cost = Base::apply_action(a);
             reprop_hole(); // repropagate the hole
             return cost; // cost is always unit
         }
@@ -665,6 +686,27 @@ namespace sbpuzzle {
             return PADelegate<Action>::e(*this);
         }
         */
+
+    template <class Action>
+    class generator {
+    public:
+        class iterator {
+        public:
+            iterator(const pcell_t *p) : cellp(p) {}
+            iterator& operator++() {
+                return *this;
+            }
+        private:
+            void advance() {
+                while(*cellp != details::HOLE<H, W>) {
+
+                    ;
+                }
+            }
+
+            const pcell_t *cellp;
+        };
+    };
 
     private:
         using Base = SBPuzzleBase<H, W>;
