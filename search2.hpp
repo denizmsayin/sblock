@@ -134,57 +134,33 @@ namespace search2 {
     // SEARCH NODE, the class that defines a search node, a record structure that keeps
     // both a puzzle state and extra book-keeping information about it. Also holds some
     // static variables such as a counter for the number of created nodes.
-    template <class Puzzle>
+    template <typename Dereferenceable> // i.e. Puzzle *, std::vector<Puzzle>::iterator
         struct SearchNode {
-            static size_t NODE_COUNTER;
-
-            #ifdef TRACK_NODES
-            static SeriesTracker<size_t> COUNTER_TRACKER;
-            #endif
-
-            Puzzle puzzle;
+            Dereferenceable puzzle;
             uint8_t path_cost;
             uint8_t est_cost;
 
-            SearchNode(const Puzzle &p, int pc, int ec) : puzzle(p), path_cost(pc), est_cost(ec) 
-            {
-                NODE_COUNTER++;
-                #ifdef TRACK_NODES
-                COUNTER_TRACKER.track();
-                #endif
-            }
+            SearchNode(const Dereferenceable &p, int pc, int ec) 
+                : puzzle(p), path_cost(pc), est_cost(ec) {}
 
-            SearchNode(const Puzzle &p, int pc) : puzzle(p), path_cost(pc), est_cost(0) 
-            {
-                NODE_COUNTER++;
-                #ifdef TRACK_NODES
-                COUNTER_TRACKER.track();
-                #endif
-            }
+            SearchNode(const Dereferenceable &p, int pc) 
+                : puzzle(p), path_cost(pc), est_cost(0) {}
         };
 
     template <class Puzzle>
-        size_t SearchNode<Puzzle>::NODE_COUNTER = 0;
-
-    #ifdef TRACK_NODES
-    template <class Puzzle>
-    SeriesTracker<size_t> SearchNode<Puzzle>::COUNTER_TRACKER(&SearchNode<Puzzle>::NODE_COUNTER, SeriesTracker<size_t>::Options(10000000));
-    #endif
-
-    template <class Puzzle>
     class SearchNodeComparator {
-        public:
-            bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
-                return n1.est_cost > n2.est_cost;
-            }
+    public:
+        bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
+            return n1.est_cost > n2.est_cost;
+        }
     };
 
     template <class Puzzle>
     class RevSearchNodeComparator {
-        public:
-            bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
-                return n1.est_cost < n2.est_cost;
-            }
+    public:
+        bool operator()(const SearchNode<Puzzle> &n1, const SearchNode<Puzzle> &n2) {
+            return n1.est_cost < n2.est_cost;
+        }
     };
 
     struct SearchResult {
@@ -194,12 +170,7 @@ namespace search2 {
         SearchResult(size_t c, size_t ne) : cost(c), nodes_expanded(ne) {}
     };
 
-    template <class Puzzle>
-    size_t get_node_counter() { return SearchNode<Puzzle>::NODE_COUNTER; }
-
-    template <class Puzzle>
-    void reset_node_counter() { SearchNode<Puzzle>::NODE_COUNTER = 0; }
-
+    /*
     template <class Puzzle, class Action>
     class BreadthFirstIterator {
         public:
@@ -239,28 +210,43 @@ namespace search2 {
         }
         return node;
     }
+    */
 
     template <class Puzzle, class Action>
     SearchResult breadth_first_search(const Puzzle &puzzle_start) {
+        // early exit in case the puzzle is already solved
+        if(puzzle_start.is_solved()) return SearchResult(0, 0);
+
+        // tracker for the expanded nodes
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
-        if(puzzle_start.is_solved()) return SearchResult(0, exp_ctr.get_value());
-        std::unordered_set<Puzzle> visited;
-        std::queue<SearchNode<Puzzle>> q;
-        q.emplace(puzzle_start, 0);
-        visited.emplace(puzzle_start);
+
+        // typedefs for the data structures 
+        typedef std::unordered_set<Puzzle> hash_table_t;
+        typedef typename hash_table_t::iterator puzzle_ptr_t;
+        typedef SearchNode<puzzle_ptr_t> node_t;
+        typedef std::queue<node_t> queue_t;
+
+        // data structures
+        hash_table_t visited;
+        queue_t q;
+        bool dummy;
+        puzzle_ptr_t itr;
+
+        std::tie(itr, dummy) = visited.emplace(puzzle_start);
+        q.emplace(itr, 0);
         while(!q.empty()) {
             ++exp_ctr;
             auto node = q.front(); q.pop();
-            const Puzzle &p = node.puzzle;
-            for(const auto &action : p.template action_generator<Action>()) 
+            puzzle_ptr_t p = node.puzzle;
+            for(const auto &action : p->template action_generator<Action>()) 
             {
-                Puzzle new_p = p;
+                Puzzle new_p = *p;
                 int new_path_cost = node.path_cost + new_p.apply_action(action);
                 if(new_p.is_solved())
                     return SearchResult(new_path_cost, exp_ctr.get_value());
                 if(visited.find(new_p) == visited.end()) {
-                    visited.emplace(new_p);
-                    q.emplace(new_p, new_path_cost);
+                    std::tie(itr, dummy) = visited.emplace(new_p);
+                    q.emplace(itr, new_path_cost);
                 }
             }
         }
@@ -688,21 +674,21 @@ namespace search2 {
 //            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
 //                                                return iterative_deepening_dfs<P, A>(p);
 //                                            };
-            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
-                                                return a_star_search<P, A, HF>(p, hf);
-                                            };
-            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
-                                                return iterative_deepening_a_star<P, A, HF>
-                                                       (p, hf);
-                                            };
-            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
-                                                return weighted_a_star_search<P, A, HF>
-                                                       (p, w, hf);
-                                            };
-            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
-                                                return batch_weighted_a_star_search<P, A, HF>
-                                                       (p, w, b, hf);
-                                            };
+//            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
+//                                                return a_star_search<P, A, HF>(p, hf);
+//                                            };
+//            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
+//                                                return iterative_deepening_a_star<P, A, HF>
+//                                                       (p, hf);
+//                                            };
+//            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
+//                                                return weighted_a_star_search<P, A, HF>
+//                                                       (p, w, hf);
+//                                            };
+//            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
+//                                                return batch_weighted_a_star_search<P, A, HF>
+//                                                       (p, w, b, hf);
+//                                            };
             default:                        throw std::invalid_argument("Unknown search type.");
         }
     }

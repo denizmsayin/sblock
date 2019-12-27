@@ -620,7 +620,7 @@ namespace sbpuzzle {
                 index(hp), i(0) {}
 
             Generator(const Generator &) = delete;
-            Generator(Generator &&) = delete;
+            Generator(Generator &&) = default;
 
             // standard Generator trio
             bool has_more() const { return i < rec->size; }
