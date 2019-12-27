@@ -269,36 +269,6 @@ namespace search2 {
     }
 
     /*
-    template <class Puzzle, class Action>
-    int bfs_double_q(const Puzzle &p) {
-        std::queue<Puzzle> q1, q2;
-        std::queue<Puzzle> *qf = &q1, *qn = &q2;
-        std::unordered_set<Puzzle> v;
-        int cost = 0;
-        qf->emplace(p);
-        v.emplace(p);
-        while(!qf->empty()) {
-            while(!qf->empty()) {
-                Puzzle p = qf->front(); qf->pop();
-                if(p.is_solved())
-                    return cost;
-                for(const auto &action : p.template possible_actions<Action>()) {
-                    Puzzle new_p = p; new_p.apply_action(action);
-                    if(new_p.is_solved())
-                        return cost;
-                    if(v.find(new_p) == v.end()) {
-                        qn->emplace(new_p);
-                        v.emplace(new_p);
-                    }
-                }
-            }
-            cost +=1;
-            std::swap(qf, qn);
-        }
-        details::throw_unreachable();
-        return 0;
-    }
-
     enum class IDFSResult {
         CUTOFF,
         FOUND,
@@ -459,7 +429,7 @@ namespace search2 {
                 if(lookup == visited.end() || node.path_cost < lookup->second) {
                     visited.emplace(p, node.path_cost);
                     ++exp_ctr;
-                    for(auto action : p.template possible_actions<Action>()) {
+                    for(auto action : p.template action_generator<Action>()) {
                         Puzzle new_p = p;
                         int step_cost = new_p.apply_action(action);
                         int new_path_cost = node.path_cost + step_cost;
@@ -505,19 +475,6 @@ namespace search2 {
         return SearchResult(0, exp_ctr.get_value());
     }
 
-    /*
-    template <class Puzzle, class Action, class BatchHeuristicFunc, bool Track = false>
-    SearchResult batch_weighted_a_star_search(const Puzzle &start, 
-                                              double weight, 
-                                              size_t batch_size,
-                                              BatchHeuristicFunc bhf) 
-    {
-        return batch_weighted_a_star_search<Puzzle, Action, BatchHeuristicFunc, Track>(
-                start, weight, batch_size, bhf);
-    }
-    */
-
-
     // wrapper class transforming single valued heuristic function to batch
     template <class Puzzle, class HF>
     class BHFWrapper {
@@ -556,7 +513,6 @@ namespace search2 {
         std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
         pq.emplace(p, 0, hf(p));
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
-        std::vector<Action> actions;
         while(!pq.empty()) {
             auto node = pq.top(); pq.pop();
             const auto &p = node.puzzle;
@@ -567,8 +523,7 @@ namespace search2 {
                 visited.emplace(p, node.path_cost);
                 ++exp_ctr; 
                 // std::cout << '\r' << static_cast<int>(node.path_cost) << " " << static_cast<int>(node.est_cost);
-                p.template fill_possible_actions<Action>(std::back_inserter(actions));
-                for(const auto &action : actions) {
+                for(const auto &action : p.template action_generator<Action>()) {
                     Puzzle new_p = p;
                     int step_cost = new_p.apply_action(action);
                     int new_path_cost = node.path_cost + step_cost;
@@ -580,35 +535,16 @@ namespace search2 {
                         pq.emplace(new_p, new_path_cost, new_est_cost);
                     }
                 }
-                actions.clear();
             }
         }
         details::throw_unreachable();
         return SearchResult(0, exp_ctr.get_value());
     }
 
-    /*
-    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult weighted_a_star_search(const Puzzle &p, double w, 
-                                        HeuristicFunc hf=HeuristicFunc()) 
-    {
-        return weighted_a_star_search(p, w, hf);
-    }
-    */
-
     template <class Puzzle, class Action, class HeuristicFunc>
     SearchResult a_star_search(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         return weighted_a_star_search<Puzzle, Action, HeuristicFunc>(p, 1.0, hf);
     }
-
-    /*
-    template <class Puzzle, class Action, class HeuristicFunc, bool Track = false>
-    SearchResult a_star_search(const Puzzle &p, HeuristicFunc &hf) {
-        return weighted_a_star_search<Puzzle, Action, HeuristicFunc, Track>(p, 1.0, hf);
-    }
-    */
-
-
 
     namespace details {
 
@@ -627,7 +563,7 @@ namespace search2 {
             } else {
                 ++exp_ctr; // increment the expansion counter
                 int min_exceeding_cost = std::numeric_limits<int>::max(); 
-                for(auto action : node.puzzle.template possible_actions<Action>()) {
+                for(const auto &action : node.puzzle.template action_generator<Action>()) {
                     // if no previous action was input, continue
                     // otherwise, do not perform the reverse of the previous action
                     // as it leads back to the same node and slows down
@@ -752,21 +688,21 @@ namespace search2 {
 //            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
 //                                                return iterative_deepening_dfs<P, A>(p);
 //                                            };
-//            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
-//                                                return a_star_search<P, A, HF>(p, hf);
-//                                            };
-//            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
-//                                                return iterative_deepening_a_star<P, A, HF>
-//                                                       (p, hf);
-//                                            };
-//            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
-//                                                return weighted_a_star_search<P, A, HF>
-//                                                       (p, w, hf);
-//                                            };
-//            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
-//                                                return batch_weighted_a_star_search<P, A, HF>
-//                                                       (p, w, b, hf);
-//                                            };
+            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
+                                                return a_star_search<P, A, HF>(p, hf);
+                                            };
+            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
+                                                return iterative_deepening_a_star<P, A, HF>
+                                                       (p, hf);
+                                            };
+            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
+                                                return weighted_a_star_search<P, A, HF>
+                                                       (p, w, hf);
+                                            };
+            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
+                                                return batch_weighted_a_star_search<P, A, HF>
+                                                       (p, w, b, hf);
+                                            };
             default:                        throw std::invalid_argument("Unknown search type.");
         }
     }
