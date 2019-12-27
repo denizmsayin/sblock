@@ -46,6 +46,7 @@
 #include <numeric>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 
 // TODO: consider alternatives to returning a vector for possible_actions()
 // a custom iterator-like type would work nicely if it can be made light-weight
@@ -87,12 +88,12 @@ namespace sbpuzzle {
             Direction::RIGHT
         };
 
+        // used for tag-dispatching on the TileSwapAction constructor
+        template <psize_t W>
+        struct WTag {
+            psize_t w = W;
+        };
     }
-
-    template <psize_t W>
-    struct WTag {
-        psize_t w = W;
-    };
 
     struct TileSwapAction {
         uint8_t tpos, hpos;
@@ -104,7 +105,7 @@ namespace sbpuzzle {
         // with no method of argument deduction. Thus, I need a dummy type to pass
         // to the constructor for deducing the template argument W.
         template <psize_t W>
-        TileSwapAction(WTag<W> tag, psize_t index, details::Direction dir) :
+        TileSwapAction(details::WTag<W> tag, psize_t index, details::Direction dir) :
             tpos(index + details::OFFSETS<W>[static_cast<size_t>(dir)]), hpos(index) {}
             
         static TileSwapAction reverse(TileSwapAction a) { 
@@ -113,24 +114,6 @@ namespace sbpuzzle {
 
         bool operator==(TileSwapAction a) const { return a.hpos == hpos && a.tpos == tpos; }
         bool operator!=(TileSwapAction a) const { return a.hpos != hpos || a.tpos != tpos; }
-
-        class iterator {
-        public:
-            iterator(const TileSwapAction *a) : actp(a) {}
-            iterator& operator++() { ++actp; return *this; }
-            iterator operator++(int) { iterator ret = *this; ++actp; return ret; }
-            bool operator==(iterator other) { return actp == other.actp; }
-            bool operator!=(iterator other) { return actp != other.actp; }
-            TileSwapAction operator*() { return *actp; }
-            // traits
-            using difference_type = ptrdiff_t;
-            using value_type = TileSwapAction;
-            using pointer = const TileSwapAction *;
-            using reference = const TileSwapAction &;
-            using iterator_category = std::input_iterator_tag;
-        private:
-            const TileSwapAction *actp;
-        };
     };
 
     struct DirectionAction {
@@ -142,7 +125,7 @@ namespace sbpuzzle {
         DirectionAction(Direction d) : dir(d) {}
 
         template <psize_t W>
-        DirectionAction(WTag<W> tag, uint8_t hole_pos, Direction d) : DirectionAction(d) {}
+        DirectionAction(details::WTag<W> tag, uint8_t hole_pos, Direction d) : DirectionAction(d) {}
 
 
         static DirectionAction reverse(DirectionAction a) {
@@ -151,25 +134,6 @@ namespace sbpuzzle {
 
         bool operator==(DirectionAction d) const { return dir == d.dir; }
         bool operator!=(DirectionAction d) const { return dir != d.dir; }
-
-        class iterator {
-        public:
-            iterator(const DirectionAction *d) : dirp(d) {}
-            iterator& operator++() { ++dirp; return *this; }
-            iterator operator++(int) { iterator ret = *this; ++dirp; return ret; }
-            bool operator==(iterator other) { return dirp == other.dirp; }
-            bool operator!=(iterator other) { return dirp != other.dirp; }
-            DirectionAction operator*() { return *dirp; }
-            // traits
-            using difference_type = ptrdiff_t;
-            using value_type = DirectionAction;
-            using pointer = const DirectionAction *;
-            using reference = const DirectionAction &;
-            using iterator_category = std::input_iterator_tag;
-
-        private:
-            const DirectionAction *dirp;
-        };
     };
     
     namespace details {
@@ -436,10 +400,9 @@ namespace sbpuzzle {
 
                 // Note: these two functions should be implemented by the derived classes
                 // same implementation for derived classes
-                // base class PADelegate should not implement anything
                 // template <class Action>
-                // std::vector<Action> possible_actions() const;
-                // uint64_t apply_action(TileSwapAction a);
+                // Action::iterator actions_begin() const;
+                // Action::iterator actions_end() const;
 
                 bool operator==(const SBPuzzleBase &other) const {
                     return details::tiles_equal<H, W>(tiles, other.tiles);
@@ -558,109 +521,87 @@ namespace sbpuzzle {
             return details::goal_state<SBPuzzle<H, W>, H, W>(Base::tiles);
         }
 
+        // TODO: think about public/private for the nested classes
         template <class Action>
-        typename Action::iterator actions_begin() const {
-            return PADelegate<Action>::b(*this);
-        }
+        class generator {
+        public:
+            class iterator {
+            public:
+                iterator(const Action *a) : actp(a) {}
+                iterator& operator++() { ++actp; return *this; }
+                iterator operator++(int) { auto ret = *this; ++actp; return ret; }
+                bool operator==(iterator other) { return actp == other.actp; }
+                bool operator!=(iterator other) { return actp != other.actp; }
+                Action operator*() { return *actp; }
 
+                using difference_type = ptrdiff_t;
+                using value_type = Action;
+                using pointer = const Action *;
+                using reference = const Action &;
+                using iterator_category = std::input_iterator_tag;
+            private:
+                const Action *actp;
+            };
+
+            generator(psize_t hp) : hole_pos(hp) {}
+            iterator begin() const { 
+                auto ptr = records[hole_pos].actions.data();
+                return iterator(ptr); 
+            }
+            iterator end() const { 
+                auto ptr = records[hole_pos].actions.data();
+                return iterator(ptr + records[hole_pos].size); 
+            }
+
+        private:
+            // the only necessary state is the hole position
+            psize_t hole_pos;
+
+            // there is also a static vector which holds pre-computed available moves
+            struct Record {
+                std::array<Action, 4> actions;
+                psize_t size;
+            };
+
+            // build the vector of records during compile time
+            // there are only H*W*4 entries, very little
+            static std::vector<Record> _construct_records() {
+                // for templating the width, tag dispatching
+                constexpr static details::WTag<W> tag; 
+                constexpr static uint8_t W1 = W - 1;
+                constexpr static uint8_t SW = details::SIZE<H, W> - W;
+                using Dir = details::Direction;
+                std::vector<Record> recs(details::SIZE<H, W>);
+                for(psize_t index = 0; index < details::SIZE<H, W>; ++index) {
+                    Record &rec = recs[index];
+                    psize_t j = 0;
+                    psize_t rem = index % W;
+                    if(index >= W)
+                        rec.actions[j++] = Action(tag, index, Dir::UP);
+                    if(rem < W1)
+                        rec.actions[j++] = Action(tag, index, Dir::RIGHT);
+                    if(index < SW)
+                        rec.actions[j++] = Action(tag, index, Dir::DOWN);
+                    if(rem > 0)
+                        rec.actions[j++] = Action(tag, index, Dir::LEFT);
+                    rec.size = j;
+                }
+                return recs;
+            }
+
+            const static inline std::vector<Record> records = _construct_records();
+
+        };
 
         template <class Action>
-        typename Action::iterator actions_end() const {
-            return PADelegate<Action>::e(*this);
+        generator<Action> action_generator() const {
+            return generator<Action>(Base::hole_pos);
         }
 
     private:
         using Base = SBPuzzleBase<H, W>;
-
-        // since it is not possible to specialize a templated function of an unspecialized
-        // templated class, in our case the possible_actions() function, we need a dummy
-        // templated wrapper struct to which we can delegate possible_actions(). However,
-        // it is not possible to FULLY specialize the wrapper struct either, only partially.
-        // Which is why we need a struct with the actual template parameter and a dummy one.
-        // C++ hell, anyone?! Wow, templates are C++'s strength but also quite messed up.
-        template <typename Action, typename Dummy = void>
-        struct PADelegate {
-            static typename Action::iterator b(const SBPuzzle &p);
-            static typename Action::iterator e(const SBPuzzle &p);
-        };
-
     };
 
-    /*
-    // PADelegate specialization for the TileSwapAction class
-    template <psize_t H, psize_t W>
-    template <typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<TileSwapAction, Iterator, Dummy> {
-        static void f(const SBPuzzle<H, W> &p, Iterator out) {
-            auto hp = p.hole_pos;
-            std::array<bool, 4> valid;
-            details::tiles_mark_valid_moves<H, W>(hp, valid);
-            for(size_t dir = 0; dir < 4; ++dir)
-                if(valid[dir])
-                    *out++ = TileSwapAction(hp + details::OFFSETS<W>[dir], hp);
-        }
-    };
-    */
-
-    // CachedType must have a constructor: CachedType(WTag<W> tag, uint8_t index, Direction dir)
-    // See the TileSwapAction constructor for an explanation of WTag<W>
-    template <psize_t H, psize_t W>
-    template <typename Action>
-    struct SBPuzzle<H, W>::PADelegate<Action> {
-        using CachedType = Action; // open to change, in case cached types can be sth else
-        using Dir = details::Direction;
-
-        struct Record {
-            CachedType actions[4];
-            uint8_t size;
-
-            Record() : actions(), size(0) {}
-        };
-
-        static std::vector<Record> records; // caches available directions for each position
-        const static WTag<W> tag;
-
-        static inline void _init_rec_ifnot(uint8_t index) {
-            constexpr static uint8_t W1 = W - 1;
-            constexpr static uint8_t SW = details::SIZE<H, W> - W;
-            Record &rec = records[index];
-            if(rec.size == 0) {
-                uint8_t i = 0;
-                uint8_t rem = index % W;
-                if(index >= W)
-                    rec.actions[i++] = CachedType(tag, index, Dir::UP);
-                if(rem < W1)
-                    rec.actions[i++] = CachedType(tag, index, Dir::RIGHT);
-                if(index < SW)
-                    rec.actions[i++] = CachedType(tag, index, Dir::DOWN);
-                if(rem > 0)
-                    rec.actions[i++] = CachedType(tag, index, Dir::LEFT);
-                rec.size = i;
-            }
-        }
-
-        static inline typename Action::iterator _get_dir_ptr(uint8_t index, uint8_t offset) {
-            _init_rec_ifnot(index);
-            return typename Action::iterator(records[index].actions + offset);
-        }
-
-        static inline typename Action::iterator b(const SBPuzzle<H, W> &p) {
-            return _get_dir_ptr(p.hole_pos, 0);
-        }
-
-        static inline typename Action::iterator e(const SBPuzzle<H, W> &p) {
-            return _get_dir_ptr(p.hole_pos, records[p.hole_pos].size);
-        }
-    };
-
-    // initialize records with H * W empty spots, one for each tile
-    template <psize_t H, psize_t W>
-    template <typename Action>
-    std::vector<typename SBPuzzle<H, W>::template PADelegate<Action>::Record>
-        SBPuzzle<H, W>::PADelegate<Action>::records(H * W);
-
-    /*                                                           */
-   
     // The derived class for the case where the hole is not masked
     template <psize_t H, psize_t W>
     class SBPuzzleNoHole : public SBPuzzleBase<H, W> {
@@ -677,8 +618,10 @@ namespace sbpuzzle {
                     Base::tiles[i] = Base::HOLE;
                     Base::hole_pos = i;
                 } else if(mask[i_tiles[i]]) {
-                    if(i_tiles[i] == Base::HOLE)
-                        throw std::invalid_argument("Constructing SBPuzzleNoHole with a masked hole will give invalid results");
+                    if(i_tiles[i] == Base::HOLE) {
+                        throw std::invalid_argument("Constructing SBPuzzleNoHole with "
+                                                    "a masked hole will give invalid results");
+                    }
                     Base::tiles[i] = i_tiles[i];
                 } else {
                     Base::tiles[i] = details::_X;
@@ -700,20 +643,23 @@ namespace sbpuzzle {
             return cost; // cost is always unit
         }
 
-        template <class Action, class Iterator>
-        void fill_possible_actions(Iterator out) const {
-            PADelegate<Action, Iterator>::f(*this, out); // delegate to the struct
+        /*
+        template <class Action>
+        typename Action::iterator actions_begin() const {
+            return PADelegate<Action>::b(*this);
         }
 
+
         template <class Action>
-        std::vector<Action> possible_actions() const {
-            std::vector<Action> actions;
-            fill_possible_actions<Action>(std::back_inserter(actions));
-            return actions;
+        typename Action::iterator actions_end() const {
+            return PADelegate<Action>::e(*this);
         }
+        */
 
     private:
         using Base = SBPuzzleBase<H, W>;
+
+        
 
         // TODO: consider caching hole/tile positions for faster searching
 
@@ -725,17 +671,20 @@ namespace sbpuzzle {
             details::tiles_reprop_hole<H, W>(Base::tiles, Base::hole_pos);
         }
 
-        template <typename Action, typename Iterator, typename Dummy = void>
+        template <typename Action, typename Dummy = void>
         struct PADelegate {
-            static void f(const SBPuzzleNoHole &p, Iterator out);
+            static typename Action::iterator b(const SBPuzzleNoHole &p);
+            static typename Action::iterator e(const SBPuzzleNoHole &p);
         };
     };
 
+    /*
     // PADelegate specialization for the TileSwapAction class
     template <psize_t H, psize_t W>
-    template <typename Iterator, typename Dummy>
-    struct SBPuzzleNoHole<H, W>::PADelegate<TileSwapAction, Iterator, Dummy> {
-        static void f(const SBPuzzleNoHole<H, W> &p, Iterator out) {
+    template <typename Dummy>
+    struct SBPuzzleNoHole<H, W>::PADelegate<TileSwapAction, Dummy> {
+
+        static void f(const SBPuzzleNoHole<H, W> &p) {
             // check around propagated hole tiles
             for(size_t i = 0; i < p.SIZE; ++i) {
                 if(p.tiles[i] == p.HOLE) { // only actual tiles
@@ -753,6 +702,7 @@ namespace sbpuzzle {
             }
         }
     };
+    */
 
 
     /*

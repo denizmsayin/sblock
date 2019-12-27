@@ -252,12 +252,8 @@ namespace search2 {
             ++exp_ctr;
             auto node = q.front(); q.pop();
             const Puzzle &p = node.puzzle;
-            for(auto itr = p.template actions_begin<Action>(),
-                     end = p.template actions_end<Action>();
-                itr != end; 
-                ++itr)
+            for(const auto &action : p.template action_generator<Action>()) 
             {
-                auto action = *itr;
                 Puzzle new_p = p;
                 int new_path_cost = node.path_cost + new_p.apply_action(action);
                 if(new_p.is_solved())
