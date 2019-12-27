@@ -56,73 +56,8 @@ namespace sbpuzzle {
         
     using std::array;
 
-    struct TileSwapAction {
-        uint8_t tpos, hpos;
-
-        TileSwapAction(uint8_t t, uint8_t h) : tpos(t), hpos(h) {}
-
-        static TileSwapAction reverse(TileSwapAction a) {
-            return TileSwapAction(a.hpos, a.tpos);
-        }
-
-        bool operator==(TileSwapAction a) const {
-            return a.hpos == hpos && a.tpos == tpos;
-        }
-
-        bool operator!=(TileSwapAction a) const {
-            return a.hpos != hpos || a.tpos != tpos;
-        }
-    };
-
-    namespace details {
-        enum class Direction : uint8_t {
-            UP, RIGHT, DOWN, LEFT
-        };
-
-        std::array<Direction, 4> DIRECTION_REVERSE {
-            Direction::DOWN,
-            Direction::LEFT,
-            Direction::UP,
-            Direction::RIGHT
-        };
-    }
-
-    struct DirectionAction {
-        using Direction = details::Direction;
-
-        Direction dir;
-
-        DirectionAction(Direction d) : dir(d) {}
-
-        static DirectionAction reverse(DirectionAction a) {
-            return details::DIRECTION_REVERSE[static_cast<uint8_t>(a.dir)];
-        }
-
-        bool operator==(DirectionAction d) const { return dir == d.dir; }
-        bool operator!=(DirectionAction d) const { return dir != d.dir; }
-
-        class iterator {
-        public:
-            iterator(const Direction *d) : dirp(d) {}
-            iterator& operator++() { ++dirp; return *this; }
-            iterator operator++(int) { iterator ret = *this; ++dirp; return ret; }
-            bool operator==(iterator other) { return dirp == other.dirp; }
-            bool operator!=(iterator other) { return dirp != other.dirp; }
-            DirectionAction operator*() { return DirectionAction(*dirp); }
-            // traits
-            using difference_type = ptrdiff_t;
-            using value_type = DirectionAction;
-            using pointer = const DirectionAction *;
-            using reference = const DirectionAction &;
-            using iterator_category = std::input_iterator_tag;
-
-        private:
-            const Direction *dirp;
-        };
-    };
-
     typedef uint8_t psize_t;
-    
+
     namespace details {
         // This namespace contains implementation details, with both
         // basic utility functions as well as C-like functions
@@ -140,7 +75,104 @@ namespace sbpuzzle {
 
         template <psize_t H, psize_t W>
         static constexpr uint8_t HOLE = H*W-1;
+        
+        enum class Direction : uint8_t {
+            UP, RIGHT, DOWN, LEFT
+        };
 
+        std::array<Direction, 4> DIRECTION_REVERSE {
+            Direction::DOWN,
+            Direction::LEFT,
+            Direction::UP,
+            Direction::RIGHT
+        };
+
+    }
+
+    template <psize_t W>
+    struct WTag {
+        psize_t w = W;
+    };
+
+    struct TileSwapAction {
+        uint8_t tpos, hpos;
+
+        TileSwapAction() = default;
+        TileSwapAction(psize_t t, psize_t h) : tpos(t), hpos(h) {}
+
+        // Since constructors have no names, we cannot have templated constructors
+        // with no method of argument deduction. Thus, I need a dummy type to pass
+        // to the constructor for deducing the template argument W.
+        template <psize_t W>
+        TileSwapAction(WTag<W> tag, psize_t index, details::Direction dir) :
+            tpos(index + details::OFFSETS<W>[static_cast<size_t>(dir)]), hpos(index) {}
+            
+        static TileSwapAction reverse(TileSwapAction a) { 
+            return TileSwapAction(a.hpos, a.tpos); 
+        }
+
+        bool operator==(TileSwapAction a) const { return a.hpos == hpos && a.tpos == tpos; }
+        bool operator!=(TileSwapAction a) const { return a.hpos != hpos || a.tpos != tpos; }
+
+        class iterator {
+        public:
+            iterator(const TileSwapAction *a) : actp(a) {}
+            iterator& operator++() { ++actp; return *this; }
+            iterator operator++(int) { iterator ret = *this; ++actp; return ret; }
+            bool operator==(iterator other) { return actp == other.actp; }
+            bool operator!=(iterator other) { return actp != other.actp; }
+            TileSwapAction operator*() { return *actp; }
+            // traits
+            using difference_type = ptrdiff_t;
+            using value_type = TileSwapAction;
+            using pointer = const TileSwapAction *;
+            using reference = const TileSwapAction &;
+            using iterator_category = std::input_iterator_tag;
+        private:
+            const TileSwapAction *actp;
+        };
+    };
+
+    struct DirectionAction {
+        using Direction = details::Direction;
+
+        Direction dir;
+
+        DirectionAction() = default;
+        DirectionAction(Direction d) : dir(d) {}
+
+        template <psize_t W>
+        DirectionAction(WTag<W> tag, uint8_t hole_pos, Direction d) : DirectionAction(d) {}
+
+
+        static DirectionAction reverse(DirectionAction a) {
+            return details::DIRECTION_REVERSE[static_cast<uint8_t>(a.dir)];
+        }
+
+        bool operator==(DirectionAction d) const { return dir == d.dir; }
+        bool operator!=(DirectionAction d) const { return dir != d.dir; }
+
+        class iterator {
+        public:
+            iterator(const DirectionAction *d) : dirp(d) {}
+            iterator& operator++() { ++dirp; return *this; }
+            iterator operator++(int) { iterator ret = *this; ++dirp; return ret; }
+            bool operator==(iterator other) { return dirp == other.dirp; }
+            bool operator!=(iterator other) { return dirp != other.dirp; }
+            DirectionAction operator*() { return *dirp; }
+            // traits
+            using difference_type = ptrdiff_t;
+            using value_type = DirectionAction;
+            using pointer = const DirectionAction *;
+            using reference = const DirectionAction &;
+            using iterator_category = std::input_iterator_tag;
+
+        private:
+            const DirectionAction *dirp;
+        };
+    };
+    
+    namespace details {
         template <psize_t H, psize_t W>
         inline void tiles_correct_fill(array<uint8_t, H*W> &tiles) {
             for(size_t size = tiles.size(), i = 0; i < size; ++i)
@@ -551,6 +583,7 @@ namespace sbpuzzle {
             static typename Action::iterator b(const SBPuzzle &p);
             static typename Action::iterator e(const SBPuzzle &p);
         };
+
     };
 
     /*
@@ -569,28 +602,23 @@ namespace sbpuzzle {
     };
     */
 
-    // PADelegate specialization for the DirectionAction class
+    // CachedType must have a constructor: CachedType(WTag<W> tag, uint8_t index, Direction dir)
+    // See the TileSwapAction constructor for an explanation of WTag<W>
     template <psize_t H, psize_t W>
-    template <typename Dummy>
-    struct SBPuzzle<H, W>::PADelegate<DirectionAction, Dummy> {
+    template <typename Action>
+    struct SBPuzzle<H, W>::PADelegate<Action> {
+        using CachedType = Action; // open to change, in case cached types can be sth else
         using Dir = details::Direction;
 
         struct Record {
-            Dir dirs[4];
+            CachedType actions[4];
             uint8_t size;
 
-            Record() : dirs(), size(0) {}
+            Record() : actions(), size(0) {}
         };
 
-        /*
-        int rem = p % W;
-            directions[0] = p >= W; // up
-            directions[1] = rem < W-1; // right
-            directions[2] = p < SIZE<H, W> - W; // down
-            directions[3] = rem > 0; // left
-        */
-
         static std::vector<Record> records; // caches available directions for each position
+        const static WTag<W> tag;
 
         static inline void _init_rec_ifnot(uint8_t index) {
             constexpr static uint8_t W1 = W - 1;
@@ -600,37 +628,36 @@ namespace sbpuzzle {
                 uint8_t i = 0;
                 uint8_t rem = index % W;
                 if(index >= W)
-                    rec.dirs[i++] = Dir::UP;
+                    rec.actions[i++] = CachedType(tag, index, Dir::UP);
                 if(rem < W1)
-                    rec.dirs[i++] = Dir::RIGHT;
+                    rec.actions[i++] = CachedType(tag, index, Dir::RIGHT);
                 if(index < SW)
-                    rec.dirs[i++] = Dir::DOWN;
+                    rec.actions[i++] = CachedType(tag, index, Dir::DOWN);
                 if(rem > 0)
-                    rec.dirs[i++] = Dir::LEFT;
+                    rec.actions[i++] = CachedType(tag, index, Dir::LEFT);
                 rec.size = i;
             }
         }
 
-        static inline DirectionAction::iterator _get_dir_ptr(uint8_t index, uint8_t offset) {
+        static inline typename Action::iterator _get_dir_ptr(uint8_t index, uint8_t offset) {
             _init_rec_ifnot(index);
-            return DirectionAction::iterator(records[index].dirs + offset);
+            return typename Action::iterator(records[index].actions + offset);
         }
 
-        static inline DirectionAction::iterator b(const SBPuzzle<H, W> &p) {
+        static inline typename Action::iterator b(const SBPuzzle<H, W> &p) {
             return _get_dir_ptr(p.hole_pos, 0);
         }
 
-        static inline typename DirectionAction::iterator e(const SBPuzzle<H, W> &p) {
+        static inline typename Action::iterator e(const SBPuzzle<H, W> &p) {
             return _get_dir_ptr(p.hole_pos, records[p.hole_pos].size);
         }
     };
 
-    // initialize cache as empty with size H*W
+    // initialize records with H * W empty spots, one for each tile
     template <psize_t H, psize_t W>
-    template <typename Dummy>
-    std::vector<typename SBPuzzle<H, W>::template PADelegate<DirectionAction, Dummy>::Record> 
-        SBPuzzle<H, W>::PADelegate<DirectionAction, Dummy>::records(H * W);
-
+    template <typename Action>
+    std::vector<typename SBPuzzle<H, W>::template PADelegate<Action>::Record>
+        SBPuzzle<H, W>::PADelegate<Action>::records(H * W);
 
     /*                                                           */
    
