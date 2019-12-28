@@ -132,19 +132,20 @@ namespace search2 {
     }
 
     // SEARCH NODE, the class that defines a search node, a record structure that keeps
-    // both a puzzle state and extra book-keeping information about it. Also holds some
-    // static variables such as a counter for the number of created nodes.
-    template <typename Dereferenceable> // i.e. Puzzle *, std::vector<Puzzle>::iterator
+    // both a puzzle state and extra book-keeping information about it.
+    // It is a templated class because what is contained can change depending on the algorithm.
+    // i.e. a const Puzzle * for BFS, or a pair<Puzzle, int> * for A* search etc.
+    template <typename Contained, typename Cost = uint8_t> 
     struct SearchNode {
-        Dereferenceable puzzle;
-        uint8_t path_cost;
-        uint8_t est_cost;
+        Contained entry;
+        Cost path_cost;
+        Cost est_cost;
 
-        SearchNode(const Dereferenceable &p, int pc, int ec) 
-            : puzzle(p), path_cost(pc), est_cost(ec) {}
+        SearchNode(const Contained &p, Cost pc, Cost ec) 
+            : entry(p), path_cost(pc), est_cost(ec) {}
 
-        SearchNode(const Dereferenceable &p, int pc) 
-            : puzzle(p), path_cost(pc), est_cost(0) {}
+        SearchNode(const Contained &p, Cost pc) 
+            : entry(p), path_cost(pc), est_cost(0) {}
     };
 
     template <class Puzzle>
@@ -199,7 +200,7 @@ namespace search2 {
     template <class Puzzle, class Action>
     SearchNode<Puzzle> BreadthFirstIterator<Puzzle, Action>::next() {
         auto node = q.front(); q.pop();
-        const Puzzle &p = node.puzzle;
+        const Puzzle &p = node.entry;
         for(auto action : p.template possible_actions<Action>()) {
             Puzzle new_p = p;
             int new_path_cost = node.path_cost + new_p.apply_action(action);
@@ -221,23 +222,27 @@ namespace search2 {
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
 
         // typedefs for the data structures 
+        // the plan is to keep all puzzle objects in the hash table,
+        // and only store pointers in the queue. This is possible
+        // because the standard dictates that while iterators
+        // can be invalidated by insertion, pointers/references
+        // to hash table elements remain valid. Thanks, separate chaining!
         typedef std::unordered_set<Puzzle> hash_table_t;
-        typedef typename hash_table_t::iterator puzzle_ptr_t;
-        typedef SearchNode<puzzle_ptr_t> node_t;
+        typedef SearchNode<const Puzzle *> node_t;
         typedef std::queue<node_t> queue_t;
 
         // data structures
         hash_table_t visited;
         queue_t q;
         bool dummy;
-        puzzle_ptr_t itr;
+        typename hash_table_t::iterator itr;
 
         std::tie(itr, dummy) = visited.emplace(puzzle_start);
-        q.emplace(itr, 0);
+        q.emplace(&(*itr), 0);
         while(!q.empty()) {
             ++exp_ctr;
             auto node = q.front(); q.pop();
-            puzzle_ptr_t p = node.puzzle;
+            const Puzzle *p = node.entry;
             for(const auto &action : p->template action_generator<Action>()) 
             {
                 Puzzle new_p = *p;
@@ -246,7 +251,7 @@ namespace search2 {
                     return SearchResult(new_path_cost, exp_ctr.get_value());
                 if(visited.find(new_p) == visited.end()) {
                     std::tie(itr, dummy) = visited.emplace(new_p);
-                    q.emplace(itr, new_path_cost);
+                    q.emplace(&(*itr), new_path_cost);
                 }
             }
         }
@@ -311,7 +316,7 @@ namespace search2 {
             {
                 if(!queue.empty()) {
                     auto node = queue.front(); queue.pop();
-                    const auto &p = node.puzzle;
+                    const auto &p = node.entry;
                     // check if the node has been visited the other way
                     auto lookup = other_visited.find(p);
                     if(lookup != other_visited.end())
@@ -417,7 +422,7 @@ namespace search2 {
             // select as many as batch size nodes for expansion
             while(!pq.empty() && to_eval.size() < batch_size) {
                 auto node = pq.top(); pq.pop();
-                const puzzle_ptr_t &map_itr = node.puzzle;
+                const puzzle_ptr_t &map_itr = node.entry;
                 const auto &p = map_itr->first; // second is cost
                 if(p.is_solved()) 
                     return SearchResult(node.path_cost, exp_ctr.get_value());
@@ -511,7 +516,7 @@ namespace search2 {
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
         while(!pq.empty()) {
             auto node = pq.top(); pq.pop();
-            const auto &p = node.puzzle;
+            const auto &p = node.entry;
             // check if the state has been visited before
             // we act as if not visited if the cost is smaller than the prev one too
             auto lookup = visited.find(p);
@@ -554,12 +559,12 @@ namespace search2 {
         {
             if(node.est_cost > cost_limit) { // return the cutoff cost
                 return node.est_cost;
-            } else if(node.puzzle.is_solved()) { // return the solution
+            } else if(node.entry.is_solved()) { // return the solution
                 return node.path_cost;;
             } else {
                 ++exp_ctr; // increment the expansion counter
                 int min_exceeding_cost = std::numeric_limits<int>::max(); 
-                for(const auto &action : node.puzzle.template action_generator<Action>()) {
+                for(const auto &action : node.entry.template action_generator<Action>()) {
                     // if no previous action was input, continue
                     // otherwise, do not perform the reverse of the previous action
                     // as it leads back to the same node and slows down
@@ -567,7 +572,7 @@ namespace search2 {
                        *prev_action_reverse != action) 
                     {
                         // generate parameters for a recursive call
-                        Puzzle new_p = node.puzzle; 
+                        Puzzle new_p = node.entry; 
                         int new_path_cost = node.path_cost + new_p.apply_action(action);
                         int new_est_cost = new_path_cost + hf(new_p);
                         SearchNode<Puzzle> new_node(new_p, new_path_cost, new_est_cost);
@@ -618,7 +623,7 @@ namespace search2 {
         // basic operations that IDA* wins out 
         template <class Puzzle, class Action, class HeuristicFunc>
             std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit, HeuristicFunc hf=HeuristicFunc()) {
-                const Puzzle &p = node.puzzle;
+                const Puzzle &p = node.entry;
                 if(p.is_solved())
                     return std::make_pair(true, node.path_cost);
                 std::vector<SearchNode<Puzzle>> successors;
