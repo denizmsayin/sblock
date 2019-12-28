@@ -1,3 +1,5 @@
+#ifdef W_TORCH
+
 #ifndef __DLMODEL_HPP__
 #define __DLMODEL_HPP__
 
@@ -148,5 +150,7 @@ namespace sbpuzzle {
 
 }
 
+
+#endif
 
 #endif

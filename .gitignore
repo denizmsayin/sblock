@@ -6,6 +6,7 @@
 
 test*.cpp
 
+notorch-release
 release
 debug
 

@@ -145,7 +145,7 @@ namespace sbpuzzle {
             // generate possible actions for each puzzle and mark the max number of moves
             max_action_index = 0;
             for(size_t i = 0; i < batch_size; ++i) {
-                puzzle_actions[i] = puzzles[i].template possible_actions<TileSwapAction>();
+                puzzle_actions[i] = puzzles[i].template action_generator<TileSwapAction>();
                 size_t asize = puzzle_actions[i].size();
                 if(max_action_index < asize)
                     max_action_index = asize;

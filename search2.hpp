@@ -241,7 +241,7 @@ namespace search2 {
         q.emplace(&(*itr), 0);
         while(!q.empty()) {
             ++exp_ctr;
-            auto node = q.front(); q.pop();
+            node_t node = q.front(); q.pop();
             const Puzzle *p = node.entry;
             for(const auto &action : p->template action_generator<Action>()) 
             {
@@ -383,19 +383,20 @@ namespace search2 {
         // set up an expanded node counter and its tracker
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
 
+        // the standard states that pointers/refs to both keys and values remain
+        // unaffected. Since pairs are stored (defined as value_type), using a 
+        // pointer to pair should be fine, I believe.
+
         // typedefs for the data structures 
         typedef std::unordered_map<Puzzle, int> hash_table_t;
-        typedef typename hash_table_t::iterator puzzle_ptr_t;
-        typedef SearchNode<puzzle_ptr_t> node_t;
-        typedef SearchNodeComparator<puzzle_ptr_t> comp_t;
+        typedef Puzzle entry_t;
+        typedef SearchNode<entry_t> node_t;
+        typedef SearchNodeComparator<entry_t> comp_t;
         typedef std::priority_queue<node_t, std::vector<node_t>, comp_t> pqueue_t;
 
         // set up the search
         hash_table_t visited;
         pqueue_t pq;
-        bool dummy;
-        puzzle_ptr_t itr;
-
 
         // vectors and manipulators
         // why two sets of vectors rather than search nodes?
@@ -413,17 +414,15 @@ namespace search2 {
         // put inside f_values are properly cast to integral
         // insert the first element
         bhf(std::vector<Puzzle> {start}, f_values); // raw pointer as iterator!
-        std::tie(itr, dummy) = visited.emplace(start, 0);
-        pq.emplace(itr, 0, f_values[0]);
+        pq.emplace(start, 0, f_values[0]);
         f_values.clear();
  
         while(!pq.empty()) {
 
             // select as many as batch size nodes for expansion
             while(!pq.empty() && to_eval.size() < batch_size) {
-                auto node = pq.top(); pq.pop();
-                const puzzle_ptr_t &map_itr = node.entry;
-                const auto &p = map_itr->first; // second is cost
+                node_t node = pq.top(); pq.pop();
+                const Puzzle &p = node.entry; // second is cost
                 if(p.is_solved()) 
                     return SearchResult(node.path_cost, exp_ctr.get_value());
                 auto lookup = visited.find(p);
@@ -495,7 +494,7 @@ namespace search2 {
 
 
     template <class Puzzle, class Action, class HeuristicFunc>
-    SearchResult weighted_a_star_search(const Puzzle &p, double w, 
+    SearchResult weighted_a_star_search(const Puzzle &start_puzzle, double w, 
                                         HeuristicFunc hf=HeuristicFunc()) 
     {
         // Since the standard library PQ does not have a decrease-key operation, we have
@@ -509,31 +508,50 @@ namespace search2 {
         // To deal with this, we also need to keep track of the smallest cost we have
         // found for each state so far. If we find a path with a lower cost, we simply
         // have to act as if that state was not visited.
-        if(p.is_solved()) return SearchResult(0, 0);
-        std::unordered_map<Puzzle, int> visited;
-        std::priority_queue<SearchNode<Puzzle>, std::vector<SearchNode<Puzzle>>, SearchNodeComparator<Puzzle>> pq;
-        pq.emplace(p, 0, hf(p));
+        if(start_puzzle.is_solved()) return SearchResult(0, 0);
+
+        // tracker for expanded nodes
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
+
+        // typedefs for the data structures 
+        typedef std::unordered_map<Puzzle, int> hash_table_t;
+        typedef std::pair<const Puzzle, int> *entry_t;
+        typedef SearchNode<entry_t> node_t;
+        typedef SearchNodeComparator<entry_t> comp_t;
+        typedef std::priority_queue<node_t, std::vector<node_t>, comp_t> pqueue_t;
+
+        // set up the search
+        hash_table_t visited;
+        pqueue_t pq;
+        bool dummy;
+        typename hash_table_t::iterator itr;
+
+        // insert the first state into the hash table with a positive cost
+        // to ensure that it gets expanded
+        std::tie(itr, dummy) = visited.emplace(start_puzzle, 0);
+        pq.emplace(&(*itr), 0, hf(start_puzzle));
+
         while(!pq.empty()) {
-            auto node = pq.top(); pq.pop();
-            const auto &p = node.entry;
-            // check if the state has been visited before
-            // we act as if not visited if the cost is smaller than the prev one too
-            auto lookup = visited.find(p);
-            if(lookup == visited.end() || node.path_cost < lookup->second) {
-                visited.emplace(p, node.path_cost);
-                ++exp_ctr; 
-                // std::cout << '\r' << static_cast<int>(node.path_cost) << " " << static_cast<int>(node.est_cost);
-                for(const auto &action : p.template action_generator<Action>()) {
-                    Puzzle new_p = p;
-                    int step_cost = new_p.apply_action(action);
-                    int new_path_cost = node.path_cost + step_cost;
-                    if(new_p.is_solved())
-                        return SearchResult(new_path_cost, exp_ctr.get_value());
-                    auto lookup = visited.find(new_p);
-                    if(lookup == visited.end() || new_path_cost < lookup->second) {
-                        int new_est_cost = static_cast<int>(w * new_path_cost) + hf(new_p);
-                        pq.emplace(new_p, new_path_cost, new_est_cost);
+            node_t node = pq.top(); pq.pop();
+            entry_t entry = node.entry;
+            const Puzzle &p = entry->first;
+            ++exp_ctr; // increase expanded nodes
+            for(const auto &action : p.template action_generator<Action>()) {
+                Puzzle new_p = p;
+                int step_cost = new_p.apply_action(action);
+                int new_path_cost = node.path_cost + step_cost;
+                if(new_p.is_solved())
+                    return SearchResult(new_path_cost, exp_ctr.get_value());
+                auto lookup = visited.find(new_p);
+                bool not_exist = lookup == visited.end();
+                if(not_exist || new_path_cost < lookup->second) {
+                    int new_est_cost = static_cast<int>(w * new_path_cost) + hf(new_p);
+                    if(not_exist) { // new state that did not exist before
+                        std::tie(itr, dummy) = visited.emplace(new_p, new_path_cost);
+                        pq.emplace(&(*itr), new_path_cost, new_est_cost);
+                    } else { // new path cost is smaller than previous
+                        lookup->second = new_path_cost;
+                        pq.emplace(&(*lookup), new_path_cost, new_est_cost);
                     }
                 }
             }
@@ -689,21 +707,21 @@ namespace search2 {
 //            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
 //                                                return iterative_deepening_dfs<P, A>(p);
 //                                            };
-//            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
-//                                                return a_star_search<P, A, HF>(p, hf);
-//                                            };
-//            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
-//                                                return iterative_deepening_a_star<P, A, HF>
-//                                                       (p, hf);
-//                                            };
-//            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
-//                                                return weighted_a_star_search<P, A, HF>
-//                                                       (p, w, hf);
-//                                            };
-//            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
-//                                                return batch_weighted_a_star_search<P, A, HF>
-//                                                       (p, w, b, hf);
-//                                            };
+            case T::ASTAR:                  return [](const P &p, double w, size_t b, HF hf) {
+                                                return a_star_search<P, A, HF>(p, hf);
+                                            };
+            case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
+                                                return iterative_deepening_a_star<P, A, HF>
+                                                       (p, hf);
+                                            };
+            case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
+                                                return weighted_a_star_search<P, A, HF>
+                                                       (p, w, hf);
+                                            };
+            case T::BATCH_WEIGHTED_ASTAR:   return [](const P &p, double w, size_t b, HF hf) {
+                                                return batch_weighted_a_star_search<P, A, HF>
+                                                       (p, w, b, hf);
+                                            };
             default:                        throw std::invalid_argument("Unknown search type.");
         }
     }

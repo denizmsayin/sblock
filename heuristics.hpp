@@ -32,7 +32,9 @@ namespace sbpuzzle {
         DPDB,
         RPDB,
         CPDB,
+        #ifdef W_TORCH
         DLMODEL
+        #endif
     };
 
     // why not auto-generate from the maps? because they are unordered
@@ -42,7 +44,9 @@ namespace sbpuzzle {
         "dpdb",
         "rpdb",
         "cpdb",
+        #ifdef W_TORCH
         "dlmodel"
+        #endif
     };
 
     namespace details {
@@ -61,7 +65,9 @@ namespace sbpuzzle {
             {"dpdb", HeuristicType::DPDB},
             {"rpdb", HeuristicType::RPDB},
             {"cpdb", HeuristicType::CPDB},
+            #ifdef W_TORCH
             {"dlmodel", HeuristicType::DLMODEL}
+            #endif
         };
 
     }
@@ -72,7 +78,9 @@ namespace sbpuzzle {
         {"dpdb", "disjoint pattern database (from file)"},
         {"rpdb", "disjoint pattern database, reflected"},
         {"cpdb", "disjoint pattern database, combined with reflection"},
+        #ifdef W_TORCH
         {"dlmodel", "TorchScript deep learning model"}
+        #endif
     };
 
     HeuristicType str2heuristictype(const std::string &s) {
