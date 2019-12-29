@@ -37,7 +37,7 @@
 constexpr uint8_t H = __H, W = __W;
 const std::string EVAL_HEURISTIC_STR = "H";
 
-constexpr size_t WRITER_THREAD_PRINT_EVERY = 1000000;
+// constexpr size_t WRITER_THREAD_PRINT_EVERY = 1000000;
 
 //-------------------------------------------------------------------------------
 
@@ -86,21 +86,17 @@ void solver_thread_routine(Solver solver, double w, size_t b, HeuristicEvaluator
             std::scoped_lock lock(m_gsolutions);
             gsolutions.emplace(p, r.cost);
         }
-        gnum_moves += r.cost;
-        gnum_nodes += r.nodes_expanded;
         --gpuzzles_to_solve; // decrement puzzle count
         // wake the writer since a solution has been found
         cv_enough_solutions.notify_one();
+        gnum_moves += r.cost;
+        gnum_nodes += r.nodes_expanded;
     }
 }
 
-void writer_thread_routine(std::fstream &stream, size_t print_every) {
+void writer_thread_routine(std::fstream &stream, size_t total_puzzles, bool write_file) {
     // initialize a tracker for printing progress
-    size_t written_sols = 0;
-    SeriesTracker<size_t>::Options opts;
-    opts.print_every = print_every;
-    opts.name_str = "puzzles solved";
-    SeriesTracker<size_t> sol_tracker(&written_sols, opts);
+    size_t read_sols = 0;
     
     // actual variables & logic
     std::queue<Solution> sols; // local queue for copying
@@ -118,6 +114,7 @@ void writer_thread_routine(std::fstream &stream, size_t print_every) {
             while(!gsolutions.empty()) {
                 sols.emplace(gsolutions.front());
                 gsolutions.pop();
+                ++read_sols;
             }
             // can now unlock gsolutions
         }
@@ -125,14 +122,17 @@ void writer_thread_routine(std::fstream &stream, size_t print_every) {
         // the lock on solutions is unlocked, can write safely
         while(!sols.empty()) {
             const Solution &s = sols.front();
-            s.puzzle.to_binary_stream(stream) << s.cost;
-            stream.flush();
+            if(write_file) {
+                s.puzzle.to_binary_stream(stream) << s.cost;
+                stream.flush();
+            }
             sols.pop();
             // track the number of solutions written
-            ++written_sols;
-            sol_tracker.track();
         }
+        // not doing anything here because the main thread calls this function
+        std::cout << '\r' << read_sols << '/' << total_puzzles << std::flush;
     }
+    std::cout << '\r';
 }
 
 
@@ -438,16 +438,13 @@ int main(int argc, char *argv[]) {
             using Solver = decltype(search_function);
             std::vector<std::thread> worker_threads(num_threads);
             for(auto &thread : worker_threads)
-                thread = std::thread(solver_thread_routine<Solver, Heuristic<H, W> &>, search_function, weight, batch_size, std::ref(hf));
-
-            // set the printing amount
+                thread = std::thread(solver_thread_routine<Solver, Heuristic<H, W> &>, 
+                                     search_function, weight, batch_size, std::ref(hf));
 
             // the main program will take care of writing
-            if(outfile_exists) {
-                std::cout << "Starting outfile writer..." << std::endl;
-                outfile.clear();
-                writer_thread_routine(std::ref(outfile), WRITER_THREAD_PRINT_EVERY);
-            }
+            std::cout << "Starting outfile writer..." << std::endl;
+            outfile.clear();
+            writer_thread_routine(std::ref(outfile), num_puzzles, outfile_exists);
 
             // join worker threads
             std::cout << "Joining threads..." << std::endl;
