@@ -94,10 +94,10 @@ void solver_thread_routine(Solver solver, double w, size_t b, HeuristicEvaluator
     }
 }
 
-void writer_thread_routine(std::fstream &stream, size_t total_puzzles, bool write_file) {
-    // initialize a tracker for printing progress
-    size_t read_sols = 0;
-    
+void writer_thread_routine(std::fstream &stream, size_t total_puzzles, bool write_file, 
+                           const SeriesTrackedValue<size_t>::Options &tracker_opts) 
+{
+    SeriesTrackedValue<size_t> read_sols(0, tracker_opts);
     // actual variables & logic
     std::queue<Solution> sols; // local queue for copying
     bool done = false;
@@ -114,7 +114,6 @@ void writer_thread_routine(std::fstream &stream, size_t total_puzzles, bool writ
             while(!gsolutions.empty()) {
                 sols.emplace(gsolutions.front());
                 gsolutions.pop();
-                ++read_sols;
             }
             // can now unlock gsolutions
         }
@@ -128,9 +127,9 @@ void writer_thread_routine(std::fstream &stream, size_t total_puzzles, bool writ
             }
             sols.pop();
             // track the number of solutions written
+            ++read_sols;
         }
         // not doing anything here because the main thread calls this function
-        std::cout << '\r' << read_sols << '/' << total_puzzles << std::flush;
     }
     std::cout << '\r';
 }
@@ -209,7 +208,9 @@ void show_usage() {
         << "                      pairs (same format as source files). none by default.\n"
         << "       -j NJOBS       number of worker threads to use to solve puzzles, with an \n"
         << "                      extra thread for writing the solutions to a file if necessary.\n"
-        << "                      Defaults to 0 which is the single threaded implementation.\n";
+        << "                      Defaults to 0 which is the single threaded implementation.\n"
+        << "       -t TRACKVAL    every time TRACKVAL puzzles are solved, an update will be\n"
+        << "                      printed on the terminal screen. Defaults to 1.\n";
         ;
 }
 
@@ -229,6 +230,7 @@ int main(int argc, char *argv[]) {
     int64_t lower = 1;
     int64_t upper = 50;
     size_t num_threads = 0;
+    size_t track_value = 1;
 
     search2::TRACKER_OPTS.do_track = true;
 
@@ -236,7 +238,7 @@ int main(int argc, char *argv[]) {
         std::cout << "For argument help: ./exe_file -?\n";
 
     int ch;
-    while((ch = getopt(argc, argv, "?gr:n:s:h:f:w:b:i:o:p:l:u:j:")) != -1) {
+    while((ch = getopt(argc, argv, "?gr:n:s:h:f:w:b:i:o:p:l:u:j:t:")) != -1) {
         switch(ch) {
             case '?':   show_usage(); return 0;
             case 'r':   seed = std::stoul(optarg); break;
@@ -253,6 +255,7 @@ int main(int argc, char *argv[]) {
             case 'l':   lower = std::stoll(optarg); break;
             case 'u':   upper = std::stoll(optarg); break;      
             case 'j':   num_threads = std::stoull(optarg); break;
+            case 't':   track_value = std::stoull(optarg); break;
             default:    std::cerr << "Unexpected argument (" << static_cast<char>(ch) << "). " 
                                   << "Try ./exe_file -?\n"; return -1;
         }
@@ -414,17 +417,22 @@ int main(int argc, char *argv[]) {
         // set counters to zero
         gnum_moves = 0;
         gnum_nodes = 0;
-
+        
+        // initialize solution tracker options 
+        SeriesTrackedValue<size_t>::Options opts;
+        opts.print_every = track_value;
+        opts.alpha = 0.5;
+        opts.target_value = num_puzzles;
 
         if(num_threads == 0) { // single threaded implementation
+            SeriesTrackedValue<size_t> nsolved(0, opts);
             for(size_t i = 0, size = puzzles.size(); i < size; ++i) {
                 auto r = search_function(puzzles[i], weight, batch_size, std::ref(hf));
                 gnum_moves += r.cost;
                 gnum_nodes += r.nodes_expanded;
-                std::cout << '\r' << (i+1) << "/" << num_puzzles << std::flush;
+                ++nsolved;
                 writer(puzzles[i], r.cost);
             }
-            std::cout << '\r';
         } else {
             // initialize variables
             gpuzzles_to_solve = num_puzzles;
@@ -444,7 +452,7 @@ int main(int argc, char *argv[]) {
             // the main program will take care of writing
             std::cout << "Starting outfile writer..." << std::endl;
             outfile.clear();
-            writer_thread_routine(std::ref(outfile), num_puzzles, outfile_exists);
+            writer_thread_routine(std::ref(outfile), num_puzzles, outfile_exists, std::ref(opts));
 
             // join worker threads
             std::cout << "Joining threads..." << std::endl;

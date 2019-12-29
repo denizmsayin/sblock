@@ -32,16 +32,19 @@ public:
         bool do_track;
         std::ostream &stream;
         double alpha;
-        Arithmetic print_every; // 0 implies disabled
+        Arithmetic print_every;
         bool show_speed;
         std::string name_str;
         bool no_newline;
+        Arithmetic target_value;
 
         Options(bool dt=true, Arithmetic pe=static_cast<Arithmetic>(1000), double a=0.0, 
                 bool ss=true, std::ostream &s=std::cout, 
                 const std::string &ns = "Value") 
             : do_track(dt), stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns), 
-              no_newline(true) {}
+              no_newline(true), target_value(0) {}
+
+        // TODO: add builder pattern
 
         Options(const Options &o) = default;
         Options(Options &&o) = default;
@@ -50,6 +53,7 @@ public:
     SeriesTracker() = default;
     SeriesTracker(const Arithmetic *to_track);
     SeriesTracker(const Arithmetic *to_track, const Options &opts);
+    ~SeriesTracker();
 
     void track();
 
@@ -60,6 +64,7 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> rec_time;
     Options options;
     double running_avg;
+    bool did_print;
     static constexpr size_t STRING_BUF_SIZE = 100;
 
     void record();
@@ -68,9 +73,11 @@ private:
 template <typename Arithmetic>
 class SeriesTrackedValue {
 public:
+    using Options = typename SeriesTracker<Arithmetic>::Options;
+
     SeriesTrackedValue(Arithmetic initial_value) : value(initial_value), tracker(&value) {}
     SeriesTrackedValue(Arithmetic initial_value, 
-                       const typename SeriesTracker<Arithmetic>::Options &opts)
+                       const Options &opts)
         : value(initial_value), tracker(&value, opts) {}
 
    
@@ -242,17 +249,22 @@ std::ostream& operator<<(
 }
 
 template <typename A>
-SeriesTracker<A>::SeriesTracker(const A *to_track) : tracked(to_track),
-    rec_value(), rec_time(), options(), running_avg()
+SeriesTracker<A>::SeriesTracker(const A *to_track, const Options &opts) : 
+    tracked(to_track), rec_value(), rec_time(), options(opts), running_avg(), did_print(false)
 {
     record();
 }
 
 template <typename A>
-SeriesTracker<A>::SeriesTracker(const A *to_track, const Options &opts) : 
-    tracked(to_track), rec_value(), rec_time(), options(opts), running_avg()
-{
-    record();
+SeriesTracker<A>::SeriesTracker(const A *to_track) : SeriesTracker(to_track, Options()) {}
+
+template <typename A>
+SeriesTracker<A>::~SeriesTracker() {
+    // TODO: count the number of chars pushed by the last print for clearing
+    const static std::string clear_str = std::string(70, ' ');
+    // clear the stream when going out of scope
+    if(did_print && options.no_newline)
+        options.stream << clear_str << '\r';
 }
 
 template <typename A>
@@ -266,6 +278,7 @@ void SeriesTracker<A>::track() {
     if(options.do_track && options.print_every != static_cast<A>(0)) {
         A diff = *tracked - rec_value;
         if(diff >= options.print_every) {
+            did_print = true; // mark for clearing
             auto now = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> ms = now - rec_time;
             double inst_speed = 1000 * diff / ms.count(); // per second
@@ -276,6 +289,8 @@ void SeriesTracker<A>::track() {
             if(options.no_newline) 
                 options.stream << '\r';
             options.stream << options.name_str << ": " << print_value;
+            if(options.target_value != 0)
+                options.stream << '/' << options.target_value;
             if(options.show_speed)
                 options.stream << ", " << fc << "ps: " << print_avg;
             if(options.no_newline)

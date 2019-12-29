@@ -6,9 +6,8 @@
 
 mytest*.cpp
 
-notorch-release
-release
-debug
+builds
+pdbs
 
 massif.out.*
 
