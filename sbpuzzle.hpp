@@ -329,7 +329,6 @@ namespace sbpuzzle {
         template <psize_t H, psize_t W>
         static std::vector<Record> _construct_records() {
             // for templating the width, tag dispatching
-            constexpr static details::WTag<W> tag; 
             constexpr static uint8_t W1 = W - 1;
             constexpr static uint8_t SW = details::SIZE<H, W> - W;
             using Dir = details::Direction;

@@ -12,6 +12,7 @@
 
 #include "search2.hpp"
 #include "sbpuzzle.hpp"
+#include "sbpuzzle_generation.hpp"
 #include "pdb.hpp"
 #include "dpdb.hpp"
 #include "reflectdpdb.hpp"
@@ -37,16 +38,6 @@ const std::string EVAL_HEURISTIC_STR = "H";
 typedef sbpuzzle::DirectionAction Action;
 typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
 
-template <int H, int W, class URNG>
-Puzzle create_solvable_puzzle(URNG &&rng) {
-    std::array<uint8_t, H*W> tiles;
-    std::iota(tiles.begin(), tiles.end(), 0);
-    do {
-        std::shuffle(tiles.begin(), tiles.end(), rng); 
-    } while(!sbpuzzle::tiles_solvable<H, W>(tiles));
-    return Puzzle(tiles);
-}
-
 // takes a vector {"1", "2", "3"} and returns a string representation "{1, 2, 3}"
 std::string make_string_list(const std::vector<std::string> &strings) {
     if(strings.empty()) return "{}";
@@ -63,6 +54,17 @@ void show_usage() {
     ext.emplace_back(EVAL_HEURISTIC_STR); // empty string for no search
     std::string sstring = make_string_list(ext);
     std::string hstring = make_string_list(sbpuzzle::HEURISTIC_STRINGS);
+    std::string pstring = make_string_list(sbpuzzle::RANDOM_GENERATOR_STRINGS);
+
+    auto print_descrs = [](const std::vector<std::string> &strings,
+                           const std::unordered_map<std::string, std::string> &descrs)
+    {
+        for(const auto &k : strings)
+            std::cout 
+            << "                      " << k << ": " 
+                                        << descrs.at(k) << "\n";
+    };
+
     std::cout 
         << "Usage: ./exe_file [-?] [-r seed/source] [-n num-puzzles] [-s search-type]\n"
         << "                  [-h heuristic] [-f file] [-w weight] [-b batch_size] [-g]\n"
@@ -74,17 +76,23 @@ void show_usage() {
         << "                      default is bfs. " << EVAL_HEURISTIC_STR << " implies\n"
         << "                      generating heuristic values, rather than solving the puzzle.\n"
 
-    // auto-print heuristic strings from those registered in heuristics.hpp
         << "       -h HEURISTIC   heuristic to use: " << hstring << "\n";
-    for(const auto &k : sbpuzzle::HEURISTIC_STRINGS) {
-        auto itr = sbpuzzle::HEURISTIC_DESCR_MAP.find(k);
-        std::cout 
-        << "                      " << itr->first << ": " << itr->second << "\n";
-    }
-
+        print_descrs(sbpuzzle::HEURISTIC_STRINGS, sbpuzzle::HEURISTIC_DESCR_MAP);
     std::cout 
         << "                      only relevant if the search type is one of the A* types\n"
-        << "                      default is manhattan\n"
+        << "                      default is manhattan\n";
+
+    std::cout
+        << "       -p PUZZLEGEN   puzzle generation method to use: " << pstring << "\n";
+        print_descrs(sbpuzzle::RANDOM_GENERATOR_STRINGS, sbpuzzle::RANDOM_GENERATOR_DESCR_MAP);
+    std::cout
+        << "                      default is shuffle.\n"
+        << "       -l LOWER       lower limit on the number of moves to apply during puzzle\n"
+        << "                      generation if using a scrambling generator. Defaults to 1.\n"
+        << "       -u UPPER       lower limit on the number of moves to apply during puzzle\n"
+        << "                      generation if using a scrambling generator. Defaults to 50.\n";
+
+    std::cout
         << "       -f FILE        file to load data from, only necessary for the pdb/rdb/cdb\n"
         << "                      and dlmodel heuristics; must be provided\n"
         << "       -w WEIGHT      a value k in the range [0, 1], used for weighting A* search\n"
@@ -109,12 +117,15 @@ int main(int argc, char *argv[]) {
     size_t num_puzzles = 1;
     std::string search_type_str = "bfs";
     std::string heuristic_str = "manhattan";
+    std::string gen_str = "shuffle";
     std::string file_path;
     std::string in_path;
     std::string out_path;
     double weight = 1.0;
     size_t batch_size = 1;
     bool use_gpu = false;
+    int64_t lower = 1;
+    int64_t upper = 50;
 
     search2::TRACKER_OPTS.do_track = true;
 
@@ -122,7 +133,7 @@ int main(int argc, char *argv[]) {
         std::cout << "For argument help: ./exe_file -?\n";
 
     int ch;
-    while((ch = getopt(argc, argv, "?gr:n:s:h:f:w:b:i:o:")) != -1) {
+    while((ch = getopt(argc, argv, "?gr:n:s:h:f:w:b:i:o:p:l:u:")) != -1) {
         switch(ch) {
             case '?':   show_usage(); return 0;
             case 'r':   seed = std::stoul(optarg); break;
@@ -135,18 +146,36 @@ int main(int argc, char *argv[]) {
             case 'g':   use_gpu = true; break;
             case 'i':   in_path = optarg; break;
             case 'o':   out_path = optarg; break;
+            case 'p':   gen_str = optarg; break;
+            case 'l':   lower = std::stoll(optarg); break;
+            case 'u':   upper = std::stoll(optarg); break;            
             default:    std::cerr << "Unexpected argument (" << static_cast<char>(ch) << "). " 
                                   << "Try ./exe_file -?\n"; return -1;
         }
     }
 
+
+    using namespace sbpuzzle;
     // create n random puzzles
     std::vector<Puzzle> puzzles;
 
+
+
     if(in_path == "") { // generate puzzles
+        RandomGeneratorType generator_type;
+        try {
+            generator_type = str2randomgeneratortype(gen_str);
+        } catch(const std::out_of_range &ex) {
+            std::cerr << "Error: invalid generator type string.\n";
+            return -1;
+        }
+
         auto rng = std::default_random_engine(seed);
-        for(size_t i = 0; i < num_puzzles; i++) 
-            puzzles.emplace_back(create_solvable_puzzle<H, W>(rng));
+        using RNG = decltype(rng);
+        using OutItr = decltype(std::back_inserter(puzzles));
+        auto puzzle_generator = random_sbpuzzle_generator_factory<H, W, RNG, OutItr>(
+            generator_type, lower, upper);
+        puzzle_generator(num_puzzles, rng, std::back_inserter(puzzles));
     } else { // read puzzles from file
         // TODO: make this more elegant by using Puzzle::from_binary_stream
         // currently it is not very practical because it is not suited to failure,
@@ -168,8 +197,7 @@ int main(int argc, char *argv[]) {
         infile.close();
         std::cout << "Read " << num_puzzles << " puzzles from file " << in_path << std::endl;
     }
-
-    using namespace sbpuzzle;
+    
     using namespace search2;
 
     HeuristicType heuristic;

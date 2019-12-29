@@ -74,7 +74,7 @@ int main() {
 
     auto solver = search2::search_factory<SBPuzzle<H, W>, TileSwapAction, Heuristic<H, W> &>(search2::SearchType::ID_ASTAR);
 
-    for(std::string stype_str : {"shuffle", "uniform", "sqrt"}) {
+    for(const std::string &stype_str : RANDOM_GENERATOR_STRINGS) {
         std::cout << stype_str << " scrambling " << sstart << "-" 
                   << send << ":" << std::endl;
         
