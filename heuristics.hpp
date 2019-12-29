@@ -59,16 +59,6 @@ namespace sbpuzzle {
             return keys;
         }
 
-        const std::unordered_map<std::string, HeuristicType> HEURISTIC_TYPE_MAP {
-            {"mispl", HeuristicType::MISPL},
-            {"manhattan", HeuristicType::MANHATTAN},
-            {"dpdb", HeuristicType::DPDB},
-            {"rpdb", HeuristicType::RPDB},
-            {"cpdb", HeuristicType::CPDB},
-            #ifdef W_TORCH
-            {"dlmodel", HeuristicType::DLMODEL}
-            #endif
-        };
 
     }
 
@@ -84,7 +74,17 @@ namespace sbpuzzle {
     };
 
     HeuristicType str2heuristictype(const std::string &s) {
-        return details::HEURISTIC_TYPE_MAP.at(s);
+        static const std::unordered_map<std::string, HeuristicType> map {
+            {"mispl", HeuristicType::MISPL},
+            {"manhattan", HeuristicType::MANHATTAN},
+            {"dpdb", HeuristicType::DPDB},
+            {"rpdb", HeuristicType::RPDB},
+            {"cpdb", HeuristicType::CPDB},
+            #ifdef W_TORCH
+            {"dlmodel", HeuristicType::DLMODEL}
+            #endif
+        };
+        return map.at(s);
     }
 
 }

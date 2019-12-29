@@ -4,7 +4,7 @@
 *.swp
 *.swo
 
-test*.cpp
+mytest*.cpp
 
 notorch-release
 release
