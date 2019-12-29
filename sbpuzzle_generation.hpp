@@ -154,10 +154,10 @@ namespace sbpuzzle {
     inline double msqrt(double x) { return sqrt(x); }
 
     template <class URNG, class OutputIterator>
-    using RandomGeneratorFn = void (*)(size_t, URNG &, OutputIterator);
+    using RandomGeneratorFunction = std::function<void(size_t, URNG &, OutputIterator)>;
 
     template <psize_t H, psize_t W, class URNG, class OutputIterator, class WeightF>
-    std::function<void(size_t, URNG &, OutputIterator)> make_scrambled_generator(
+    RandomGeneratorFunction<URNG, OutputIterator> make_scrambled_generator(
             int64_t distr_min,
             int64_t distr_max,
             WeightF f)
@@ -169,7 +169,7 @@ namespace sbpuzzle {
     }
 
     template <psize_t H, psize_t W, class URNG, class OutputIterator>
-    std::function<void(size_t, URNG &, OutputIterator)> random_sbpuzzle_generator_factory(
+    RandomGeneratorFunction<URNG, OutputIterator> random_sbpuzzle_generator_factory(
             RandomGeneratorType type, 
             int64_t distr_min=0,
             int64_t distr_max=0) 

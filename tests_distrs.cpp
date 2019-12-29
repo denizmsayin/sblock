@@ -59,7 +59,7 @@ void print_crude_int_hist(ForwardItr begin, ForwardItr end, size_t damp) {
 
 using namespace sbpuzzle;
 
-static constexpr size_t N = 100000;
+static constexpr size_t N = 10000;
 static constexpr int64_t sstart = 0, send = 30;
 
 int main() {
@@ -69,7 +69,8 @@ int main() {
     using URNG = decltype(rng);
     using OI = decltype(std::back_inserter(puzzles));
 
-    auto hval = heuristic_factory<H, W>(HeuristicType::CPDB, "../databases/dp3x3.db");
+    // auto hval = heuristic_factory<H, W>(HeuristicType::CPDB, "../databases/dp3x3.db");
+    auto hval = heuristic_factory<H, W>(HeuristicType::MANHATTAN, "../databases/dp3x3.db");
     Heuristic<H, W> &heuristic = *hval;
 
     auto solver = search2::search_factory<SBPuzzle<H, W>, TileSwapAction, Heuristic<H, W> &>(search2::SearchType::ID_ASTAR);

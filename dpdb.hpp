@@ -240,6 +240,7 @@ namespace sbpuzzle {
         char w = in_file.get();
         */
         FILE *f = fopen(filename.c_str(), "rb");
+        if(!f) throw std::runtime_error("Could not open provided PDB file: " + filename);
         int h = fgetc(f);
         int w = fgetc(f);
         if(h != H || w != W)

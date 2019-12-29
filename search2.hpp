@@ -13,6 +13,7 @@
 #include <stack>
 #include <iostream>
 #include <chrono>
+#include <functional>
 
 #include "sblock_utils.hpp"
 #include "search_queues.hpp"
@@ -692,13 +693,11 @@ namespace search2 {
         }
     */
 
-    namespace details {
-        template <class Puzzle, class Action, class HF>
-        using GeneralizedSearchFn = SearchResult (*)(const Puzzle &, double, size_t, HF);
-    }
+    template <class Puzzle, class HF>
+    using SearchFunction = std::function<SearchResult(const Puzzle &, double, size_t, HF)>;
 
     template <class P, class A, class HF>
-    details::GeneralizedSearchFn<P, A, HF> search_factory(SearchType type) {
+    SearchFunction<P, HF> search_factory(SearchType type) {
         typedef SearchType T;
         switch(type) {
             case T::BFS:                    return [](const P &p, double w, size_t b, HF hf) {
