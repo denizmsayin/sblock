@@ -48,6 +48,7 @@
 #include <iomanip>
 #include <memory>
 #include <limits>
+#include <stack>
 
 // TODO: consider alternatives to returning a vector for possible_actions()
 // a custom iterator-like type would work nicely if it can be made light-weight
@@ -394,15 +395,12 @@ namespace sbpuzzle {
         // hole propagation & variants for the no-hole puzzle version
         template <psize_t H, psize_t W>
         void tiles_prop_hole(array<pcell_t, H*W> &tiles, psize_t i) {
-            array<bool, 4> valid;
-            tiles_mark_valid_moves<H, W>(i, valid);
-            for(auto dir = 0; dir < 4; ++dir) {
-                if(valid[dir]) {
-                    auto np = i + OFFSETS<W>[dir];
-                    if(tiles[np] == _X) {
-                        tiles[np] = HOLE<H, W>;
-                        tiles_prop_hole<H, W>(tiles, np);
-                    }
+            const Record &rec = DIRECTION_RECORDS<H, W>[i];
+            for(auto j = 0; j < rec.size; ++j) {
+                auto np = i + OFFSETS<W>[static_cast<uint8_t>(rec.dirs[j])];
+                if(tiles[np] == _X) {
+                    tiles[np] = HOLE<H, W>;
+                    tiles_prop_hole<H, W>(tiles, np);
                 }
             }
         }
@@ -724,7 +722,6 @@ namespace sbpuzzle {
         using Base = SBPuzzleBase<H, W>;
 
         
-
         // TODO: consider caching hole/tile positions for faster searching
 
         void prop_hole() {

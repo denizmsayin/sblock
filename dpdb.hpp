@@ -7,6 +7,7 @@
 #include <string>
 #include <cstdio>
 #include <queue>
+#include <chrono>
 
 #include "pdb.hpp"
 #include "sbpuzzle.hpp"
@@ -380,6 +381,8 @@ namespace sbpuzzle {
         if(GEN_VERBOSE)
             std::cout << "Generating database for group " 
                       << static_cast<int>(i) << "..." << std::endl;
+        
+        auto t1 = std::chrono::high_resolution_clock::now();
 
         // a small local struct as a bfs node
         // ideally, SBPuzzleNoHole could be serialized
@@ -431,6 +434,10 @@ namespace sbpuzzle {
             size_t visited_count = std::count(visited.begin(), visited.end(), true);
             std::cout << "Visited table usage: " 
                       << visited_count << '/' << visited.size() << std::endl;
+            
+            auto t2 = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+            std::cout << "Took " << fp_ms.count() / 1000 << " seconds." << std::endl;
         }
 
         /*
