@@ -117,7 +117,7 @@ namespace search2 {
     SeriesTracker<size_t>::Options TRACKER_OPTS(
         false, // do_track
         1000000, // print_every
-        0.5, // smoothing factor
+        0.0, // smoothing factor
         true, // show_speed
         std::cout, // output stream
         "Nodes expanded" // name string

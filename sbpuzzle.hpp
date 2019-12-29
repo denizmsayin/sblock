@@ -567,11 +567,16 @@ namespace sbpuzzle {
 
         SBPuzzle() : Base() {}
 
-        explicit SBPuzzle(const array<pcell_t, H*W> &i_tiles) {
+        explicit SBPuzzle(const array<pcell_t, H*W> &i_tiles) : SBPuzzle(i_tiles.begin()) {}
+
+        // there should be H*W elements available for read starting from
+        // begin, the constructor does not concern itself with type-checking
+        template <typename InputItr>
+        SBPuzzle(InputItr begin) {
             for(size_t i = 0; i < Base::SIZE; ++i) {
-                if(i_tiles[i] == Base::HOLE)
+                if(*begin == Base::HOLE)
                     Base::hole_pos = i;
-                Base::tiles[i] = i_tiles[i];
+                Base::tiles[i] = *begin++;
             }
         }
 
