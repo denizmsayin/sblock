@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cctype>
+#include <string>
 
 #include "dpdb.hpp"
 
@@ -59,7 +60,7 @@ void parse_group_string(const char *group_str, std::array<uint8_t, SIZE> &out) {
             out[i++] = static_cast<uint8_t>(acc);
             acc = 0;
             if(i > SIZE)
-                throw std::invalid_argument("Buffer overflow, input group spec is too long");
+                throw std::invalid_argument("Buffer overflow, input group spec is too long: " + std::to_string(i) + " instead of " + std::to_string(SIZE));
         } else {
             throw std::invalid_argument("Unknown char in group spec");
         }
@@ -75,19 +76,29 @@ void parse_group_string(const char *group_str, std::array<uint8_t, SIZE> &out) {
 }
 
 int main(int argc, char *argv[]) {
-    if(argc != 3) {
-        std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,X filename\n";
+    if(argc != 3 && argc != 4) {
+        std::cout << "usage (3x3): ./generate_dpdb 0,0,0,0,0,1,1,1,X filename [print_every=1000]\n";
         return 0;
     }
 
+    size_t print_every = 1000;
+    if(argc == 4)
+        print_every = std::stoull(argv[3]);
+
     // I wanted to create the files given a directory, but my current version
     // of g++ does not yet have the standard <filesystem> header
+
+    using sbpuzzle::DPDB;
 
     std::array<uint8_t, SIZE> groups;
     parse_group_string(argv[1], groups);
     validate_groups(groups);
 
-    sbpuzzle::DPDB<H, W>::generate_and_save(groups, argv[2]);
+    DPDB<H, W>::GEN_TRACKER_OPTS.print_every(print_every);
+    DPDB<H, W>::GEN_TRACKER_OPTS.do_track(true);
+    DPDB<H, W>::GEN_VERBOSE = true;
+
+    DPDB<H, W>::generate_and_save(groups, argv[2]);
 
     return 0;
 }

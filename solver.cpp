@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
     size_t num_threads = 0;
     size_t track_value = 1;
 
-    search2::TRACKER_OPTS.do_track = true;
+    search2::TRACKER_OPTS.do_track(true);
 
     if(argc == 1)
         std::cout << "For argument help: ./exe_file -?\n";
@@ -419,10 +419,10 @@ int main(int argc, char *argv[]) {
         gnum_nodes = 0;
         
         // initialize solution tracker options 
-        SeriesTrackedValue<size_t>::Options opts;
-        opts.print_every = track_value;
-        opts.alpha = 0.5;
-        opts.target_value = num_puzzles;
+        SeriesTrackedValue<size_t>::Options opts = SeriesTrackedValue<size_t>::Options{}
+            .print_every(track_value)
+            .alpha(0.5)
+            .target_value(num_puzzles);
 
         if(num_threads == 0) { // single threaded implementation
             SeriesTrackedValue<size_t> nsolved(0, opts);

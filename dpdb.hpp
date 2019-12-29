@@ -133,6 +133,11 @@ namespace sbpuzzle {
         uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const;
         uint8_t lookup(const SBPuzzleBase<H, W> &p) const;
 
+        // both static variables are used for printing details during generation
+        // they should be changed before calling generate/generate_and_save
+        static SeriesTracker<size_t>::Options GEN_TRACKER_OPTS;
+        static bool GEN_VERBOSE;
+
         // calculate the index of the given tile configuration for the given group
         // note that DPDB works with the no-hole version of SBPuzzle. extended
         // implies taking into account the hole position, which is used for 
@@ -162,6 +167,16 @@ namespace sbpuzzle {
         constexpr static int SIZE = H * W;
         constexpr static uint8_t DIST_MAX = 255;
     };
+
+    template <psize_t H, psize_t W>
+    SeriesTrackedValue<size_t>::Options DPDB<H, W>::GEN_TRACKER_OPTS = 
+        SeriesTrackedValue<size_t>::Options{}
+            .do_track(false)
+            .print_every(1000000)
+            .name_str("States explored");
+
+    template <psize_t H, psize_t W>
+    bool DPDB<H, W>::GEN_VERBOSE = false;
 
     // How are the tables laid out? 
     // -> For each group, there is a table with C(Ntiles, Ngroup) * Ngroup! entries
@@ -359,12 +374,12 @@ namespace sbpuzzle {
         std::vector<bool> visited(visited_size, false);
         
         // a tracker for tracking the progress of generation
-        #ifdef TRACK_DPDB
-        size_t sc = 0;
-        SeriesTracker<size_t>::Options opts;
-        opts.print_every = 10000000;
-        SeriesTracker<size_t> t(&sc, opts);
-        #endif
+        // update the target of the options as the number of entries in the db
+        GEN_TRACKER_OPTS.target_value(tables[i].size());
+       
+        if(GEN_VERBOSE)
+            std::cout << "Generating database for group " 
+                      << static_cast<int>(i) << "..." << std::endl;
 
         // a small local struct as a bfs node
         // ideally, SBPuzzleNoHole could be serialized
@@ -381,42 +396,43 @@ namespace sbpuzzle {
         q.emplace(start_state, 0);
         size_t start_ex_index = calculate_extended_index(i, start_state.get_tiles());
         visited[start_ex_index] = true;
-        while(!q.empty()) {
-            Node node = q.front(); q.pop(); // get the next node
-            const auto &p = node.puzzle;
-            if(node.cost == DIST_MAX)
-                std::cerr << "Warning: cost overflow in DPDB BFS" << std::endl;
-            // update cost in table if necessary (with reduced index)
-            size_t index = calculate_index(i, p.get_tiles());
-            if(node.cost < table[index])
-                table[index] = node.cost;
-            // generate neighboring states
-            for(const auto &action : p.template action_generator<ActionType>()) {
-                PuzzleType new_p = p; 
-                uint8_t new_cost = node.cost + new_p.apply_action(action);
-                size_t new_ex_index = calculate_extended_index(i, new_p.get_tiles());
-                if(!visited[new_ex_index]) {
-                    // can already be marked as visited before actually
-                    // expanding. Why? As soon as a node is added to the open
-                    // list, the shortest path to it has been found for BFS
-                    visited[new_ex_index] = true;
-                    q.emplace(new_p, new_cost);
+        {
+            SeriesTrackedValue<size_t> ex_states(0, GEN_TRACKER_OPTS);
+            while(!q.empty()) {
+                Node node = q.front(); q.pop(); // get the next node
+                const auto &p = node.puzzle;
+                if(node.cost == DIST_MAX)
+                    std::cerr << "Warning: cost overflow in DPDB BFS" << std::endl;
+                // update cost in table if necessary (with reduced index)
+                size_t index = calculate_index(i, p.get_tiles());
+                if(table[index] == DIST_MAX) // count explored states only on first find
+                    ++ex_states;
+                if(node.cost < table[index])
+                    table[index] = node.cost;
+                // generate neighboring states
+                for(const auto &action : p.template action_generator<ActionType>()) {
+                    PuzzleType new_p = p; 
+                    uint8_t new_cost = node.cost + new_p.apply_action(action);
+                    size_t new_ex_index = calculate_extended_index(i, new_p.get_tiles());
+                    if(!visited[new_ex_index]) {
+                        // can already be marked as visited before actually
+                        // expanding. Why? As soon as a node is added to the open
+                        // list, the shortest path to it has been found for BFS
+                        visited[new_ex_index] = true;
+                        q.emplace(new_p, new_cost);
+                    }
                 }
             }
-            
-            #ifdef TRACK_DPDB
-            sc++;
-            t.track();
-            #endif
         }
 
-        #ifdef TRACK_DPDB
-        // count the number of false values in visited, because I wonder!
-        // somewhere between table_size and table_size * (group_size + 1)
-        size_t visited_count = std::count(visited.begin(), visited.end(), true);
-        std::cout << "Visited table usage: " 
-                  << visited_count << '/' << visited.size() << std::endl;
-        #endif
+        if(GEN_VERBOSE) {
+            // count the number of false values in visited, because I wonder!
+            // somewhere between table_size and table_size * (group_size + 1)
+            size_t visited_count = std::count(visited.begin(), visited.end(), true);
+            std::cout << "Visited table usage: " 
+                      << visited_count << '/' << visited.size() << std::endl;
+        }
+
         /*
         search2::BreadthFirstIterator<PuzzleType, ActionType> itr(start_state);
         while(!itr.done()) {
@@ -454,10 +470,6 @@ namespace sbpuzzle {
             if(node.path_cost < tables[i][index])
                 tables[i][index] = node.path_cost;
 
-            #ifdef TRACK_DPDB
-            sc++;
-            t.track();
-            #endif
         }
         */
     }

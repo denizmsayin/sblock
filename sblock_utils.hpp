@@ -28,26 +28,41 @@ size_t hash_byte_array(const uint8_t *a, size_t s);
 template <typename Arithmetic>
 class SeriesTracker {
 public:
-    struct Options {
-        bool do_track;
-        std::ostream &stream;
-        double alpha;
-        Arithmetic print_every;
-        bool show_speed;
-        std::string name_str;
-        bool no_newline;
-        Arithmetic target_value;
+    class Options {
+    public:
+        Options()
+            : _do_track{true}, _stream{std::cout}, _alpha{0.0}, _print_every{1}, 
+              _show_speed{true}, _name_str{"Value"}, _no_newline{true}, _target_value{0},
+              _clear_on_destruction{false} {}
 
-        Options(bool dt=true, Arithmetic pe=static_cast<Arithmetic>(1000), double a=0.0, 
-                bool ss=true, std::ostream &s=std::cout, 
-                const std::string &ns = "Value") 
-            : do_track(dt), stream(s), alpha(a), print_every(pe), show_speed(ss), name_str(ns), 
-              no_newline(true), target_value(0) {}
-
-        // TODO: add builder pattern
+        // builder-like pattern for large objects
+        // only 'like', because properties can be changed
+        // after construction as well
+        Options &do_track(bool b) { _do_track = b; return *this; }
+        Options &stream(std::ostream &s) { _stream = s; return *this; }
+        Options &alpha(double a) { _alpha = a; return *this; }
+        Options &print_every(Arithmetic p) { _print_every = p; return *this; }
+        Options &show_speed(bool ss) { _show_speed = ss; return *this; }
+        Options &name_str(const std::string &ns) { _name_str = ns; return *this; }
+        Options &no_newline(bool nn) { _no_newline = nn; return *this; }
+        Options &target_value(Arithmetic tv) { _target_value = tv; return *this; }
+        Options &clear_on_destruction(bool c) { _clear_on_destruction = c; return *this; }
 
         Options(const Options &o) = default;
         Options(Options &&o) = default;
+
+    private:
+        bool _do_track;
+        std::ostream &_stream;
+        double _alpha;
+        Arithmetic _print_every;
+        bool _show_speed;
+        std::string _name_str;
+        bool _no_newline;
+        Arithmetic _target_value;
+        bool _clear_on_destruction;
+
+        friend class SeriesTracker;
     };
 
     SeriesTracker() = default;
@@ -263,8 +278,12 @@ SeriesTracker<A>::~SeriesTracker() {
     // TODO: count the number of chars pushed by the last print for clearing
     const static std::string clear_str = std::string(70, ' ');
     // clear the stream when going out of scope
-    if(did_print && options.no_newline)
-        options.stream << clear_str << '\r';
+    if(did_print && options._no_newline) {
+        if(options._clear_on_destruction) 
+            options._stream << clear_str << '\r';
+        else
+            options._stream << std::endl;
+    }
 }
 
 template <typename A>
@@ -275,28 +294,29 @@ void SeriesTracker<A>::record() {
 
 template <typename A>
 void SeriesTracker<A>::track() {
-    if(options.do_track && options.print_every != static_cast<A>(0)) {
+    if(options._do_track && options._print_every != static_cast<A>(0)) {
         A diff = *tracked - rec_value;
-        if(diff >= options.print_every) {
+        if(diff >= options._print_every) {
             did_print = true; // mark for clearing
             auto now = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> ms = now - rec_time;
             double inst_speed = 1000 * diff / ms.count(); // per second
-            running_avg = options.alpha * running_avg + (1 - options.alpha) * inst_speed;
+            running_avg = options._alpha * running_avg + (1 - options._alpha) * inst_speed;
             NumWrapper<A> print_value(*tracked);
             NumWrapper<double> print_avg(running_avg);
-            char fc = tolower(options.name_str[0]);
-            if(options.no_newline) 
-                options.stream << '\r';
-            options.stream << options.name_str << ": " << print_value;
-            if(options.target_value != 0)
-                options.stream << '/' << options.target_value;
-            if(options.show_speed)
-                options.stream << ", " << fc << "ps: " << print_avg;
-            if(options.no_newline)
-                options.stream << std::flush;
+            NumWrapper<A> target_value(options._target_value);
+            char fc = tolower(options._name_str[0]);
+            if(options._no_newline) 
+                options._stream << '\r';
+            options._stream << options._name_str << ": " << print_value;
+            if(options._target_value != 0)
+                options._stream << '/' << target_value;
+            if(options._show_speed)
+                options._stream << ", " << fc << "ps: " << print_avg;
+            if(options._no_newline)
+                options._stream << std::flush;
             else
-                options.stream << std::endl;
+                options._stream << std::endl;
             record();
         }
     }

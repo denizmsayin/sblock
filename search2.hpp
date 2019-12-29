@@ -115,14 +115,10 @@ namespace search2 {
 namespace search2 {
 
     // Options for tracking generated node count, can be modified at runtime
-    SeriesTracker<size_t>::Options TRACKER_OPTS(
-        false, // do_track
-        1000000, // print_every
-        0.0, // smoothing factor
-        true, // show_speed
-        std::cout, // output stream
-        "Nodes expanded" // name string
-    );
+    SeriesTracker<size_t>::Options TRACKER_OPTS = SeriesTracker<size_t>::Options{}
+        .do_track(false)
+        .print_every(1000000)
+        .name_str("Nodes expanded");
 
 
     namespace details {
