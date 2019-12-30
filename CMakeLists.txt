@@ -35,6 +35,6 @@ foreach(D 3 4 5)
     add_target_to_build_with_libs("generate_dpdb_${D}x${D}" "${SRCLIST}" "" "${D}")
 endforeach()
 
-foreach(T tests_basic tests_distrs cmp_solution_files)
+foreach(T tests_basic tests_distrs cmp_solution_files tests_gen)
     add_target_to_build("${T}" "${T}.cpp;sblock_utils.cpp")
 endforeach()
