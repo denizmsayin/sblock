@@ -475,10 +475,19 @@ int main(int argc, char *argv[]) {
                   << " nodes expanded on average." << std::endl;
 
     } else {
-        // use the batch version of the heuristic
+        // use the batch version of the heuristic, with limited batch size
+        uint64_t total_cost = 0;
+        size_t k = 0;
         std::vector<int> costs;
-        hf(puzzles, costs);
-        int total_cost = std::accumulate(costs.begin(), costs.end(), 0);
+        while(k < puzzles.size()) {
+            size_t end = std::min(k + batch_size, puzzles.size());
+            std::vector<Puzzle> bpuzzles(puzzles.begin() + k, puzzles.begin() + end);
+            std::vector<int> bcosts;
+            hf(bpuzzles, bcosts);
+            k += batch_size;
+            total_cost += std::accumulate(bcosts.begin(), bcosts.end(), 0);
+            std::copy(bcosts.begin(), bcosts.end(), std::back_inserter(costs));
+        }
         if(outfile_exists) // small check to prevent wasting time
             for(size_t i = 0, size = puzzles.size(); i < size; ++i)
                 writer(puzzles[i], costs[i]);

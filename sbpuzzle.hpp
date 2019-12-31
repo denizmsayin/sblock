@@ -161,6 +161,11 @@ namespace sbpuzzle {
         bool operator!=(TileSwapAction a) const { return a.hpos != hpos || a.tpos != tpos; }
     };
 
+    std::ostream &operator<<(std::ostream &os, TileSwapAction a) {
+        os << "(t:" << static_cast<unsigned>(a.hpos) << ", h:" << static_cast<unsigned>(a.tpos) << ")";
+        return os;
+    }
+
     struct DirectionAction {
         using Direction = details::Direction;
 
