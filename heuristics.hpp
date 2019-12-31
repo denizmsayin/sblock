@@ -111,16 +111,16 @@ namespace sbpuzzle {
         }
 
         // had to stick with vector since we cannot have templated virtual functions
-        virtual void operator()(typename pvector_t::const_iterator begin, 
-                                typename pvector_t::const_iterator end,
-                                cvector_t::iterator o) 
+        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
+                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+                                std::vector<pcost_t>::iterator o) 
         {
             op_par_base(begin, end, o);
         }
         
-        virtual void operator()(typename pvector_t::const_iterator begin, 
-                                typename pvector_t::const_iterator end,
-                                std::back_insert_iterator<cvector_t> o) 
+        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
+                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+                                std::back_insert_iterator<std::vector<pcost_t>> o) 
         {
             op_par_base(begin, end, o);
         }
@@ -166,18 +166,18 @@ namespace sbpuzzle {
             return model->forward(p);
         }
         
-        virtual void operator()(typename pvector_t::const_iterator begin, 
-                                typename pvector_t::const_iterator end,
-                                cvector_t::iterator o) 
+        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
+                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+                                std::vector<pcost_t>::iterator o) 
         {
-            model->template forwar<float, pcost_t>(begin, end, o);
+            model->template forward<float, pcost_t>(begin, end, o);
         }
         
-        virtual void operator()(typename pvector_t::const_iterator begin, 
-                                typename pvector_t::const_iterator end,
-                                std::back_insert_iterator<cvector_t> o) 
+        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
+                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+                                std::back_insert_iterator<std::vector<pcost_t>> o) 
         {
-            model->template forwar<float, pcost_t>(begin, end, o);
+            model->template forward<float, pcost_t>(begin, end, o);
         }
 
     private:

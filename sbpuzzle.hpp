@@ -123,7 +123,7 @@ namespace sbpuzzle {
 
             GeneratorIterator(generator *g) : gen(g) {}
             GeneratorIterator& operator++() { incr(); return *this; }
-            GeneratorIterator operator++(int) { auto ret = *this; incr(); return ret; }
+            // GeneratorIterator operator++(int) { auto ret = *this; incr(); return ret; }
             bool operator==(GeneratorIterator other) { return gen == other.gen; }
             bool operator!=(GeneratorIterator other) { return gen != other.gen; }
             value_type operator*() { return gen->value(); }
@@ -629,6 +629,9 @@ namespace sbpuzzle {
             Generator(const Generator &) = delete;
             Generator(Generator &&) = default;
 
+            Generator &operator=(const Generator &) = delete;
+            Generator &operator=(Generator &&) = default;
+
             // standard Generator trio
             bool has_more() const { return i < rec->size; }
             void advance() { ++i; }
@@ -757,6 +760,12 @@ namespace sbpuzzle {
             advance_until_possible_index();
             advance();
         }
+
+        Generator(const Generator &) = delete;
+        Generator(Generator &&) = default;
+
+        Generator &operator=(const Generator &) = delete;
+        Generator &operator=(Generator &&) = default;
 
         bool has_more() const {
             return index < details::SIZE<H, W>;

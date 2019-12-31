@@ -43,8 +43,8 @@ namespace sbpuzzle {
             return convert_output_tensor(output);
         }   
 
-        template <typename RandomAccessIterator, typename OutputIterator,
-                  typename IType = float, typename OType = pcost_t>
+        template <typename IType, typename OType,
+                  typename RandomAccessIterator, typename OutputIterator>
         void forward(RandomAccessIterator begin,
                      RandomAccessIterator end,
                      OutputIterator out)
