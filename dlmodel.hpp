@@ -28,11 +28,11 @@ namespace sbpuzzle {
     public:
         virtual ~DLModel() {}
 
-        uint8_t forward(const std::array<uint8_t, H*W> &tiles) {
+        pcost_t forward(const std::array<uint8_t, H*W> &tiles) {
             static constexpr size_t S = details::SIZE<H, W>;
             // one-hot encode the tiles to float32
             std::array<float, S*S> enc;
-            details::one_hot_encode<uint8_t, float>(tiles.data(), S, enc.data());
+            details::one_hot_encode<pcell_t, float>(tiles.data(), S, enc.data());
 
             // create an input tensor
             std::vector<torch::jit::IValue> inputs;
@@ -43,15 +43,19 @@ namespace sbpuzzle {
             return convert_output_tensor(output);
         }   
 
-        template <typename IType = float, typename OType = int>
-        void forward(const std::vector<SBPuzzle<H, W>> &puzzles, std::vector<OType> &out) {
+        template <typename RandomAccessIterator, typename OutputIterator,
+                  typename IType = float, typename OType = pcost_t>
+        void forward(RandomAccessIterator begin,
+                     RandomAccessIterator end,
+                     OutputIterator out)
+        {
             static constexpr size_t S = details::SIZE<H, W>;
             // one hot encode all the puzzles in a cont. memory block
-            long int n = static_cast<long int>(puzzles.size());
+            long int n = static_cast<long int>(end - begin);
             std::vector<IType> enc(n * S * S); // in cont. memory
             size_t i = 0;
-            for(const auto &puzzle : puzzles) {
-                details::one_hot_encode<uint8_t, IType>(puzzle.get_tiles().data(), S, &enc[i]);
+            for(auto itr = begin; itr != end; ++itr) {
+                details::one_hot_encode<pcell_t, IType>(itr->get_tiles().data(), S, &enc[i]);
                 i += S * S;
             }
 
@@ -67,7 +71,7 @@ namespace sbpuzzle {
             // empty the result tensor to output itr
             auto acc = result_tensor.template accessor<long, 1>();
             for(long int i = 0; i < n; ++i)
-                out.emplace_back(static_cast<OType>(acc[i]));
+                *out++ = static_cast<OType>(acc[i]);
         }
 
         uint8_t forward(const SBPuzzle<H, W> &p) {
@@ -92,7 +96,7 @@ namespace sbpuzzle {
             module = torch::jit::load(filename);
         }
 
-        virtual uint8_t convert_output_tensor(const at::Tensor &output) const = 0;
+        virtual pcost_t convert_output_tensor(const at::Tensor &output) const = 0;
         virtual at::Tensor output2result(const at::Tensor &output) const = 0;
     };
 
@@ -103,8 +107,8 @@ namespace sbpuzzle {
             RegressionModel(torch::jit::script::Module &&m, const torch::Device &dev) 
                 : DLModel<H, W>(std::move(m), dev) {}
 
-            uint8_t convert_output_tensor(const at::Tensor &output) const {
-                return static_cast<uint8_t>(round(output.item().toFloat()));
+            pcost_t convert_output_tensor(const at::Tensor &output) const {
+                return static_cast<pcost_t>(round(output.item().toFloat()));
             }
         
             at::Tensor output2result(const at::Tensor &output) const {
@@ -119,8 +123,8 @@ namespace sbpuzzle {
             ClassificationModel(torch::jit::script::Module &&m, const torch::Device &dev) 
                 : DLModel<H, W>(std::move(m), dev) {}
 
-            uint8_t convert_output_tensor(const at::Tensor &output) const {
-                return static_cast<uint8_t>(at::argmax(output).item().toInt());
+            pcost_t convert_output_tensor(const at::Tensor &output) const {
+                return static_cast<pcost_t>(at::argmax(output).item().toInt());
             }
 
             at::Tensor output2result(const at::Tensor &output) const {

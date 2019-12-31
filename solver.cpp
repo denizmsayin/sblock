@@ -410,7 +410,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &>(search_type);
+        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &, uint8_t>(search_type);
 
         auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -476,18 +476,14 @@ int main(int argc, char *argv[]) {
 
     } else {
         // use the batch version of the heuristic, with limited batch size
-        uint64_t total_cost = 0;
         size_t k = 0;
-        std::vector<int> costs;
+        std::vector<sbpuzzle::pcost_t> costs;
         while(k < puzzles.size()) {
             size_t end = std::min(k + batch_size, puzzles.size());
-            std::vector<Puzzle> bpuzzles(puzzles.begin() + k, puzzles.begin() + end);
-            std::vector<int> bcosts;
-            hf(bpuzzles, bcosts);
+            hf(puzzles.begin() + k, puzzles.begin() + end, std::back_inserter(costs));
             k += batch_size;
-            total_cost += std::accumulate(bcosts.begin(), bcosts.end(), 0);
-            std::copy(bcosts.begin(), bcosts.end(), std::back_inserter(costs));
         }
+        uint64_t total_cost = std::accumulate(costs.begin(), costs.end(), 0ULL);;
         if(outfile_exists) // small check to prevent wasting time
             for(size_t i = 0, size = puzzles.size(); i < size; ++i)
                 writer(puzzles[i], costs[i]);

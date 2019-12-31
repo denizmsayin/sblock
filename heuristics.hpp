@@ -95,19 +95,42 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
     class Heuristic {
     public:
+        typedef std::vector<SBPuzzle<H, W>> pvector_t;
+        typedef std::vector<pcost_t> cvector_t;
+
         virtual ~Heuristic() {}
 
-        virtual uint8_t operator()(const SBPuzzle<H, W> &h) = 0;
+        virtual pcost_t operator()(const SBPuzzle<H, W> &h) = 0;
 
-        virtual void operator()(const std::vector<SBPuzzle<H, W>> &p, std::vector<int> &o) {
-            search2::BHFWrapper<SBPuzzle<H, W>, Heuristic&>(*this)(p, o);
+        template <typename RandomAccessIterator, typename OutputIterator>
+        void op_par_base(RandomAccessIterator begin, 
+                         RandomAccessIterator end,
+                         OutputIterator o)
+        {
+            search2::BHFWrapper<SBPuzzle<H, W>, Heuristic&, pcost_t>(*this)(begin, end, o);
         }
+
+        // had to stick with vector since we cannot have templated virtual functions
+        virtual void operator()(typename pvector_t::const_iterator begin, 
+                                typename pvector_t::const_iterator end,
+                                cvector_t::iterator o) 
+        {
+            op_par_base(begin, end, o);
+        }
+        
+        virtual void operator()(typename pvector_t::const_iterator begin, 
+                                typename pvector_t::const_iterator end,
+                                std::back_insert_iterator<cvector_t> o) 
+        {
+            op_par_base(begin, end, o);
+        }
+
     };
 
     template <psize_t H, psize_t W>
     class MisplacedTileHeuristic : public Heuristic<H, W> {
     public:
-        uint8_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const SBPuzzle<H, W> &p) {
             return p.num_misplaced_tiles();
         }
     };
@@ -115,7 +138,7 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
     class ManhattanHeuristic : public Heuristic<H, W> {
     public:
-        uint8_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const SBPuzzle<H, W> &p) {
             return p.manhattan_distance_to_solution();
         }
     };
@@ -126,7 +149,7 @@ namespace sbpuzzle {
     public:
         PDBHeuristic(PDB<H, W> *p) : db(p) {}
 
-        uint8_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const SBPuzzle<H, W> &p) {
             return db->lookup(p);
         }
     private:
@@ -139,12 +162,22 @@ namespace sbpuzzle {
     public:
         DLModelHeuristic(std::unique_ptr<DLModel<H, W>> &&p) : model(std::move(p)) {}
 
-        uint8_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const SBPuzzle<H, W> &p) {
             return model->forward(p);
         }
-
-        void operator()(const std::vector<SBPuzzle<H, W>> &p, std::vector<int> &o) {
-            return model->template forward<float, int>(p, o);
+        
+        virtual void operator()(typename pvector_t::const_iterator begin, 
+                                typename pvector_t::const_iterator end,
+                                cvector_t::iterator o) 
+        {
+            model->template forwar<float, pcost_t>(begin, end, o);
+        }
+        
+        virtual void operator()(typename pvector_t::const_iterator begin, 
+                                typename pvector_t::const_iterator end,
+                                std::back_insert_iterator<cvector_t> o) 
+        {
+            model->template forwar<float, pcost_t>(begin, end, o);
         }
 
     private:

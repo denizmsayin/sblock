@@ -72,7 +72,7 @@ int main() {
     auto hval = heuristic_factory<H, W>(HeuristicType::CPDB, "/home/deniz/ceng783-project/supervised/sblock/pdbs/dp3x3_full.db");
     Heuristic<H, W> &heuristic = *hval;
 
-    auto solver = search2::search_factory<SBPuzzle<H, W>, TileSwapAction, Heuristic<H, W> &>(search2::SearchType::ID_ASTAR);
+    auto solver = search2::search_factory<SBPuzzle<H, W>, TileSwapAction, Heuristic<H, W> &, sbpuzzle::pcost_t>(search2::SearchType::ID_ASTAR);
 
     for(const std::string &stype_str : RANDOM_GENERATOR_STRINGS) {
         std::cout << stype_str << " scrambling " << sstart << "-" 
