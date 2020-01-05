@@ -684,11 +684,8 @@ namespace search2 {
             } else {
                 ++exp_ctr; // increment the expansion counter
                 Cost min_exceeding_cost = std::numeric_limits<Cost>::max(); 
-                std::optional<Action> prev_action = std::nullopt;
-                if constexpr (Rev) {
-                    if(node.action.has_value())
-                        prev_action = Action::reverse(node.action.value());
-                }
+                std::optional<Action> prev_action = 
+                    conditionally_reverse_action<Rev, Action>(node);
                 for(const auto &action : node.entry.template action_generator<Action>()) {
                     // if no previous action was input, continue
                     // otherwise, do not perform the reverse of the previous action
