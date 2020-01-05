@@ -89,12 +89,11 @@ namespace sbpuzzle {
             : module(m), device(dev)
         {
             module.to(device);
+            module.eval();
         }
 
-        DLModel(const std::string &filename, const torch::Device &dev) : device(dev) 
-        {
-            module = torch::jit::load(filename);
-        }
+        DLModel(const std::string &filename, const torch::Device &dev) 
+            : DLModel(torch::jit::load(filename), dev) {}
 
         virtual pcost_t convert_output_tensor(const at::Tensor &output) const = 0;
         virtual at::Tensor output2result(const at::Tensor &output) const = 0;

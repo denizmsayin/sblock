@@ -11,8 +11,12 @@ if(WITH_TORCH)
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-function(add_target_to_build_with_libs TRG SRCLIST LDFLAGS D)
-    add_executable("${TRG}" ${SRCLIST})
+function(add_target_to_build_with_libs TRG SRCLIST LDFLAGS D IS_LIB)
+    if(${IS_LIB})
+        add_library("${TRG}" SHARED ${SRCLIST})
+    else()
+        add_executable("${TRG}" ${SRCLIST})
+    endif()
     target_link_libraries("${TRG}" ${LDFLAGS})
     target_compile_definitions("${TRG}" PRIVATE __H=${D} __W=${D})
     if(WITH_TORCH)
@@ -23,19 +27,22 @@ function(add_target_to_build_with_libs TRG SRCLIST LDFLAGS D)
 endfunction()
 
 function(add_target_to_build TRG SRCLIST)
-    add_target_to_build_with_libs("${TRG}" "${SRCLIST}" "" "")
+    add_target_to_build_with_libs("${TRG}" "${SRCLIST}" "" "" FALSE)
 endfunction()
 
 foreach(D 3 4 5)
+    # add the solver
     set(SRCLIST "solver.cpp" "sblock_utils.cpp")
-    add_target_to_build_with_libs("solver_${D}x${D}" "${SRCLIST}" "-pthread" "${D}")
-endforeach()
-
-foreach(D 3 4 5)
+    add_target_to_build_with_libs("solver_${D}x${D}" "${SRCLIST}" "-pthread" "${D}" FALSE)
+    # add the pdb generator
     set(SRCLIST "generate_dpdb.cpp" "sblock_utils.cpp")
-    add_target_to_build_with_libs("generate_dpdb_${D}x${D}" "${SRCLIST}" "" "${D}")
+    add_target_to_build_with_libs("generate_dpdb_${D}x${D}" "${SRCLIST}" "" "${D}" FALSE)
+    # add the data generator as a shared library
+    set(SRCLIST "libdig.cpp" "sblock_utils.cpp")
+    add_target_to_build_with_libs("dig_${D}x${D}" "${SRCLIST}" "" "${D}" TRUE)
 endforeach()
 
+# remaining misc. programs
 foreach(T tests_basic tests_distrs cmp_solution_files tests_gen)
     add_target_to_build("${T}" "${T}.cpp;sblock_utils.cpp")
 endforeach()

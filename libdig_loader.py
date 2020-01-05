@@ -10,6 +10,9 @@ def load(so_path):
     libdig.DIG_new.restype = c_void_p
     libdig.DIG_new.argtypes = [c_uint, c_ulong]
 
+    # libdig.DIG_new_gent.restype = c_void_p
+    # libdig.DIG_new_gent.argtypes = [c_uint, c_ulong, c_char_p]
+
     libdig.DIG_delete.argtypes = [c_void_p]
 
     libdig.DIG_init_batch.argtypes = [c_void_p, c_long, c_long]

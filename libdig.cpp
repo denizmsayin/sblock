@@ -20,6 +20,10 @@ extern "C" {
     DIG *DIG_new(unsigned seed, size_t batch_size) {
         return new DIG(seed, batch_size);
     }
+    
+    DIG *DIG_new_gent(unsigned seed, size_t batch_size, const char *gen_t) {
+        return new DIG(seed, batch_size, gen_t);
+    }
 
     void DIG_delete(DIG *dig) {
         delete dig;

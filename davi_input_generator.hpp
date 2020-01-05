@@ -16,8 +16,8 @@
 
 // Goal: generate input for models that will be trained in pytorch
 // Inputs: batch_size, scramble_min, scramble_max, action_i
-// Outputs: states -> (batch_size, (H*W)**2)
-//          neighbors -> (batch_size, (H*W)**2)
+// Outputs: states -> (batch_size, H*W)
+//          neighbors -> (batch_size, H*W)
 //          neighbor_exists -> (batch_size,)
 //          is_goal_state -> (batch_size,)
 // Since the python script will not do any puzzle related operations,
@@ -28,26 +28,34 @@ namespace sbpuzzle {
 
     template <psize_t H, psize_t W>
     class DaviInputGenerator {
+    private:
+        typedef std::default_random_engine rng_t;
+
     public:
         // initialize with preallocated buffers
-        DaviInputGenerator(unsigned seed, size_t o_batch_size) : rng(seed), 
-            batch_size(o_batch_size), puzzles(o_batch_size), 
-            puzzle_actions(o_batch_size), action_index(0), max_action_index(0) {}
+        DaviInputGenerator(unsigned seed, size_t o_batch_size, RandomGeneratorType gen_t) 
+            : gen_type(gen_t), rng(seed), batch_size(o_batch_size), puzzles(o_batch_size), 
+              puzzle_actions(o_batch_size), action_index(0), max_action_index(0) {}
+
+        DaviInputGenerator(unsigned seed, size_t o_batch_size)
+            : DaviInputGenerator(seed, o_batch_size, RandomGeneratorType::UNIFORM) {}
+
+        DaviInputGenerator(unsigned seed, size_t o_batch_size, const std::string &gen_t_str)
+            : DaviInputGenerator(seed, o_batch_size, str2randomgeneratortype(gen_t_str)) {}
 
         void init_batch(int64_t scramble_min, int64_t scramble_max) {
             // create a set of scrambled puzzles
             // try a weighted distribution instead of uniform
             // weight by sqrt(scramble_max - scramble_min + 1)
-            std::vector<double> weights;
-            details::fill_scrambling_weights(scramble_min, scramble_max, 
-                                             std::back_inserter(weights));
-            details::OffsetDiscreteDistribution<int64_t> 
-                move_distr(weights.begin(), weights.end(), scramble_min);
-            details::fill_scrambled_puzzles<H, W>(batch_size, move_distr, rng, puzzles);
+            typedef typename std::vector<SBPuzzle<H, W>>::iterator oitr_t;
+            auto batch_generator = random_sbpuzzle_generator_factory<H, W, rng_t, oitr_t>(
+                    gen_type, scramble_min, scramble_max);
+            batch_generator(batch_size, rng, puzzles.begin());
             // generate possible actions for each puzzle and mark the max number of moves
             max_action_index = 0;
             for(size_t i = 0; i < batch_size; ++i) {
-                puzzle_actions[i] = puzzles[i].template action_generator<TileSwapAction>();
+                for(auto action : puzzles[i].template action_generator<TileSwapAction>())
+                    puzzle_actions[i].emplace_back(action);
                 size_t asize = puzzle_actions[i].size();
                 if(max_action_index < asize)
                     max_action_index = asize;
@@ -117,7 +125,8 @@ namespace sbpuzzle {
         }
 
     private:
-        std::default_random_engine rng;
+        RandomGeneratorType gen_type;
+        rng_t rng;
         size_t batch_size;
         std::vector<SBPuzzle<H, W>> puzzles;
         std::vector<std::vector<TileSwapAction>> puzzle_actions;
