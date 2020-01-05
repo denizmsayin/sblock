@@ -31,4 +31,4 @@ Once the build is complete, you will notice a few executables and shared library
 
 + `libdig_HxW.so`: A compiled shared library with a C interface used for generating random puzzles for training reinforcement learning models with PyTorch via the `ctypes` interface. 
 
-Other executables can be generated if the `-DWITH_TESTS=ON` is passed to cmake, but those executables are meant for testing purposes only.
+Other executables can be generated if `-DWITH_TESTS=ON` is passed to cmake, but those executables are meant for testing purposes only.
