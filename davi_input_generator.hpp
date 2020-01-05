@@ -54,8 +54,11 @@ namespace sbpuzzle {
             // generate possible actions for each puzzle and mark the max number of moves
             max_action_index = 0;
             for(size_t i = 0; i < batch_size; ++i) {
+                // TODO: improve this part
+                std::vector<TileSwapAction> tmp;
                 for(auto action : puzzles[i].template action_generator<TileSwapAction>())
-                    puzzle_actions[i].emplace_back(action);
+                    tmp.push_back(action);
+                puzzle_actions[i] = tmp; 
                 size_t asize = puzzle_actions[i].size();
                 if(max_action_index < asize)
                     max_action_index = asize;

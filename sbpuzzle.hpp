@@ -119,7 +119,7 @@ namespace sbpuzzle {
             using difference_type = int64_t;
             using pointer = const value_type *;
             using reference = const value_type &;
-            using iterator_category = std::input_iterator_tag;
+            using iterator_category = std::forward_iterator_tag;
 
             GeneratorIterator(generator *g) : gen(g) {}
             GeneratorIterator& operator++() { incr(); return *this; }
