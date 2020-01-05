@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(sblock)
 
 option(WITH_TORCH "if enabled, code is compiled with TorchScript support" ON)
+option(WITH_TESTS "if enabled, test source files are also compiled" OFF)
 
 set(THREAD_LIB "-pthread")
 
@@ -43,6 +44,10 @@ foreach(D 3 4 5)
 endforeach()
 
 # remaining misc. programs
-foreach(T tests_basic tests_distrs cmp_solution_files tests_gen)
+if(WITH_TESTS)
+    set(EXTRAS "cmp_solution_files;tests_basic;tests_distrs;tests_gen")
+endif()
+
+foreach(T ${EXTRAS})
     add_target_to_build("${T}" "${T}.cpp;sblock_utils.cpp")
 endforeach()
