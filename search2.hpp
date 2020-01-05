@@ -14,6 +14,7 @@
 #include <iostream>
 #include <chrono>
 #include <functional>
+#include <type_traits>
 #include <optional>
 
 #include "sblock_utils.hpp"
@@ -136,31 +137,53 @@ namespace search2 {
     // both a puzzle state and extra book-keeping information about it.
     // It is a templated class because what is contained can change depending on the algorithm.
     // i.e. a const Puzzle * for BFS, or a pair<Puzzle, int> * for A* search etc.
+    
     template <typename Contained, typename Cost = default_cost_t> 
-    struct SearchNode {
+    struct PNode {
         Contained entry;
         Cost path_cost;
-        Cost est_cost;
 
-        SearchNode(const Contained &p, Cost pc, Cost ec) 
-            : entry(p), path_cost(pc), est_cost(ec) {}
-
-        SearchNode(const Contained &p, Cost pc) 
-            : entry(p), path_cost(pc), est_cost(0) {}
+        PNode(const Contained &p, Cost pc) 
+            : entry(p), path_cost(pc) {}
     };
 
+
+    template <typename Contained, typename Cost = default_cost_t> 
+    struct HNode : PNode<Contained, Cost> {
+        Cost est_cost;
+
+        HNode(const Contained &p, Cost pc, Cost ec) 
+            : PNode<Contained, Cost>(p, pc), est_cost(ec) {}
+    };
+
+    template <typename Action, typename BaseNode> 
+    struct ActionExtended : public BaseNode {
+        std::optional<Action> action;
+
+        // variadic template constructor forwarded to base class
+        template <typename... Args>
+        ActionExtended(const Action &a, Args&&... args) 
+            : BaseNode(std::forward<Args>(args)...), action(a) {}
+        
+        template <typename... Args>
+        ActionExtended(std::nullopt_t, Args&&... args) 
+            : BaseNode(std::forward<Args>(args)...), action() {}
+
+    };
+
+
     template <class Puzzle, class Cost>
-    class SearchNodeComparator {
+    class HNodeComparator {
     public:
-        bool operator()(const SearchNode<Puzzle, Cost> &n1, const SearchNode<Puzzle, Cost> &n2) {
+        bool operator()(const HNode<Puzzle, Cost> &n1, const HNode<Puzzle, Cost> &n2) {
             return n1.est_cost > n2.est_cost;
         }
     };
 
     template <class Puzzle, class Cost>
-    class RevSearchNodeComparator {
+    class RevHNodeComparator {
     public:
-        bool operator()(const SearchNode<Puzzle, Cost> &n1, const SearchNode<Puzzle, Cost> &n2) {
+        bool operator()(const HNode<Puzzle, Cost> &n1, const HNode<Puzzle, Cost> &n2) {
             return n1.est_cost < n2.est_cost;
         }
     };
@@ -178,11 +201,11 @@ namespace search2 {
         public:
             BreadthFirstIterator(const Puzzle &p);
             bool done() const;
-            SearchNode<Puzzle> next();
+            HNode<Puzzle> next();
 
         private:
             std::unordered_set<Puzzle> visited;
-            std::queue<SearchNode<Puzzle>> q;
+            std::queueeHNode<Puzzle>> q;
     };
 
     template <class Puzzle, class Action>
@@ -199,7 +222,7 @@ namespace search2 {
     }
 
     template <class Puzzle, class Action>
-    SearchNode<Puzzle> BreadthFirstIterator<Puzzle, Action>::next() {
+    HNode<Puzzle> BreadthFirstIterator<Puzzle, Action>::next() {
         auto node = q.front(); q.pop();
         const Puzzle &p = node.entry;
         for(auto action : p.template possible_actions<Action>()) {
@@ -214,7 +237,14 @@ namespace search2 {
     }
     */
 
-    template <class Puzzle, class Action, typename Cost = default_cost_t>
+    // Puzzle and Action types are self explanatory, simple template arguments for the
+    // functions. Cost is the type to use to store costs, which can be important
+    // to provide memory savings. e.g. uint8_t can be used for low cost problems.
+    // Rev is a template argument provided to take advantage of actions that contain
+    // static Action reverse(Action a);
+    // and prevents the checking of the reverse of the previous action when enabled,
+    // which improves runtime.
+    template <class Puzzle, class Action, typename Cost = default_cost_t, bool Rev = false>
     SearchResult breadth_first_search(const Puzzle &puzzle_start) {
         // early exit in case the puzzle is already solved
         if(puzzle_start.is_solved()) return SearchResult(0, 0);
@@ -229,7 +259,9 @@ namespace search2 {
         // can be invalidated by insertion, pointers/references
         // to hash table elements remain valid. Thanks, separate chaining!
         typedef std::unordered_set<Puzzle> hash_table_t;
-        typedef SearchNode<const Puzzle *, Cost> node_t;
+        typedef typename std::conditional<Rev, 
+                                          ActionExtended<Action, PNode<const Puzzle *, Cost>>,
+                                          PNode<const Puzzle *, Cost>>::type node_t;
         typedef std::queue<node_t> queue_t;
 
         // data structures
@@ -239,20 +271,35 @@ namespace search2 {
         typename hash_table_t::iterator itr;
 
         std::tie(itr, dummy) = visited.emplace(puzzle_start);
-        q.emplace(&(*itr), 0);
+        if constexpr (Rev) {
+            q.emplace(std::nullopt, &(*itr), 0); // no previous action for the first state
+        } else {
+            q.emplace(&(*itr), 0); // simply a pointer to the hashtable and the zero cost
+        }
         while(!q.empty()) {
             ++exp_ctr;
             node_t node = q.front(); q.pop();
             const Puzzle *p = node.entry;
+            std::optional<Action> prev_reverse = std::nullopt;
+            if constexpr (Rev) { // if rev is enabled, get the reverse of the previous action
+                if(node.action.has_value())
+                    prev_reverse = Action::reverse(node.action.value());
+            }
             for(const auto &action : p->template action_generator<Action>()) 
             {
-                Puzzle new_p = *p;
-                Cost new_path_cost = node.path_cost + new_p.apply_action(action);
-                if(new_p.is_solved())
-                    return SearchResult(new_path_cost, exp_ctr.get_value());
-                if(visited.find(new_p) == visited.end()) {
-                    std::tie(itr, dummy) = visited.emplace(new_p);
-                    q.emplace(&(*itr), new_path_cost);
+                if(action != prev_reverse) {
+                    Puzzle new_p = *p;
+                    Cost new_path_cost = node.path_cost + new_p.apply_action(action);
+                    if(new_p.is_solved())
+                        return SearchResult(new_path_cost, exp_ctr.get_value());
+                    if(visited.find(new_p) == visited.end()) {
+                        std::tie(itr, dummy) = visited.emplace(new_p);
+                        if constexpr (Rev) { // construct a node with the current action
+                            q.emplace(action, &(*itr), new_path_cost);
+                        } else { // no action if rev is disabled
+                            q.emplace(&(*itr), new_path_cost);
+                        }
+                    }
                 }
             }
         }
@@ -311,7 +358,7 @@ namespace search2 {
     /*
     namespace details {
         template <class Puzzle, class Action>
-            int step_single_direction(std::queue<SearchNode<Puzzle>> &queue,
+            int step_single_direction(std::queue<HNode<Puzzle>> &queue,
                     std::unordered_map<Puzzle, int> &visited, 
                     std::unordered_map<Puzzle, int> &other_visited)
             {
@@ -339,7 +386,7 @@ namespace search2 {
         int bidirectional_bfs(const Puzzle &p) {
             using details::step_single_direction;
             std::unordered_map<Puzzle, int> f_visited, b_visited;
-            std::queue<SearchNode<Puzzle>> fq, bq;
+            std::queue<HNode<Puzzle>> fq, bq;
             fq.emplace(p, 0);
             bq.emplace(p.goal_state(), 0);
             while(!fq.empty() || !bq.empty()) {
@@ -393,8 +440,8 @@ namespace search2 {
         // typedefs for the data structures 
         typedef std::unordered_map<Puzzle, Cost> hash_table_t;
         typedef std::pair<const Puzzle, Cost> *entry_t;
-        typedef SearchNode<entry_t, Cost> node_t;
-        typedef SearchNodeComparator<entry_t, Cost> comp_t;
+        typedef HNode<entry_t, Cost> node_t;
+        typedef HNodeComparator<entry_t, Cost> comp_t;
         typedef std::priority_queue<node_t, std::vector<node_t>, comp_t> pqueue_t;
         typedef decltype(start_puzzle.template action_generator<Action>()) gen_t;
         typedef decltype(start_puzzle.template action_generator<Action>().begin()) gen_t_itr;
@@ -526,8 +573,8 @@ namespace search2 {
         // typedefs for the data structures 
         typedef std::unordered_map<Puzzle, Cost> hash_table_t;
         typedef std::pair<const Puzzle, Cost> *entry_t;
-        typedef SearchNode<entry_t, Cost> node_t;
-        typedef SearchNodeComparator<entry_t, Cost> comp_t;
+        typedef HNode<entry_t, Cost> node_t;
+        typedef HNodeComparator<entry_t, Cost> comp_t;
         typedef std::priority_queue<node_t, std::vector<node_t>, comp_t> pqueue_t;
 
         // set up the search
@@ -579,7 +626,7 @@ namespace search2 {
 
         // TODO: this implementation of IDA* cannot decide on NOT_FOUND
         template <class Puzzle, class Action, class HeuristicFunc, class Cost>
-        Cost cost_limited_dfs(const SearchNode<Puzzle, Cost> &node, 
+        Cost cost_limited_dfs(const HNode<Puzzle, Cost> &node, 
                               Cost cost_limit, 
                               SeriesTrackedValue<size_t> &exp_ctr,
                               const Action *prev_action_reverse = nullptr,
@@ -603,7 +650,7 @@ namespace search2 {
                         Puzzle new_p = node.entry; 
                         Cost new_path_cost = node.path_cost + new_p.apply_action(action);
                         Cost new_est_cost = new_path_cost + hf(new_p);
-                        SearchNode<Puzzle, Cost> new_node(new_p, new_path_cost, new_est_cost);
+                        HNode<Puzzle, Cost> new_node(new_p, new_path_cost, new_est_cost);
                         Action rev_action = Action::reverse(action);
                         // call cost limited dfs on the neighbor
                         Cost result = 
@@ -627,7 +674,7 @@ namespace search2 {
     SearchResult iterative_deepening_a_star(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         using details::cost_limited_dfs;
         Cost cost_limit = hf(p);
-        SearchNode<Puzzle, Cost> start_node(p, 0, cost_limit);
+        HNode<Puzzle, Cost> start_node(p, 0, cost_limit);
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
         while(true) {
             Cost result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, Cost>(start_node, 
@@ -650,11 +697,11 @@ namespace search2 {
         // but in my sliding block puzzle case RBFS contains so many more complex 
         // basic operations that IDA* wins out 
         template <class Puzzle, class Action, class HeuristicFunc>
-            std::pair<bool, int> rbfs(const SearchNode<Puzzle> &node, int cost_limit, HeuristicFunc hf=HeuristicFunc()) {
+            std::pair<bool, int> rbfs(const HNode<Puzzle> &node, int cost_limit, HeuristicFunc hf=HeuristicFunc()) {
                 const Puzzle &p = node.entry;
                 if(p.is_solved())
                     return std::make_pair(true, node.path_cost);
-                std::vector<SearchNode<Puzzle>> successors;
+                std::vector<HNode<Puzzle>> successors;
                 for(auto action : p.template possible_actions<Action>()) {
                     Puzzle new_p = p;
                     int new_path_cost = node.path_cost + new_p.apply_action(action);
@@ -667,23 +714,23 @@ namespace search2 {
                     s.est_cost = std::max(s.est_cost, node.est_cost);
                 // now, we need to find the best/second best etc. multiple times, so I thought
                 // it best to use a heap for the general case
-                std::make_heap(successors.begin(), successors.end(), SearchNodeComparator<Puzzle>());
+                std::make_heap(successors.begin(), successors.end(), HNodeComparator<Puzzle>());
                 while(true) {
                     // the best node is simply the first in the heap
-                    const SearchNode<Puzzle> &best = successors[0];
+                    const HNode<Puzzle> &best = successors[0];
                     if(best.est_cost > cost_limit)
                         return std::make_pair(false, best.est_cost);
                     // to find the alternative, pop the first and place it at the back
-                    std::pop_heap(successors.begin(), successors.end(), SearchNodeComparator<Puzzle>());
+                    std::pop_heap(successors.begin(), successors.end(), HNodeComparator<Puzzle>());
                     int alt_cost = successors[0].est_cost;
                     // get a new reference for the best node, which is now at the back
-                    SearchNode<Puzzle> &best2 = successors.back();
+                    HNode<Puzzle> &best2 = successors.back();
                     bool success = false;
                     std::tie(success, best2.est_cost) = rbfs<Puzzle, Action, HeuristicFunc>(best2, std::min(cost_limit, alt_cost), hf);
                     if(success)
                         return std::make_pair(true, best2.est_cost);
                     // since the cost of the best was modified, reinsert it into successors
-                    std::push_heap(successors.begin(), successors.end(), SearchNodeComparator<Puzzle>());
+                    std::push_heap(successors.begin(), successors.end(), HNodeComparator<Puzzle>());
                 }
             }
     }
@@ -692,7 +739,7 @@ namespace search2 {
         int recursive_best_first_search(const Puzzle &p) {
             using details::rbfs;
             using details::INT_INF;
-            SearchNode<Puzzle> start_node(p, 0, HeuristicFunc()(p));
+            HNode<Puzzle> start_node(p, 0, HeuristicFunc()(p));
             bool success;
             int cost;
             std::tie(success, cost) = rbfs<Puzzle, Action, HeuristicFunc>(start_node, INT_INF);
@@ -705,12 +752,12 @@ namespace search2 {
     template <class Puzzle, class HF>
     using SearchFunction = std::function<SearchResult(const Puzzle &, double, size_t, HF)>;
 
-    template <class P, class A, class HF, class C = default_cost_t>
+    template <class P, class A, class HF, class C = default_cost_t, bool R = false>
     SearchFunction<P, HF> search_factory(SearchType type) {
         typedef SearchType T;
         switch(type) {
             case T::BFS:                    return [](const P &p, double w, size_t b, HF hf) {
-                                                return breadth_first_search<P, A, C>(p);
+                                                return breadth_first_search<P, A, C, R>(p);
                                             };
 //            case T::IDDFS:                  return [](const P &p, double w, size_t b, HF hf) {
 //                                                return iterative_deepening_dfs<P, A, C>(p);
