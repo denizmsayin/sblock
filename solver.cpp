@@ -410,7 +410,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &, uint8_t, true>(search_type);
+        auto search_function = search_factory<Puzzle, Action, Heuristic<H, W> &, uint8_t, true, true>(search_type);
 
         auto t1 = std::chrono::high_resolution_clock::now();
 

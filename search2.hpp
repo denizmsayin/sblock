@@ -223,6 +223,22 @@ namespace search2 {
         }
     }
 
+    template <bool Reverse, class Action, class Node>
+    std::optional<Action> conditionally_retrieve_action(const Node &n) {
+        if constexpr (Reverse) {
+            return n.action;
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    template <bool Extended, class Action, class Node>
+    void conditionally_assign_action(Node &n, const Action &a) {
+        if constexpr (Extended) {
+            n.action = a;
+        }
+    }
+
     struct SearchResult {
         size_t cost;
         size_t nodes_expanded;
@@ -669,14 +685,16 @@ namespace search2 {
 
         // TODO: this implementation of IDA* cannot decide on NOT_FOUND
         template <class Puzzle, class Action, class HeuristicFunc, class Cost, 
-                  bool Rev, class node_t>
-        Cost cost_limited_dfs(const typename std::conditional<Rev,
-                                                              ActionExtended<Action, node_t>,
-                                                              node_t>::type &node, 
+                  bool Rev, class Node, bool Backtrack = true>
+        Cost cost_limited_dfs(typename std::conditional<Rev,
+                                                        ActionExtended<Action, Node>,
+                                                        Node>::type &node, 
                               Cost cost_limit, 
                               SeriesTrackedValue<size_t> &exp_ctr,
                               HeuristicFunc hf=HeuristicFunc()) 
         {
+            static_assert(!Backtrack || (Backtrack && Rev), 
+                          "Backtracking cannot be enabled without reversing");
             if(node.est_cost > cost_limit) { // return the cutoff cost
                 return node.est_cost;
             } else if(node.entry.is_solved()) { // return the solution
@@ -684,27 +702,53 @@ namespace search2 {
             } else {
                 ++exp_ctr; // increment the expansion counter
                 Cost min_exceeding_cost = std::numeric_limits<Cost>::max(); 
-                std::optional<Action> prev_action = 
+                std::optional<Action> prev_reverse = 
                     conditionally_reverse_action<Rev, Action>(node);
+                // saved variables for backtracking
+                Cost last_path_cost = node.path_cost;
+                Cost last_est_cost = node.est_cost;
+                std::optional<Action> last_action = 
+                    conditionally_retrieve_action<Rev, Action>(node);
                 for(const auto &action : node.entry.template action_generator<Action>()) {
                     // if no previous action was input, continue
                     // otherwise, do not perform the reverse of the previous action
                     // as it leads back to the same node and slows down
-                    if(action != prev_action) {
-                        // generate parameters for a recursive call
-                        Puzzle new_p = node.entry; 
-                        Cost new_path_cost = node.path_cost + new_p.apply_action(action);
-                        Cost new_est_cost = new_path_cost + hf(new_p);
-                        auto new_node = 
-                            conditionally_construct_action_extended_node<Rev, Action, node_t>(
-                                action, 
-                                new_p, 
-                                new_path_cost, 
-                                new_est_cost);
-                        // call cost limited dfs on the neighbor
-                        Cost result = 
-                            cost_limited_dfs<Puzzle, Action, HeuristicFunc, Cost, Rev, node_t>(
-                                    new_node, cost_limit, exp_ctr, hf); 
+                    if(action != prev_reverse) {
+                        Cost result;
+                        if constexpr (Backtrack) {
+                            // apply everything in-place
+                            node.path_cost += node.entry.apply_action(action);
+                            node.est_cost = node.path_cost + hf(node.entry);
+                            node.action = action;
+                            result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, 
+                                                      Cost, Rev, Node, Backtrack>(
+                                    node, 
+                                    cost_limit, 
+                                    exp_ctr, 
+                                    hf); 
+                            node.entry.apply_action(Action::reverse(action));
+                            node.path_cost = last_path_cost;
+                            node.est_cost = last_est_cost;
+                            node.action = last_action;
+                        } else {
+                            // generate parameters for a recursive call
+                            Puzzle new_p = node.entry; 
+                            Cost new_path_cost = node.path_cost + new_p.apply_action(action);
+                            Cost new_est_cost = new_path_cost + hf(new_p);
+                            auto new_node = 
+                                conditionally_construct_action_extended_node<Rev, Action, Node>(
+                                    action, 
+                                    new_p, 
+                                    new_path_cost, 
+                                    new_est_cost);
+                            // call cost limited dfs on the neighbor
+                            result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, 
+                                                      Cost, Rev, Node, Backtrack>(
+                                    new_node, 
+                                    cost_limit, 
+                                    exp_ctr, 
+                                    hf); 
+                        }
                         if(result <= cost_limit) // found
                             return result;
                         else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
@@ -717,17 +761,18 @@ namespace search2 {
     }
 
     template <class Puzzle, class Action, class HeuristicFunc, 
-              class Cost = default_cost_t, bool Rev = false>
+              class Cost = default_cost_t, bool Rev = false, bool Backtrack = false>
     SearchResult iterative_deepening_a_star(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         using details::cost_limited_dfs;
-        typedef HNode<Puzzle, Cost> node_t;
+        typedef HNode<Puzzle, Cost> Node;
         Cost cost_limit = hf(p);
-        auto start_node = conditionally_construct_action_extended_node<Rev, Action, node_t>(
+        auto start_node = conditionally_construct_action_extended_node<Rev, Action, Node>(
                 std::nullopt, p, 0, cost_limit);
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
         while(true) {
-            Cost result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, Cost, Rev, node_t>(
-                    start_node, cost_limit, exp_ctr, hf);
+            Cost result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, Cost, 
+                                           Rev, Node, Backtrack>(start_node, cost_limit, 
+                                                                 exp_ctr, hf);
             if(result <= cost_limit) 
                 return SearchResult(result, exp_ctr.get_value());
             cost_limit = result;
@@ -798,7 +843,8 @@ namespace search2 {
     template <class Puzzle, class HF>
     using SearchFunction = std::function<SearchResult(const Puzzle &, double, size_t, HF)>;
 
-    template <class P, class A, class HF, class C = default_cost_t, bool R = false>
+    template <class P, class A, class HF, class C = default_cost_t, 
+              bool R = false, bool B = false>
     SearchFunction<P, HF> search_factory(SearchType type) {
         typedef SearchType T;
         switch(type) {
@@ -812,7 +858,7 @@ namespace search2 {
                                                 return a_star_search<P, A, HF, C, R>(p, hf);
                                             };
             case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
-                                                return iterative_deepening_a_star<P, A, HF, C, R>
+                                                return iterative_deepening_a_star<P, A, HF, C, R, B>
                                                        (p, hf);
                                             };
             case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
