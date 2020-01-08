@@ -1,5 +1,5 @@
-
-#include "basic.hpp"
+#ifndef DENIZMSAYIN_SBLOCK_MASKEDWHOLE_HPP
+#define DENIZMSAYIN_SBLOCK_MASKEDWHOLE_HPP
 
 // A class that defines the sliding block puzzle in a manner solvable by
 // our pre-defined search functions. Templates are used for the height
@@ -101,3 +101,5 @@ namespace std {
     struct hash<denizmsayin::sblock::sbpuzzle::MaskedWithHole<H, W>> 
         : denizmsayin::sblock::sbpuzzle::details::hash<denizmsayin::sblock::sbpuzzle::MaskedWithHole<H, W>> {};
 };
+
+#endif

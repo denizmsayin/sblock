@@ -1,5 +1,5 @@
-#ifndef DENIZMSAYIN_SBLOCK_BASE_HPP
-#define DENIZMSAYIN_SBLOCK_BASE_HPP
+#ifndef DENIZMSAYIN_SBLOCK_BASIC_HPP
+#define DENIZMSAYIN_SBLOCK_BASIC_HPP
 
 #include <array>
 
@@ -187,6 +187,5 @@ namespace std {
     struct hash<denizmsayin::sblock::sbpuzzle::Basic<H, W>> 
         : denizmsayin::sblock::sbpuzzle::details::hash<denizmsayin::sblock::sbpuzzle::Basic<H, W>> {};
 };
-
 
 #endif

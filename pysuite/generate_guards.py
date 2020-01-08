@@ -12,8 +12,8 @@ def _skip_until(file_handle, string):
             if lstr.startswith(string):
                 return True
             else:
-                print(f'Header file (?) contains non-whitespace characters'
-                       ' before guard {string}, skipping.')
+                print('Header file (?) contains non-whitespace characters'
+                      f' before guard {string}, skipping.')
                 return False
     return False
 

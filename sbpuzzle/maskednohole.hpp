@@ -1,5 +1,5 @@
-
-#include "basic.hpp"
+#ifndef DENIZMSAYIN_SBLOCK_MASKEDNOHOLE_HPP
+#define DENIZMSAYIN_SBLOCK_MASKEDNOHOLE_HPP
 
 namespace denizmsayin::sblock::sbpuzzle {
     // The derived class for the case where the hole is not masked
@@ -143,3 +143,5 @@ namespace std {
     struct hash<denizmsayin::sblock::sbpuzzle::MaskedNoHole<H, W>> 
         : denizmsayin::sblock::sbpuzzle::details::hash<denizmsayin::sblock::sbpuzzle::MaskedNoHole<H, W>> {};
 };
+
+#endif
