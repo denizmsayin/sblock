@@ -1,5 +1,5 @@
-
-#include <unordered_set>
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_BFS_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_BFS_HPP
 #include <queue>
 
 #include "defs.hpp"
@@ -70,3 +70,4 @@ namespace denizmsayin::sblock::search {
     }
 }
 
+#endif

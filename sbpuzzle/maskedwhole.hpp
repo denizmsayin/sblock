@@ -1,5 +1,5 @@
-#ifndef DENIZMSAYIN_SBLOCK_MASKEDWHOLE_HPP
-#define DENIZMSAYIN_SBLOCK_MASKEDWHOLE_HPP
+#ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_MASKEDWHOLE_HPP
+#define DENIZMSAYIN_SBLOCK_SBPUZZLE_MASKEDWHOLE_HPP
 
 // A class that defines the sliding block puzzle in a manner solvable by
 // our pre-defined search functions. Templates are used for the height

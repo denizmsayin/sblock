@@ -1,5 +1,5 @@
-
-#include "bfs.hpp"
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_FACTORY_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_FACTORY_HPP
 #include "astar.hpp"
 #include "wastar.hpp"
 #include "bwastar.hpp"
@@ -73,3 +73,4 @@ namespace denizmsayin::sblock::search {
     }
 
 }
+#endif

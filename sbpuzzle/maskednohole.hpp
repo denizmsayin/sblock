@@ -1,5 +1,5 @@
-#ifndef DENIZMSAYIN_SBLOCK_MASKEDNOHOLE_HPP
-#define DENIZMSAYIN_SBLOCK_MASKEDNOHOLE_HPP
+#ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_MASKEDNOHOLE_HPP
+#define DENIZMSAYIN_SBLOCK_SBPUZZLE_MASKEDNOHOLE_HPP
 
 namespace denizmsayin::sblock::sbpuzzle {
     // The derived class for the case where the hole is not masked

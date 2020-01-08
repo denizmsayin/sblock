@@ -1,5 +1,5 @@
-
-#include <unordered_map>
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_BWASTAR_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_BWASTAR_HPP
 #include <queue>
 
 #include "defs.hpp"
@@ -157,3 +157,4 @@ namespace denizmsayin::sblock::search {
     };
 }
 
+#endif

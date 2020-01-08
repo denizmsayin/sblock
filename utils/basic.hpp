@@ -1,5 +1,5 @@
-#ifndef __UTILS_BASIC_HPP__
-#define __UTILS_BASIC_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_UTILS_BASIC_HPP
+#define DENIZMSAYIN_SBLOCK_UTILS_BASIC_HPP
 
 #include <iostream>
 #include <iomanip>

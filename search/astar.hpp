@@ -1,5 +1,5 @@
-
-#include "wastar.hpp"
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_ASTAR_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_ASTAR_HPP
 
 // Could not observe a speed difference between previous version
 // and simply using WA* with -O3, which is why A* calls WA*
@@ -13,3 +13,4 @@ namespace denizmsayin::sblock::search {
     }
 
 }
+#endif

@@ -1,5 +1,5 @@
-    
-// SEARCH NODE, the class that defines a search node, a record structure that keeps
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_NODES_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_NODES_HPP
     // both a puzzle state and extra book-keeping information about it.
     // It is a templated class because what is contained can change depending on the algorithm.
     // i.e. a const Puzzle * for BFS, or a pair<Puzzle, int> * for A* search etc.
@@ -25,3 +25,4 @@
         bool operator>(const HNode &other) const { return est_cost > other.est_cost; }
     };
 
+#endif

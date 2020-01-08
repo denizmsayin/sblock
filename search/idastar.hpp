@@ -1,5 +1,5 @@
-
-#include "defs.hpp"
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_IDASTAR_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_IDASTAR_HPP
 #include "basic_nodes.hpp"
 #include "action_ext.hpp"
 
@@ -106,3 +106,4 @@ namespace denizmsayin::sblock::search {
     }
 }
 
+#endif

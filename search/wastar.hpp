@@ -1,5 +1,5 @@
-
-#include <unordered_map>
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_WASTAR_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_WASTAR_HPP
 #include <queue>
 
 #include "defs.hpp"
@@ -92,3 +92,4 @@ namespace denizmsayin::sblock::search {
         return SearchResult(0, exp_ctr.get_value());
     }
 }
+#endif

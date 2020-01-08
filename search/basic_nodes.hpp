@@ -1,5 +1,5 @@
-
-#include "defs.hpp"
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_BASIC_NODES_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_BASIC_NODES_HPP
 
 namespace denizmsayin::sblock::search {
     // SEARCH NODE, the class that defines a search node, a record structure that keeps
@@ -28,3 +28,4 @@ namespace denizmsayin::sblock::search {
         bool operator>(const HNode &other) const { return est_cost > other.est_cost; }
     };
 }
+#endif

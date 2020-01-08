@@ -1,5 +1,5 @@
-
-#include <utility>
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_ACTION_EXT_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_ACTION_EXT_HPP
 #include <optional>
 
 namespace denizmsayin::sblock::search {
@@ -89,3 +89,4 @@ namespace denizmsayin::sblock::search {
         }
     }
 }
+#endif

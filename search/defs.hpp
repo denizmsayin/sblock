@@ -1,5 +1,5 @@
-
-#include <cstdint>
+#ifndef DENIZMSAYIN_SBLOCK_SEARCH_DEFS_HPP
+#define DENIZMSAYIN_SBLOCK_SEARCH_DEFS_HPP
 #include <unordered_map>
 #include <vector>
 
@@ -96,3 +96,4 @@ namespace denizmsayin::sblock::search {
 }
 
 
+#endif
