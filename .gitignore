@@ -6,8 +6,9 @@
 
 mytest*.cpp
 
+legacy
 builds
-pdbs
+datafiles
 
 massif.out.*
 

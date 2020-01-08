@@ -1,5 +1,5 @@
-#ifndef __SBLOCK_UTILS_HPP__
-#define __SBLOCK_UTILS_HPP__
+#ifndef __UTILS_BASIC_HPP__
+#define __UTILS_BASIC_HPP__
 
 #include <iostream>
 #include <iomanip>
@@ -14,8 +14,8 @@
 // implementations for these are contained in .cpp
 
 // calculate combinations & factorial
-size_t combination(size_t x, size_t n);
-size_t factorial(size_t n);
+unsigned long combination(unsigned long x, unsigned long n);
+unsigned long factorial(unsigned long n);
 
 // hash byte arrays by 8 bytes at each step, and combine with boost's
 // implementation of hash combination
@@ -27,7 +27,7 @@ std::vector<size_t> generate_different_bitstrings(size_t num_bit_strings, unsign
 
 // calculate combination & lexical indices over iterators
 template <typename Iterator>
-size_t calculate_combindex(Iterator begin, Iterator end, int x, int n);
+size_t calculate_combindex(Iterator begin, Iterator end, unsigned long x, unsigned long n);
 
 template <typename RandomAccessIterator>
 size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end);
@@ -65,7 +65,7 @@ void one_hot_encode(const T1 *inp, size_t s, T2 *out) {
 //18: OOXOXX
 //19: OOOXXX
 template <typename Iterator>
-size_t calculate_combindex(Iterator begin, Iterator end, int x, int n) {
+size_t calculate_combindex(Iterator begin, Iterator end, unsigned long x, unsigned long n) {
     // x and n are required to know which combinations to use beforehand
     // the iterator should be for booleans, true means full (X), false means empty (Y)
     size_t counter = 0;

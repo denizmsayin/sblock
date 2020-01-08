@@ -1,19 +1,17 @@
-#ifndef __PDB_HPP__
-#define __PDB_HPP__
+#ifndef __PDB_BASE_HPP__
+#define __PDB_BASE_HPP__
 
 #include <array>
 #include <cstdint>
 
-#include "sbpuzzle.hpp"
+#include "../sbpuzzle.hpp"
 
 // A simple base class for different pattern database classes,
 // to allow their combination via runtime polymorphism
 
-// TODO: refactor psize_t
-
 namespace sbpuzzle {
     
-    template <uint8_t H, uint8_t W>
+    template <psize_t H, psize_t W>
     class PDB {
     public:
         virtual ~PDB() {}

@@ -1,5 +1,7 @@
-#ifndef __SERIES_TRACKER_HPP__
-#define __SERIES_TRACKER_HPP__
+#ifndef __UTILS_SERIESTRACKER_HPP__
+#define __UTILS_SERIESTRACKER_HPP__
+
+#include <iostream>
 
 // templated class declarations
 template <typename Arithmetic>

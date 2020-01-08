@@ -1,4 +1,4 @@
-#include "sblock_utils.hpp"
+#include "basic.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -11,8 +11,8 @@
 
 // a quick function to determine combination values by table lookup
 static constexpr size_t MAX_COMB = 50;
-size_t combination(size_t x, size_t n) {
-    static size_t table[MAX_COMB][MAX_COMB+1] = {{0}}; // remember for dynamic programming
+unsigned long combination(unsigned long x, unsigned long n) {
+    static unsigned long table[MAX_COMB][MAX_COMB+1] = {{0}}; // remember for dynamic programming
     if(x == n || n == 0)
         return 1;
     else if(table[x][n] == 0)
@@ -22,8 +22,8 @@ size_t combination(size_t x, size_t n) {
 
 // another similar function for factorial values
 static constexpr size_t MAX_FACTORIAL = 50;
-size_t factorial(size_t n) {
-    static size_t table[MAX_FACTORIAL] = {0};
+unsigned long factorial(size_t n) {
+    static unsigned long table[MAX_FACTORIAL] = {0};
     if(n == 0)
         return 1;
     else if(table[n] == 0)
