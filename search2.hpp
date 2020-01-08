@@ -18,7 +18,7 @@
 #include <optional>
 
 #include "sblock_utils.hpp"
-#include "search_queues.hpp"
+#include "seriestracker.hpp"
 
 namespace search2 {
     

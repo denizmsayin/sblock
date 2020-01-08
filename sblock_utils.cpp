@@ -88,3 +88,4 @@ size_t hash_byte_array(const uint8_t *arr, size_t size) {
     // brought form 34 ms to 28 ms compared to hashing one by one
 }
 
+
