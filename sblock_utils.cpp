@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <stdexcept>
 #include <string>
+#include <vector>
+#include <random>
+#include <unordered_set>
 
 // a quick function to determine combination values by table lookup
 static constexpr size_t MAX_COMB = 50;
@@ -88,4 +91,19 @@ size_t hash_byte_array(const uint8_t *arr, size_t size) {
     // brought form 34 ms to 28 ms compared to hashing one by one
 }
 
+std::vector<size_t> generate_different_bitstrings(size_t n, unsigned seed) {
+    std::mt19937_64 mt(seed); // mersenne twister RNG
+    std::unordered_set<size_t> bitstrings;
+    for(size_t i = 0; i < n; ++i) {
+        bool not_done = true;
+        while(not_done) {
+            size_t bs = mt();
+            if(bitstrings.find(bs) == bitstrings.end()) {
+                bitstrings.insert(bs);
+                not_done = false;
+            }
+        }
+    }
+    return std::vector<size_t>(bitstrings.begin(), bitstrings.end());
+}
 

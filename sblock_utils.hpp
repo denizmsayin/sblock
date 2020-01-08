@@ -4,14 +4,26 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include <vector>
 #include <chrono>
 #include <string>
 #include <cstdint>
 #include <cctype>
 
 // first, non-templated functions 
+// implementations for these are contained in .cpp
+
+// calculate combinations & factorial
 size_t combination(size_t x, size_t n);
 size_t factorial(size_t n);
+
+// hash byte arrays by 8 bytes at each step, and combine with boost's
+// implementation of hash combination
+size_t hash_byte_array(const uint8_t *a, size_t s);
+
+// generate a number of bit strings that are different, useful for zobrist
+// hashing. returns a vector because it is used for static initialization.
+std::vector<size_t> generate_different_bitstrings(size_t num_bit_strings, unsigned seed);
 
 template <typename Iterator>
 size_t calculate_combindex(Iterator begin, Iterator end, int x, int n);
@@ -21,8 +33,6 @@ size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end);
 
 template <typename T1, typename T2>
 void one_hot_encode(const T1 *inp, size_t s, T2 *out);
-
-size_t hash_byte_array(const uint8_t *a, size_t s);
 
 template <typename T1, typename T2>
 void one_hot_encode(const T1 *inp, size_t s, T2 *out) {
