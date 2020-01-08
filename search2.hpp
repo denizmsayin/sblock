@@ -60,7 +60,6 @@ namespace search2 {
 
 // TODO: update all comments
 // add the option for path remembering, will require fast dynamic allocations
-// along with the previous update, consider adding backtracking search as an alternative
 
 // While the goal of achieving maximal code reuse was accomplished in the previous version
 // of search.hpp, some algorithms suffered due to search being a high performance task,
@@ -70,53 +69,56 @@ namespace search2 {
 //
 // A base class for both tree and graph search classes
 // The class Puzzle has to implement the following functions:
-//     bool is_solved() const { returns true if the Puzzle is in a goal state, false o.w. }
-//     Container possible_actions<Action>() const { 
-//         returns possible actions for the current puzzle 
-//         templated to allow multiple action sets for a puzzle
-//     }
-//     int apply_action(Action a) { applies 'a' to the puzzle and returns the cost of the action }
-// the class must also define a hash function so that it can be stored in unordered_set.
-// As an alternative for Container possible_actions() const, we will have a function returning
-// an iterator and iterate over possible actions. This should make it slightly nicer, hopefully:
-//     Puzzle::ActionIterator action_iterator() const { returns an iterator going over possible actions }
-//     The iterator is expected to have the following interface:
-//         bool done() const;
-//         Action next_action();
+//      Puzzle goal_state() const { 
+//          returns an instance of the goal state 
+//      }
 //
-// The class Action must be used and returned by Puzzle as explained above.
-// For bidirectional search, the following function must also be defined:
-//     Action inverse(Action a); { returns the reverse of action a }
+//      bool operator==(const Puzzle &p) const { i
+//          check equality of states, necessary for using hash tables & comparing with goal
+//      }
 //
-// The class HeuristicFunc must be called as if it has the following signature:
-//     int HeuristicFunc(const Puzzle &p) { returns a heuristic value, lower is better }
+//      template <typename Action>
+//      generator_like action_generator() const {
+//          return something that conforms to the C++ forward iterator interface,
+//          its goal is to generate actions one after the other, so it must have
+//          .begin() and .end() methods. Those methods should return an object
+//          that act like a forward iterator and thus have the ++ & == operators.
+//          In this code, the generators are mostly used with C++11's for each loop.
+//          Can have different overloads for different action types.
+//          i.e. for(const auto &action : puzzle.template action_generator<DirectionAction>()) {}
+//      }
 //
-// The template<class, class> class Queue must support the following functions:
-//     Queue() { empty constructor }
-//     bool empty() const { returns true if the queue is empty, false o.w. }
-//     void push(Record &r) { adds record r to the queue }
-//     const Record &top() const { returns the top record }
-//     void pop() { pops the top record }
+//      cost_t apply_action(Action a) { 
+//          applies action a to the puzzle and returns the cost, cost_t can be 
+//          any basic integral/floating type.
+//      }
 //
-// To increase code reuse, I decided to have both tree and graph search classes to inherit from
-// the same class, and have visitation insertions/checks performed by virtual functions. Graph
-// search does the insertions & checks in these functions, while the tree search simply skips
-// them
+// The class Action must be used and returned by Puzzle as explained above. Puzzle and Action
+// classes can have many to many relationships thanks to the templated action_generator()
+// and static overloads on apply_action(Action a).
+//
+// For bidirectional search, as well as making use of direct reverse optimization (not applying
+// moves leading back to the previous state), the following must be defined by the Action class:
+//      static Action inverse(Action a); { 
+//          returns the reverse of action a 
+//      }
+//
+// The class HeuristicFunc will have the following signature:
+//      cost_t HeuristicFunc(const Puzzle &p) { 
+//          returns a heuristic value, lower is better 
+//      }
+//
+// The BatchHeuristicFunc is a bit troublesome due to the lack of templated virtual functions.
+// I have elected to define two possible input types for it:
+// void BHF(std::vector<Puzzle>::const_iterator begin,
+//          std::vector<Puzzle>::const_iterator end,
+//          std::vector<cost_t>::iterator out)
+// as well as
+// void BHF(std::vector<Puzzle>::const_iterator begin,
+//          std::vector<Puzzle>::const_iterator end,
+//          std::back_insert_iterator<std::vector<cost_t>> out)
+//
 
-// For the return value of the functions, I decided to return a vector of actions just as before
-// While specifically using a vector is slightly restrictive, we can rely on return value
-// optimization to avoid copying, and returning by value creates less of a burden
-// for the caller who only has to assign the return value to a vector
-
-// BREADTH FIRST SEARCH
-// BFS is quite simple, and to reconstruct the path we simply need to keep a
-// linked list (tree) of actions that go all the way back up to the first state
-
-// BfsActionRecord keeps the previous action, while BfsNode is what's actually
-// kept in the queue. The reason we have two different records is to save a
-// bit of memory, once a state is removed from the queue we no longer need
-// to remember the state itself, just the action that led to it so that
-// we can reconstruct the solution path
 namespace search2 {
 
     // Options for tracking generated node count, can be modified at runtime
@@ -159,6 +161,8 @@ namespace search2 {
         bool operator>(const HNode &other) const { return est_cost > other.est_cost; }
     };
 
+    // A template class that allows extending a node type with action information
+    // Contains lots of forwarding for easy construction of base types.
     template <typename Action, typename BaseNode> 
     struct ActionExtended : public BaseNode {
         std::optional<Action> action;
@@ -181,8 +185,12 @@ namespace search2 {
 
     // Easy interface for action extended construction
     // for optional speed-ups in different search functions
-    // quite critical for IDA*
+    // quite critical for IDA*. These functions do different things
+    // depending on their boolean template parameter, but these are
+    // determined at compile time, which means almost no performance 
+    // hit is incurred.
 
+    // construct either a normal node, or a node with an action depending on Extend
     template <bool Extend, class Action, class BaseNode, typename... Args>
     typename std::conditional<Extend,
                               ActionExtended<Action, BaseNode>,
@@ -198,6 +206,7 @@ namespace search2 {
         }
     }
 
+    // emplace either a normal node, or a node with an action depending on Extend
     template <bool Extend, class Action, class QueueType, typename... Args>
     void conditionally_emplace_action_extended_node(
             QueueType &q, // std::stack, queue, priority_queue... 
@@ -211,6 +220,7 @@ namespace search2 {
         }
     }
 
+    // either reverse the input action, or return an empty optional depending on Reverse
     template <bool Reverse, class Action, class Node>
     std::optional<Action> conditionally_reverse_action(const Node &n) {
         if constexpr (Reverse) {
@@ -223,19 +233,13 @@ namespace search2 {
         }
     }
 
+    // either retrieve an action from the node, or return empty optional depending on Reverse
     template <bool Reverse, class Action, class Node>
     std::optional<Action> conditionally_retrieve_action(const Node &n) {
         if constexpr (Reverse) {
             return n.action;
         } else {
             return std::nullopt;
-        }
-    }
-
-    template <bool Extended, class Action, class Node>
-    void conditionally_assign_action(Node &n, const Action &a) {
-        if constexpr (Extended) {
-            n.action = a;
         }
     }
 
