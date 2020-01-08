@@ -25,12 +25,14 @@ size_t hash_byte_array(const uint8_t *a, size_t s);
 // hashing. returns a vector because it is used for static initialization.
 std::vector<size_t> generate_different_bitstrings(size_t num_bit_strings, unsigned seed);
 
+// calculate combination & lexical indices over iterators
 template <typename Iterator>
 size_t calculate_combindex(Iterator begin, Iterator end, int x, int n);
 
 template <typename RandomAccessIterator>
 size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end);
 
+// one hot encoding, for dlmodels
 template <typename T1, typename T2>
 void one_hot_encode(const T1 *inp, size_t s, T2 *out);
 
@@ -100,7 +102,5 @@ size_t calculate_lexindex(RandomAccessIterator begin, RandomAccessIterator end) 
     }
     return counter;
 }
-
-
 
 #endif

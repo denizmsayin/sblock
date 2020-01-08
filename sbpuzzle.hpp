@@ -224,9 +224,32 @@ namespace sbpuzzle {
             return std::equal(t1.begin(), t1.end(), t2.begin());
         }
 
+        // ZOBRIST HASHING: a cool method for hashing game tables
+        // each (square, value) pair has a bitstring associated with it
+        // in the sbpuzzle case, we have H*W tiles & H*W values
+        
+        unsigned ZOBRIST_SEED = 509;
+
+        template <psize_t H, psize_t W>
+        std::vector<size_t> ZOBRISTS = generate_different_bitstrings(SIZE<H, W> * SIZE<H, W>, 
+                                                                     ZOBRIST_SEED);
+
+        template <psize_t H, psize_t W>
+        size_t get_zobrist(pcell_t pos, pcell_t value) {
+            return ZOBRISTS<H, W>[pos * SIZE<H, W> + value];
+        }
+
+        template <psize_t H, psize_t W>
+        size_t tiles_zobrist_hash(const array<pcell_t, H*W> tiles) {
+            size_t h = 0;
+            for(size_t i = 0, size = tiles.size(); i < size; ++i)
+                h ^= get_zobrist(i, tiles[i]);
+            return h;
+        }
+
         template <psize_t H, psize_t W>
         size_t tiles_hash(const array<pcell_t, H*W> tiles) {
-            return hash_byte_array(&tiles[0], H*W);
+            return hash_byte_array(tiles.data(), H*W);
         }
 
         template <psize_t H, psize_t W>
@@ -474,92 +497,119 @@ namespace sbpuzzle {
     // The derived classes still have to implement constructors, possible_actions(),
     // and apply_action()
     template <psize_t H, psize_t W>
-        class SBPuzzleBase {
-            public:
-                
-                const std::array<pcell_t, H*W> &get_tiles() const {
-                    return tiles;
-                }
+    class SBPuzzleBase {
+        public:
+            
+            const std::array<pcell_t, H*W> &get_tiles() const {
+                return tiles;
+            }
 
-                bool is_solved() const {
-                    return details::tiles_in_correct_places<H, W>(tiles);
-                }
+            bool is_solved() const {
+                return details::tiles_in_correct_places<H, W>(tiles);
+            }
 
-                bool operator==(const SBPuzzleBase &other) const {
-                    return details::tiles_equal<H, W>(tiles, other.tiles);
-                }
+            bool operator==(const SBPuzzleBase &other) const {
+                return details::tiles_equal<H, W>(tiles, other.tiles);
+            }
 
-                // Actions are returned over a generator like class
-                // template <typename Action>
-                // class generator {
-                //     class iterator { ... };
-                //     generator(...)
-                //     iterator begin() const {...}
-                //     iterator end() const {...}
-                //  };
-                //  generator<Action> action_generator() const;
-                //  See the SBPuzzle implementation for an example.
+            // Actions are returned over a generator like class
+            // template <typename Action>
+            // class generator {
+            //     class iterator { ... };
+            //     generator(...)
+            //     iterator begin() const {...}
+            //     iterator end() const {...}
+            //  };
+            //  generator<Action> action_generator() const;
+            //  See the SBPuzzle implementation for an example.
 
-                size_t hash() const {
-                    return details::tiles_hash<H, W>(tiles);
-                }
+            size_t hash() const {
+                return details::tiles_hash<H, W>(tiles);
+            }
 
-                friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<H, W> &p) {
-                    return details::tiles_stream<H, W>(s, p.tiles);
-                }
+            friend std::ostream &operator<<(std::ostream &s, const SBPuzzleBase<H, W> &p) {
+                return details::tiles_stream<H, W>(s, p.tiles);
+            }
 
-                std::ostream &to_binary_stream(std::ostream &s) const {
-                    const char *out_ptr = reinterpret_cast<const char *>(&tiles[0]);
-                    size_t out_size = tiles.size() * sizeof(tiles[0]);
-                    return s.write(out_ptr, out_size);
-                }
+            std::ostream &to_binary_stream(std::ostream &s) const {
+                const char *out_ptr = reinterpret_cast<const char *>(&tiles[0]);
+                size_t out_size = tiles.size() * sizeof(tiles[0]);
+                return s.write(out_ptr, out_size);
+            }
 
-                static size_t tile_size_in_bytes() {
-                    return sizeof(tiles);
-                }
+            static size_t tile_size_in_bytes() {
+                return sizeof(tiles);
+            }
 
-                int manhattan_distance_to_solution() const {
-                    return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
-                }
+            int manhattan_distance_to_solution() const {
+                return details::tiles_manhattan_distance_to_solution<H, W>(tiles);
+            }
 
-                int num_misplaced_tiles() const {
-                    return details::tiles_count_misplaced<H, W>(tiles);
-                }
+            int num_misplaced_tiles() const {
+                return details::tiles_count_misplaced<H, W>(tiles);
+            }
 
-                pcost_t apply_action(TileSwapAction a) {
-                    tiles[a.hpos] = tiles[a.tpos]; // move tile over the hole
-                    tiles[a.tpos] = HOLE; // tile is now the hole
-                    hole_pos = a.tpos;
-                    return 1; // cost is always unit
-                }
+            pcost_t apply_action(TileSwapAction a) {
+                tiles[a.hpos] = tiles[a.tpos]; // move tile over the hole
+                tiles[a.tpos] = HOLE; // tile is now the hole
+                hole_pos = a.tpos;
+                return 1; // cost is always unit
+            }
 
-                pcost_t apply_action(DirectionAction d) {
-                    int8_t off = details::OFFSETS<W>[static_cast<uint8_t>(d.dir)];
-                    uint8_t tile_pos = hole_pos + off;
-                    return apply_action(TileSwapAction(tile_pos, hole_pos));
-                }
+            pcost_t apply_action(DirectionAction d) {
+                int8_t off = details::OFFSETS<W>[static_cast<uint8_t>(d.dir)];
+                uint8_t tile_pos = hole_pos + off;
+                return apply_action(TileSwapAction(tile_pos, hole_pos));
+            }
 
-                // a small optimized function for applying a sequence of actions
-                void apply_action_sequence(const std::vector<TileSwapAction> &as) {
-                    for(auto a : as)
-                        tiles[a.hpos] = tiles[a.tpos];
-                    tiles[as.back().tpos] = HOLE;
-                    hole_pos = as.back().tpos;
-                }
+            // a small optimized function for applying a sequence of actions
+            void apply_action_sequence(const std::vector<TileSwapAction> &as) {
+                for(auto a : as)
+                    tiles[a.hpos] = tiles[a.tpos];
+                tiles[as.back().tpos] = HOLE;
+                hole_pos = as.back().tpos;
+            }
 
-            protected:
-                // only callable by derived classes
-                SBPuzzleBase() : hole_pos(details::HOLE<H, W>) {
-                    details::tiles_correct_fill<H, W>(tiles);
-                }
+        protected:
+            // only callable by derived classes
+            SBPuzzleBase() : hole_pos(details::HOLE<H, W>) {
+                details::tiles_correct_fill<H, W>(tiles);
+            }
 
-                static constexpr auto SIZE = details::SIZE<H, W>;
-                static constexpr auto HOLE = details::HOLE<H, W>;
+            static constexpr auto SIZE = details::SIZE<H, W>;
+            static constexpr auto HOLE = details::HOLE<H, W>;
 
-                array<pcell_t, SIZE> tiles;
-                psize_t hole_pos;
-        };
+            array<pcell_t, SIZE> tiles;
+            psize_t hole_pos;
+    };
 
+    // Zobrist hashing is great for hashing quickly. However, an important issue
+    // is that hashing is not necessary for tree searching. Thus, adding hashing
+    // to the puzzle when applying tree search would be a slowdown. Instead, I
+    // opt to create another base class that uses Zobrist hashing while keeping
+    // the original class with on-demand hashing as-is.
+
+    template <psize_t H, psize_t W>
+    class SBPuzzleBaseHashed : public SBPuzzleBase<H, W> {
+    private: using Base = SBPuzzleBase<H, W>;
+    protected:
+        void init_hash() {
+            hash_val = details::tiles_zobrist_hash<H, W>(Base::tiles);
+        }
+
+        // call after the swap between pos1 & pos2 is done
+        void postupdate_hash(pcell_t pos1, pcell_t pos2) {
+            // undo previous bitstrings
+            hash_val ^= details::get_zobrist<H, W>(pos1, Base::tiles[pos2]);
+            hash_val ^= details::get_zobrist<H, W>(pos2, Base::tiles[pos1]);
+            // update with new bitstrings
+            hash_val ^= details::get_zobrist<H, W>(pos1, Base::tiles[pos1]);
+            hash_val ^= details::get_zobrist<H, W>(pos2, Base::tiles[pos2]);
+        }
+
+        size_t hash_val;
+    };
+    
     /*                                                           */
 
     // The derived class for the case where the hole is masked
