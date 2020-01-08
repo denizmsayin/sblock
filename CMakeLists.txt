@@ -33,13 +33,13 @@ endfunction()
 
 foreach(D 3 4 5)
     # add the solver
-    set(SRCLIST "solver.cpp" "sblock_utils.cpp")
+    set(SRCLIST "solver.cpp" "utils/basic.cpp")
     add_target_to_build_with_libs("solver_${D}x${D}" "${SRCLIST}" "-pthread" "${D}" FALSE)
     # add the pdb generator
-    set(SRCLIST "generate_dpdb.cpp" "sblock_utils.cpp")
+    set(SRCLIST "generate_dpdb.cpp" "utils/basic.cpp")
     add_target_to_build_with_libs("generate_dpdb_${D}x${D}" "${SRCLIST}" "" "${D}" FALSE)
     # add the data generator as a shared library
-    set(SRCLIST "libdig.cpp" "sblock_utils.cpp")
+    set(SRCLIST "libdig.cpp" "utils/basic.cpp")
     add_target_to_build_with_libs("dig_${D}x${D}" "${SRCLIST}" "" "${D}" TRUE)
 endforeach()
 
@@ -49,5 +49,5 @@ if(WITH_TESTS)
 endif()
 
 foreach(T ${EXTRAS})
-    add_target_to_build("${T}" "${T}.cpp;sblock_utils.cpp")
+    add_target_to_build("${T}" "${T}.cpp;utils/basic.cpp")
 endforeach()
