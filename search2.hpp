@@ -692,25 +692,35 @@ namespace search2 {
 
     namespace details {
 
+        template <typename Puzzle, typename HeuristicFunc, typename Cost>
+        struct CLDFSRec {
+            const Puzzle goal;
+            Cost cost_limit;
+            SeriesTrackedValue<size_t> exp_ctr;
+            HeuristicFunc heuristic;
+
+            // Only used for creating the initial state of the record
+            CLDFSRec(const Puzzle &p, HeuristicFunc hf) 
+                : goal(p.goal_state()), cost_limit(hf(p)), 
+                  exp_ctr(0, TRACKER_OPTS), heuristic(hf) {}
+        };
+
         // TODO: this implementation of IDA* cannot decide on NOT_FOUND
         template <class Puzzle, class Action, class HeuristicFunc, class Cost, 
                   bool Rev, class Node, bool Backtrack = true>
         Cost cost_limited_dfs(typename std::conditional<Rev,
                                                         ActionExtended<Action, Node>,
                                                         Node>::type &node, 
-                              const Puzzle &goal,
-                              Cost cost_limit, 
-                              SeriesTrackedValue<size_t> &exp_ctr,
-                              HeuristicFunc hf=HeuristicFunc()) 
+                              CLDFSRec<Puzzle, HeuristicFunc, Cost> &record)
         {
             static_assert(!Backtrack || (Backtrack && Rev), 
                           "Backtracking cannot be enabled without reversing");
-            if(node.est_cost > cost_limit) { // return the cutoff cost
+            if(node.est_cost > record.cost_limit) { // return the cutoff cost
                 return node.est_cost;
-            } else if(node.entry == goal) { // return the solution
+            } else if(node.entry == record.goal) { // return the solution
                 return node.path_cost;;
             } else {
-                ++exp_ctr; // increment the expansion counter
+                ++record.exp_ctr; // increment the expansion counter
                 Cost min_exceeding_cost = std::numeric_limits<Cost>::max(); 
                 std::optional<Action> prev_reverse = 
                     conditionally_reverse_action<Rev, Action>(node);
@@ -728,15 +738,10 @@ namespace search2 {
                         if constexpr (Backtrack) {
                             // apply everything in-place
                             node.path_cost += node.entry.apply_action(action);
-                            node.est_cost = node.path_cost + hf(node.entry);
+                            node.est_cost = node.path_cost + record.heuristic(node.entry);
                             node.action = action;
                             result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, 
-                                                      Cost, Rev, Node, Backtrack>(
-                                    node,
-                                    goal,
-                                    cost_limit, 
-                                    exp_ctr, 
-                                    hf); 
+                                                      Cost, Rev, Node, Backtrack>(node, record);
                             node.entry.apply_action(Action::reverse(action));
                             node.path_cost = last_path_cost;
                             node.est_cost = last_est_cost;
@@ -745,7 +750,7 @@ namespace search2 {
                             // generate parameters for a recursive call
                             Puzzle new_p = node.entry; 
                             Cost new_path_cost = node.path_cost + new_p.apply_action(action);
-                            Cost new_est_cost = new_path_cost + hf(new_p);
+                            Cost new_est_cost = new_path_cost + record.heuristic(new_p);
                             auto new_node = 
                                 conditionally_construct_action_extended_node<Rev, Action, Node>(
                                     action, 
@@ -754,14 +759,9 @@ namespace search2 {
                                     new_est_cost);
                             // call cost limited dfs on the neighbor
                             result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, 
-                                                      Cost, Rev, Node, Backtrack>(
-                                    new_node, 
-                                    goal,
-                                    cost_limit, 
-                                    exp_ctr, 
-                                    hf); 
+                                                      Cost, Rev, Node, Backtrack>(new_node, record); 
                         }
-                        if(result <= cost_limit) // found
+                        if(result <= record.cost_limit) // found
                             return result;
                         else if(min_exceeding_cost > result) // not found, but less than smallest exceeding
                             min_exceeding_cost = result;
@@ -777,20 +777,17 @@ namespace search2 {
     SearchResult iterative_deepening_a_star(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         using details::cost_limited_dfs;
         typedef HNode<Puzzle, Cost> Node;
-        Puzzle goal = p.goal_state();
-        Cost cost_limit = hf(p);
         auto start_node = conditionally_construct_action_extended_node<Rev, Action, Node>(
-                std::nullopt, p, 0, cost_limit);
-        SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
+                std::nullopt, p, 0, hf(p));
+        details::CLDFSRec<Puzzle, HeuristicFunc, Cost> cldfs_record(p, hf);
         while(true) {
             Cost result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, Cost, 
-                                           Rev, Node, Backtrack>(start_node, goal, cost_limit, 
-                                                                 exp_ctr, hf);
-            if(result <= cost_limit) 
-                return SearchResult(result, exp_ctr.get_value());
-            cost_limit = result;
+                                           Rev, Node, Backtrack>(start_node, cldfs_record); 
+            if(result <= cldfs_record.cost_limit)
+                return SearchResult(result, cldfs_record.exp_ctr.get_value());
+            cldfs_record.cost_limit = result;
         }
-        return SearchResult(0, exp_ctr.get_value());
+        return SearchResult(0, cldfs_record.exp_ctr.get_value());
     }
 
     /*
