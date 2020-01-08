@@ -7,7 +7,7 @@
 // i.e. postfix ++ would not work because g is modified. Think
 // of a way to handle this.
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle {
 // a templated iterator class that goes with my custom generator template
 template <typename generator_type, typename value_type>
     class GeneratorIterator {

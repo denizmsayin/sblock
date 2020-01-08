@@ -4,7 +4,7 @@
 #include <iostream>
 #include <array>
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle {
         
     typedef int8_t spsize_t;
     typedef uint8_t psize_t;

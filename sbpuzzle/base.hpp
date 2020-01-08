@@ -1,9 +1,11 @@
 #ifndef __SBPUZZLE_BASE_HPP__
 #define __SBPUZZLE_BASE_HPP__
 
+#include <array>
+
 #include "defs.hpp"
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle {
 
     // I've elected to define the functions right in the declaration since
     // writing them separately takes time and I keep changing implementations...
@@ -93,10 +95,12 @@ namespace sbpuzzle {
             static constexpr auto SIZE = details::SIZE<H, W>;
             static constexpr auto HOLE = details::HOLE<H, W>;
 
-            array<pcell_t, SIZE> tiles;
+            std::array<pcell_t, SIZE> tiles;
             psize_t hole_pos;
     };
 
+}
+}
 }
 
 #endif

@@ -11,7 +11,7 @@
 
 // TODO: cleanup
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle {
     namespace details {
         using std::array;
 
@@ -312,6 +312,5 @@ namespace sbpuzzle {
     }
 
 }
-
 
 #endif

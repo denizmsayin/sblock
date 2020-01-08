@@ -3,7 +3,7 @@
 
 #include "defs.hpp"
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle {
         
     namespace details {
 
