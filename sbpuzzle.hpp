@@ -382,7 +382,6 @@ namespace sbpuzzle {
         template <psize_t H, psize_t W>
         const std::vector<Record> DIRECTION_RECORDS = _construct_records<H, W>();
 
-
         inline uint8_t inv_action_index(uint8_t i) {
             return (i + 2) & 3; // 0 -> 2, 1 -> 3, 2 -> 0, 3 -> 1
         }
@@ -502,10 +501,6 @@ namespace sbpuzzle {
             
             const std::array<pcell_t, H*W> &get_tiles() const {
                 return tiles;
-            }
-
-            bool is_solved() const {
-                return details::tiles_in_correct_places<H, W>(tiles);
             }
 
             bool operator==(const SBPuzzleBase &other) const {

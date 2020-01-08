@@ -301,8 +301,10 @@ namespace search2 {
     // which improves runtime.
     template <class Puzzle, class Action, typename Cost = default_cost_t, bool Rev = false>
     SearchResult breadth_first_search(const Puzzle &puzzle_start) {
+        Puzzle goal = puzzle_start.goal_state();
+
         // early exit in case the puzzle is already solved
-        if(puzzle_start.is_solved()) return SearchResult(0, 0);
+        if(puzzle_start == goal) return SearchResult(0, 0);
 
         // tracker for the expanded nodes
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
@@ -338,7 +340,7 @@ namespace search2 {
                 if(action != prev_reverse) {
                     Puzzle new_p = *p;
                     Cost new_path_cost = node.path_cost + new_p.apply_action(action);
-                    if(new_p.is_solved())
+                    if(new_p == goal)
                         return SearchResult(new_path_cost, exp_ctr.get_value());
                     if(visited.find(new_p) == visited.end()) {
                         std::tie(itr, dummy) = visited.emplace(new_p);
@@ -477,8 +479,9 @@ namespace search2 {
         // To deal with this, we also need to keep track of the smallest cost we have
         // found for each state so far. If we find a path with a lower cost, we simply
         // have to act as if that state was not visited.
-       
-        if(start_puzzle.is_solved()) return SearchResult(0, 0);
+        Puzzle goal = start_puzzle.goal_state();
+
+        if(start_puzzle == goal) return SearchResult(0, 0);
 
         // set up an expanded node counter and its tracker
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
@@ -541,7 +544,7 @@ namespace search2 {
                 Puzzle new_p = node.entry->first;
                 Cost step_cost = new_p.apply_action(action);
                 Cost new_path_cost = node.path_cost + step_cost;
-                if(new_p.is_solved())
+                if(new_p == goal)
                     return SearchResult(new_path_cost, exp_ctr.get_value());
                 auto lookup = visited.find(new_p);
                 if(lookup == visited.end()) // store pointers if state already exists
@@ -614,7 +617,9 @@ namespace search2 {
         // To deal with this, we also need to keep track of the smallest cost we have
         // found for each state so far. If we find a path with a lower cost, we simply
         // have to act as if that state was not visited.
-        if(start_puzzle.is_solved()) return SearchResult(0, 0);
+        Puzzle goal = start_puzzle.goal_state();
+
+        if(start_puzzle == goal) return SearchResult(0, 0);
 
         // tracker for expanded nodes
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
@@ -649,7 +654,7 @@ namespace search2 {
                     Puzzle new_p = p;
                     Cost step_cost = new_p.apply_action(action);
                     Cost new_path_cost = node.path_cost + step_cost;
-                    if(new_p.is_solved())
+                    if(new_p == goal)
                         return SearchResult(new_path_cost, exp_ctr.get_value());
                     auto lookup = visited.find(new_p);
                     bool not_exist = lookup == visited.end();
@@ -693,6 +698,7 @@ namespace search2 {
         Cost cost_limited_dfs(typename std::conditional<Rev,
                                                         ActionExtended<Action, Node>,
                                                         Node>::type &node, 
+                              const Puzzle &goal,
                               Cost cost_limit, 
                               SeriesTrackedValue<size_t> &exp_ctr,
                               HeuristicFunc hf=HeuristicFunc()) 
@@ -701,7 +707,7 @@ namespace search2 {
                           "Backtracking cannot be enabled without reversing");
             if(node.est_cost > cost_limit) { // return the cutoff cost
                 return node.est_cost;
-            } else if(node.entry.is_solved()) { // return the solution
+            } else if(node.entry == goal) { // return the solution
                 return node.path_cost;;
             } else {
                 ++exp_ctr; // increment the expansion counter
@@ -726,7 +732,8 @@ namespace search2 {
                             node.action = action;
                             result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, 
                                                       Cost, Rev, Node, Backtrack>(
-                                    node, 
+                                    node,
+                                    goal,
                                     cost_limit, 
                                     exp_ctr, 
                                     hf); 
@@ -749,6 +756,7 @@ namespace search2 {
                             result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, 
                                                       Cost, Rev, Node, Backtrack>(
                                     new_node, 
+                                    goal,
                                     cost_limit, 
                                     exp_ctr, 
                                     hf); 
@@ -769,13 +777,14 @@ namespace search2 {
     SearchResult iterative_deepening_a_star(const Puzzle &p, HeuristicFunc hf=HeuristicFunc()) {
         using details::cost_limited_dfs;
         typedef HNode<Puzzle, Cost> Node;
+        Puzzle goal = p.goal_state();
         Cost cost_limit = hf(p);
         auto start_node = conditionally_construct_action_extended_node<Rev, Action, Node>(
                 std::nullopt, p, 0, cost_limit);
         SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
         while(true) {
             Cost result = cost_limited_dfs<Puzzle, Action, HeuristicFunc, Cost, 
-                                           Rev, Node, Backtrack>(start_node, cost_limit, 
+                                           Rev, Node, Backtrack>(start_node, goal, cost_limit, 
                                                                  exp_ctr, hf);
             if(result <= cost_limit) 
                 return SearchResult(result, exp_ctr.get_value());
