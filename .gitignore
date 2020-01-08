@@ -9,6 +9,7 @@ mytest*.cpp
 legacy
 builds
 datafiles
+__pycache__
 
 massif.out.*
 

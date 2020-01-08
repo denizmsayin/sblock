@@ -1,5 +1,5 @@
-#ifndef __SBPUZZLE_ACTIONS_HPP__
-#define __SBPUZZLE_ACTIONS_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_ACTIONS_HPP
+#define DENIZMSAYIN_SBLOCK_ACTIONS_HPP
 
 #include "defs.hpp"
 

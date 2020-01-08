@@ -10,15 +10,18 @@ def _skip_until(file_handle, string):
         lstr = line.strip()
         if lstr != '':
             if lstr.startswith(string):
-                break
+                return True
             else:
-                raise RuntimeError(f'Header file (?) contains non-whitespace characters'
-                                    ' before guard {string}, aborting.')
+                print(f'Header file (?) contains non-whitespace characters'
+                       ' before guard {string}, skipping.')
+                return False
+    return False
 
 
 def skip_guards(hf_handle):
-    _skip_until(hf_handle, '#ifndef')
-    _skip_until(hf_handle, '#define')
+    skipped = _skip_until(hf_handle, '#ifndef')
+    if skipped:
+        _skip_until(hf_handle, '#define')
         
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
-#ifndef __SBPUZZLE_GENERATOR_ITERATOR_HPP__
-#define __SBPUZZLE_GENERATOR_ITERATOR_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_GENERATOR_ITERATOR_HPP
+#define DENIZMSAYIN_SBLOCK_GENERATOR_ITERATOR_HPP
 
 #include "defs.hpp"
 
@@ -7,9 +7,9 @@
 // i.e. postfix ++ would not work because g is modified. Think
 // of a way to handle this.
 
-namespace denizmsayin::sblock::sbpuzzle {
-// a templated iterator class that goes with my custom generator template
-template <typename generator_type, typename value_type>
+namespace denizmsayin::sblock::sbpuzzle::details {
+    // a templated iterator class that goes with my custom generator template
+    template <typename generator_type, typename value_type>
     class GeneratorIterator {
     using Direction = details::Direction;
     public:

@@ -1,17 +1,19 @@
-#ifndef __SBPUZZLE_TILES_HPP__
-#define __SBPUZZLE_TILES_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_TILES_HPP
+#define DENIZMSAYIN_SBLOCK_TILES_HPP
 
 #include <array>
 #include <vector>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <stdexcept>
 
 #include "defs.hpp"
 
 // TODO: cleanup
 
 namespace denizmsayin::sblock::sbpuzzle {
+
     namespace details {
         using std::array;
 
@@ -294,14 +296,49 @@ namespace denizmsayin::sblock::sbpuzzle {
                 if(tiles[i] != _X && group_mask[tiles[i]])
                     *itr++ = tiles[i];
         }
+
+        template <psize_t H, psize_t W>
+        psize_t tiles_find_hole(const std::array<pcell_t, H*W> &tiles) {
+            auto itr = std::find(tiles.begin(), tiles.end(), details::HOLE<H, W>); 
+            return static_cast<psize_t>(itr - tiles.begin());
+        }
+
+        template <psize_t H, psize_t W>
+        std::string _tv_error_string(pcell_t tile) {
+            return "Tile value " + std::to_string(tile) + "is invalid, should be in the "
+                   "range [0, " + std::to_string(H*W-1) + "]";
+        }
+
+        template <psize_t H, psize_t W, bool Masked = false>
+        void tiles_validate(const std::array<pcell_t, H*W> &tiles) {
+            std::array<bool, H*W> tile_exists; 
+            tile_exists.fill(false);
+            for(pcell_t tile : tiles) {
+                if((tile < 0 || tile >= H*W)) {
+                    if constexpr (Masked) {
+                        if(tile != _X) {
+                            throw std::invalid_argument(_tv_error_string<H, W>(tile) 
+                                                        + " or DONT_CARE");
+                        }
+                    } else {
+                        throw std::invalid_argument(_tv_error_string<H, W>(tile));
+                    }
+                } else if(tile_exists[tile]) {
+                    throw std::invalid_argument("Found multiple instances of value " + 
+                                                std::to_string(tile) + " in tiles.");
+                } else {
+                    tile_exists[tile] = true;
+                }
+            }
+        }
+
     }
 
     // a utility function to decide if a set of tiles is solvable
     template <psize_t H, psize_t W>
     bool tiles_solvable(const std::array<pcell_t, H*W> &tiles) {
         // see https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-        size_t hole_pos = std::find(tiles.begin(), tiles.end(), details::HOLE<H, W>) 
-            - tiles.begin();
+        size_t hole_pos = details::tiles_find_hole<H, W>(tiles); 
         size_t inversions = details::count_inversions<H, W>(tiles);
         size_t hole_row_from_bottom = H - hole_pos / W;
         bool grid_width_odd = (W & 1);

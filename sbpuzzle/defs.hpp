@@ -1,5 +1,5 @@
-#ifndef __SBPUZZLE_DEFS_HPP__
-#define __SBPUZZLE_DEFS_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_DEFS_HPP
+#define DENIZMSAYIN_SBLOCK_DEFS_HPP
 
 #include <iostream>
 #include <array>
@@ -53,6 +53,9 @@ namespace denizmsayin::sblock::sbpuzzle {
         };
 
     }
+
+    // publicly accessible value for _X
+    const auto DONT_CARE = details::_X;
 }
 
 #endif
