@@ -1,10 +1,10 @@
 #ifndef __REFLECTDPDB_HPP__
 #define __REFLECTDPDB_HPP__
 
-#include "pdb.hpp"
+#include "pdb_base.hpp"
 #include "dpdb.hpp"
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
     
     // A class that creates a second disjoint pattern database
     // over the provided one using a reflection through the diagonal.
@@ -18,9 +18,9 @@ namespace sbpuzzle {
     
     namespace details {
         template <psize_t H, psize_t W, typename Storage>
-        class ReflectDPDB : public PDB<H, W> {
+        class ReflectDPDB : public PDBBase<H, W> {
         public:
-            uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const;
+            pcost_t lookup(const std::array<pcell_t, H*W> &tiles) const;
 
         protected:
             ReflectDPDB(const DPDB<H, W> &o_db) : db(o_db) {}
@@ -31,21 +31,21 @@ namespace sbpuzzle {
         };
 
         template <psize_t H, psize_t W>
-        void tiles_reflect(const std::array<uint8_t, H*W> &tiles,
-                           std::array<uint8_t, H*W> &o_tiles) 
+        void tiles_reflect(const std::array<pcell_t, H*W> &tiles,
+                           std::array<pcell_t, H*W> &o_tiles) 
         {
-            for(size_t i = 0, size = tiles.size(); i < size; ++i) {
-                uint8_t itile = tiles[i] / W, jtile = tiles[i] % W;
-                uint8_t rtile = jtile * W + itile;
-                size_t ipos = i / W, jpos = i % W;
-                size_t rpos = jpos * W + ipos;
+            for(psize_t i = 0, size = tiles.size(); i < size; ++i) {
+                psize_t itile = tiles[i] / W, jtile = tiles[i] % W;
+                psize_t rtile = jtile * W + itile;
+                psize_t ipos = i / W, jpos = i % W;
+                psize_t rpos = jpos * W + ipos;
                 o_tiles[rpos] = rtile;
             }
         }
 
         template<psize_t H, psize_t W, typename Storage>
-        uint8_t ReflectDPDB<H, W, Storage>::lookup(const std::array<uint8_t, H*W> &tiles) const {
-            std::array<uint8_t, H*W> rtiles;
+        pcost_t ReflectDPDB<H, W, Storage>::lookup(const std::array<pcell_t, H*W> &tiles) const {
+            std::array<pcell_t, H*W> rtiles;
             details::tiles_reflect<H, W>(tiles, rtiles);
             return db.lookup(rtiles);
         }

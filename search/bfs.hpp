@@ -1,5 +1,7 @@
 #ifndef DENIZMSAYIN_SBLOCK_SEARCH_BFS_HPP
 #define DENIZMSAYIN_SBLOCK_SEARCH_BFS_HPP
+
+#include <unordered_set>
 #include <queue>
 
 #include "defs.hpp"
@@ -32,7 +34,7 @@ namespace denizmsayin::sblock::search {
         // to hash table elements remain valid. Thanks, separate chaining!
         typedef std::unordered_set<Puzzle> hash_table_t;
         typedef PNode<const Puzzle *, Cost> node_t;
-        typedef typename MaybeActionExtended<Rev, Action, Node> mnode_t;
+        typedef MaybeActionExtended<Rev, Action, node_t> mnode_t;
         typedef std::queue<mnode_t> queue_t;
 
         // data structures

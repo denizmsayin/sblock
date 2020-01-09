@@ -8,17 +8,18 @@
 #include <cstdio>
 #include <queue>
 #include <chrono>
+#include <numeric>
 
-#include "pdb.hpp"
-#include "sbpuzzle.hpp"
-#include "sblock_utils.hpp"
-#include "search2.hpp"
+#include "pdb_base.hpp"
+#include "../../puzzle/maskednohole.hpp"
+#include "../../../utils.hpp"
 
-namespace sbpuzzle {
-// Now, since our function that determine
-// 'generically' over an iterator that returns booleans, we need to
-// create a custom iterator class constructed over a set of tiles
-// that presents a 'boolean' view of them
+namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
+    
+    // Now, since our function that determine
+    // 'generically' over an iterator that returns booleans, we need to
+    // create a custom iterator class constructed over a set of tiles
+    // that presents a 'boolean' view of them
     namespace details {
         template <psize_t H, psize_t W>
         class TileCombIterator {
@@ -34,13 +35,13 @@ namespace sbpuzzle {
             // Also, equality checks only compare the index, so it's up to the
             // user to ensure that tiles are the same
             static TileCombIterator begin(const std::array<bool, H*W> &in_group, 
-                                          const std::array<uint8_t, H*W> &tiles) 
+                                          const std::array<pcell_t, H*W> &tiles) 
             {
                 return TileCombIterator(&in_group.front(), &tiles.front());
             }
             
             static TileCombIterator end(const std::array<bool, H*W> &in_group, 
-                                        const std::array<uint8_t, H*W> &tiles) 
+                                        const std::array<pcell_t, H*W> &tiles) 
             {
                 return TileCombIterator(&in_group.back(), &tiles.back());
             }
@@ -72,7 +73,7 @@ namespace sbpuzzle {
             }
 
             bool operator*() const {
-                return *tiles != details::_X && in_group[*tiles];
+                return *tiles != DONT_CARE && in_group[*tiles];
             }
 
             bool operator==(const TileCombIterator &other) const {
@@ -85,27 +86,27 @@ namespace sbpuzzle {
 
         private:
             TileCombIterator(const bool *o_in_group, 
-                             const uint8_t *o_tiles) 
+                             const pcell_t *o_tiles) 
                 : in_group(o_in_group), tiles(o_tiles)
             {}
 
             // TODO: make this even better by somehow squeezing into 8 bytes
             const bool *in_group;
-            const uint8_t *tiles;
+            const pcell_t *tiles;
         };
 
         template <psize_t H, psize_t W>
-        size_t calculate_table_index(const std::array<uint8_t, H*W> &tiles,
+        size_t calculate_table_index(const std::array<pcell_t, H*W> &tiles,
                                      const std::array<bool, H*W> group_mask,
-                                     uint8_t group_size)
+                                     psize_t group_size)
         {
             // first, find the combination index
             auto s = TileCombIterator<H, W>::begin(group_mask, tiles);
             auto e = TileCombIterator<H, W>::end(group_mask, tiles);
             size_t comb_i = calculate_combindex(s, e, tiles.size(), group_size);
             // then the lexicographical index of the group elements
-            std::vector<uint8_t> group_tiles(group_size);
-            details::tiles_fill_group<H, W>(group_mask, tiles, group_tiles.begin());
+            std::vector<pcell_t> group_tiles(group_size);
+            sbpuzzle::details::tiles_fill_group<H, W>(group_mask, tiles, group_tiles.begin());
             size_t lex_i = calculate_lexindex(group_tiles.begin(), group_tiles.end());
             // calculate the total index and lookup the table
             size_t index = comb_i * factorial(group_size) + lex_i;
@@ -115,7 +116,7 @@ namespace sbpuzzle {
     }
 
     template <psize_t H, psize_t W>
-    class DPDB : public PDB<H, W> {
+    class DPDB : public PDBBase<H, W> {
     public:
 
         // groups is supposed to contain a group for each tile
@@ -125,14 +126,14 @@ namespace sbpuzzle {
 
         // function for a set of groups
         static DPDB from_file(const std::string &filename);
-        static DPDB generate(const std::array<uint8_t, H*W> &o_groups);
-        static void generate_and_save(const std::array<uint8_t, H*W> &o_groups, 
+        static DPDB generate(const std::array<pcell_t, H*W> &o_groups);
+        static void generate_and_save(const std::array<pcell_t, H*W> &o_groups, 
                                       const std::string &filename);
 
         void save(const std::string &filename) const;
 
-        uint8_t lookup(const std::array<uint8_t, H*W> &tiles) const;
-        uint8_t lookup(const SBPuzzleBase<H, W> &p) const;
+        pcost_t lookup(const std::array<pcell_t, H*W> &tiles) const;
+        pcost_t lookup(const Basic<H, W> &p) const;
 
         // both static variables are used for printing details during generation
         // they should be changed before calling generate/generate_and_save
@@ -144,29 +145,29 @@ namespace sbpuzzle {
         // implies taking into account the hole position, which is used for 
         // the custom BFS inside _generate
     private:
-        DPDB(const std::array<uint8_t, H*W> &o_groups);
+        DPDB(const std::array<pcell_t, H*W> &o_groups);
        
-        size_t calculate_index(int group_num, const std::array<uint8_t, H*W> &tiles) const;
-        size_t calculate_extended_index(int group_num, const std::array<uint8_t, H*W> &tiles) const;
+        size_t calculate_index(psize_t group_num, const std::array<pcell_t, H*W> &tiles) const;
+        size_t calculate_extended_index(psize_t group_num, const std::array<pcell_t, H*W> &tiles) const;
 
-        void init(const std::array<uint8_t, H*W> &o_groups);
+        void init(const std::array<psize_t, H*W> &o_groups);
         
         template <class OutputIterator>
-        void fill_group(int group_num, 
-                        const std::array<uint8_t, H*W> &tiles, 
+        void fill_group(psize_t group_num, 
+                        const std::array<pcell_t, H*W> &tiles, 
                         OutputIterator itr) const;
         
         // function for a single group, with a dpdb object prepared
-        void _generate(uint8_t group_num);
+        void _generate(psize_t group_num);
 
-        std::vector<std::vector<uint8_t>> tables;
-        std::array<uint8_t, H*W> groups;
-        uint8_t num_groups;
-        std::vector<uint8_t> group_counts;
+        std::vector<std::vector<pcost_t>> tables;
+        std::array<psize_t, H*W> groups;
+        psize_t num_groups;
+        std::vector<psize_t> group_counts;
         std::vector<std::array<bool, H*W>> in_groups;
 
         constexpr static int SIZE = H * W;
-        constexpr static uint8_t DIST_MAX = 255;
+        constexpr static pcost_t DIST_MAX = std::numeric_limits<pcost_t>::max();
     };
 
     template <psize_t H, psize_t W>
@@ -189,7 +190,7 @@ namespace sbpuzzle {
 
 
     template <psize_t H, psize_t W>
-    void DPDB<H, W>::init(const std::array<uint8_t, H*W> &o_groups) 
+    void DPDB<H, W>::init(const std::array<psize_t, H*W> &o_groups) 
     {
         // copy the group number of each tile
         std::copy(o_groups.begin(), o_groups.end(), groups.begin());
@@ -202,27 +203,27 @@ namespace sbpuzzle {
         });
         // count each group's elements and mark them
         // also allocate empty tables
-        group_counts = std::vector<uint8_t>(num_groups, 0);
+        group_counts = std::vector<psize_t>(num_groups, 0);
         in_groups = std::vector<std::array<bool, SIZE>>(num_groups);
-        for(uint8_t i = 0; i < num_groups; ++i)
+        for(psize_t i = 0; i < num_groups; ++i)
             in_groups[i].fill(false);
-        for(int i = 0; i < SIZE; ++i) {
-            if(groups[i] != details::_X) {
+        for(psize_t i = 0; i < SIZE; ++i) {
+            if(groups[i] != DONT_CARE) {
                 group_counts[groups[i]]++;
                 in_groups[groups[i]][i] = true; // using 1/0 since vbool is an uint type
             }
         } // NOTE: the hole is not in any group
         // initialize empty tables
-        tables = std::vector<std::vector<uint8_t>>(num_groups);
-        for(uint8_t i = 0; i < num_groups; ++i) {
+        tables = std::vector<std::vector<pcost_t>>(num_groups);
+        for(psize_t i = 0; i < num_groups; ++i) {
             size_t db_size = combination(SIZE, group_counts[i]) * factorial(group_counts[i]);
-            tables[i] = std::vector<uint8_t>(db_size, DIST_MAX);
+            tables[i] = std::vector<pcost_t>(db_size, DIST_MAX);
             // set the initial distances to max value
         }
     }
 
     template <psize_t H, psize_t W>
-    DPDB<H, W>::DPDB(const std::array<uint8_t, H*W> &o_groups) {
+    DPDB<H, W>::DPDB(const std::array<pcell_t, H*W> &o_groups) {
         init(o_groups);
     }
 
@@ -230,22 +231,6 @@ namespace sbpuzzle {
     // function. As all tiles in a group have to be in a contiguous array
     // for their index to be calculated, this function simply fills
     // the output iterator with consecutive tiles from the same group
-
-    template <psize_t H, psize_t W>
-    class ZH {
-    public:
-        constexpr int operator()(const SBPuzzleNoHole<H, W> &p) {
-            return 0;
-        }
-    };
-
-    template <psize_t H, psize_t W>
-    class MH {
-    public:
-        constexpr int operator()(const SBPuzzleNoHole<H, W> &p) {
-            return p.manhattan_distance_to_solution();
-        }
-    };
 
     template <psize_t H, psize_t W>
     DPDB<H, W> DPDB<H, W>::from_file(const std::string &filename) {
@@ -261,7 +246,7 @@ namespace sbpuzzle {
         int w = fgetc(f);
         if(h != H || w != W)
             throw std::invalid_argument("Stored DPDB dimensions do not match template function");
-        std::array<uint8_t, H*W> groups;
+        std::array<psize_t, H*W> groups;
         ssize_t s = fread(&groups[0], sizeof(groups[0]), H*W, f);
         if(s != H*W)
             throw std::runtime_error("Failed to read enough bytes");
@@ -269,10 +254,10 @@ namespace sbpuzzle {
         // I switched to cstdio for this function. Would be good to fix.
         // in_file.get(reinterpret_cast<char *>(&groups[0]), H*W);
         DPDB<H, W> db(groups);
-        for(uint8_t i = 0; i < db.num_groups; ++i) {
+        for(psize_t i = 0; i < db.num_groups; ++i) {
             // in_file.get(reinterpret_cast<char *>(&(db.tables[i][0])), db.table_sizes[i]);
             s = fread(&(db.tables[i][0]), sizeof(db.tables[i][0]), db.tables[i].size(), f);
-            if(s != static_cast<ssize_t>(db.tables[i].size()))
+            if(s != static_cast<ssize_t>(db.tables[i].size() * sizeof(db.tables[i][0])))
                 throw std::runtime_error("Failed to read enough bytes");
         }
         // in_file.close();
@@ -282,7 +267,7 @@ namespace sbpuzzle {
 
     template <psize_t H, psize_t W>
     void DPDB<H, W>::generate_and_save(
-            const std::array<uint8_t, H*W> &o_groups,
+            const std::array<pcell_t, H*W> &o_groups,
             const std::string &filename) 
     {
         DPDB<H, W> db = DPDB<H, W>::generate(o_groups);
@@ -299,27 +284,27 @@ namespace sbpuzzle {
         out_file.put(H);
         out_file.put(W);
         out_file.write(reinterpret_cast<const char *>(&groups[0]), H*W);
-        for(uint8_t i = 0; i < num_groups; ++i)
+        for(psize_t i = 0; i < num_groups; ++i)
             out_file.write(reinterpret_cast<const char *>(&tables[i][0]), tables[i].size());
         out_file.close();
     }
 
     template <psize_t H, psize_t W>
-    DPDB<H, W> DPDB<H, W>::generate(const std::array<uint8_t, H*W> &o_groups) {
+    DPDB<H, W> DPDB<H, W>::generate(const std::array<pcell_t, H*W> &o_groups) {
         DPDB db(o_groups);
-        for(uint8_t i = 0; i < db.num_groups; ++i)
+        for(psize_t i = 0; i < db.num_groups; ++i)
             db._generate(i);
         return db;
     }
 
     template <psize_t H, psize_t W>
-    void DPDB<H, W>::_generate(uint8_t i) 
+    void DPDB<H, W>::_generate(psize_t i) 
     {
-        typedef SBPuzzleNoHole<H, W> PuzzleType;
+        typedef MaskedNoHole<H, W> PuzzleType;
         typedef TileSwapAction ActionType;
         // we simply need to apply bfs, but only add a cost when a tile
         // from the group is moved, otherwise the moves do not cost anything
-        std::array<uint8_t, SIZE> tiles;
+        std::array<pcell_t, SIZE> tiles;
         std::iota(tiles.begin(), tiles.end(), 0);
         // TODO: extend this so it can deal with partitions where the group
         // does not split the puzzle into multiple parts. e.g.
@@ -344,7 +329,7 @@ namespace sbpuzzle {
         // PS: Scratch that, it probably works now
 
 
-        // Instead of using search2::BFS, I decided to implement this BFS right 
+        // Instead of using search::BFS, I decided to implement this BFS right 
         // here with a few modifications. One of the main things is making use
         // of a lookup table for indexing, rather than using a hash set which
         // takes up a lot of space due to the puzzle state not being compressed.
@@ -388,12 +373,12 @@ namespace sbpuzzle {
         // ideally, SBPuzzleNoHole could be serialized
         struct Node {
             PuzzleType puzzle;
-            uint8_t cost;
-            Node(const PuzzleType &p, uint8_t c) : puzzle(p), cost(c) {}
+            pcost_t cost;
+            Node(const PuzzleType &p, pcost_t c) : puzzle(p), cost(c) {}
         };
 
         // the actual modified BFS implementation
-        std::vector<uint8_t> &table = tables[i];
+        std::vector<pcost_t> &table = tables[i];
         PuzzleType start_state(tiles, in_groups[i]);
         std::queue<Node> q;
         q.emplace(start_state, 0);
@@ -415,7 +400,7 @@ namespace sbpuzzle {
                 // generate neighboring states
                 for(const auto &action : p.template action_generator<ActionType>()) {
                     PuzzleType new_p = p; 
-                    uint8_t new_cost = node.cost + new_p.apply_action(action);
+                    pcost_t new_cost = node.cost + new_p.apply_action(action);
                     size_t new_ex_index = calculate_extended_index(i, new_p.get_tiles());
                     if(!visited[new_ex_index]) {
                         // can already be marked as visited before actually
@@ -482,23 +467,23 @@ namespace sbpuzzle {
     }
 
     template <psize_t H, psize_t W>
-    size_t DPDB<H, W>::calculate_index(int i, 
-                                       const std::array<uint8_t, H*W> &o_tiles) const
+    size_t DPDB<H, W>::calculate_index(psize_t i, 
+                                       const std::array<pcell_t, H*W> &o_tiles) const
     {
         return details::calculate_table_index<H, W>(o_tiles, in_groups[i], group_counts[i]);
     }
 
     template <psize_t H, psize_t W>
-    size_t DPDB<H, W>::calculate_extended_index(int i, 
-                                                const std::array<uint8_t, H*W> &o_tiles) const 
+    size_t DPDB<H, W>::calculate_extended_index(psize_t i, 
+                                                const std::array<pcell_t, H*W> &o_tiles) const 
     {
         // if extended, we need to account for the hole after collapsing it
-        std::array<uint8_t, H*W> tiles = o_tiles; // copying output tiles to keep constness
+        std::array<pcell_t, H*W> tiles = o_tiles; // copying output tiles to keep constness
         std::array<bool, H*W> group_mask = in_groups[i];
-        uint8_t group_size = group_counts[i];
+        psize_t group_size = group_counts[i];
         // collapse the hole and add it to the group
-        details::tiles_collapse_hole<H, W>(tiles);
-        group_mask[details::HOLE<H, W>] = true;
+        sbpuzzle::details::tiles_collapse_hole<H, W>(tiles);
+        group_mask[sbpuzzle::details::HOLE<H, W>] = true;
         ++group_size;
         return details::calculate_table_index<H, W>(tiles, group_mask, group_size);
     }
@@ -511,10 +496,10 @@ namespace sbpuzzle {
     */
 
     template <psize_t H, psize_t W>
-    uint8_t DPDB<H, W>::lookup(const std::array<uint8_t, H*W> &tiles) const {
-        uint8_t total = 0;
+    pcost_t DPDB<H, W>::lookup(const std::array<pcell_t, H*W> &tiles) const {
+        pcost_t total = 0;
         // for each group
-        for(uint8_t i = 0; i < num_groups; ++i) {
+        for(psize_t i = 0; i < num_groups; ++i) {
             size_t index = calculate_index(i, tiles);
             total += tables[i][index];
         }

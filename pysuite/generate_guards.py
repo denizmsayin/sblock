@@ -10,18 +10,20 @@ def _skip_until(file_handle, string):
         lstr = line.strip()
         if lstr != '':
             if lstr.startswith(string):
-                return True
+                return True, lstr
             else:
                 print(f'Header file ({file_handle.name}) contains non-whitespace characters'
                       f' before guard {string}, skipping.')
-                return False
-    return False
+                return False, lstr 
+    return False, lstr
 
 
 def skip_guards(hf_handle):
-    skipped = _skip_until(hf_handle, '#ifndef')
-    if skipped:
+    skipped, line = _skip_until(hf_handle, '#ifndef')
+    if skipped == True:
         _skip_until(hf_handle, '#define')
+    else:
+        return line
         
 
 if __name__ == '__main__':
@@ -34,7 +36,9 @@ if __name__ == '__main__':
         with TemporaryFile(mode='w+') as tmpf:
             with open(header_file, 'r') as hf:
                 tmpf.write(f'#ifndef {defn_str}\n#define {defn_str}\n') # write auto guards
-                skip_guards(hf) # skip #ifndef & #define
+                last_line = skip_guards(hf) # skip #ifndef & #define
+                if last_line: # no guards, do not forget last readline
+                    tmpf.write(last_line)
                 for line in hf: # copy the rest of the header file
                     tmpf.write(line)
                     lstr = line.strip()
