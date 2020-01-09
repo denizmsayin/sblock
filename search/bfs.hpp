@@ -24,7 +24,7 @@ namespace denizmsayin::sblock::search {
         if(puzzle_start == goal) return SearchResult(0, 0);
 
         // tracker for the expanded nodes
-        SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
+        utils::SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
 
         // typedefs for the data structures 
         // the plan is to keep all puzzle objects in the hash table,

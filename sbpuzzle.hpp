@@ -6,6 +6,7 @@
 #include "sbpuzzle/defs.hpp"
 #include "sbpuzzle/maskedwhole.hpp"
 #include "sbpuzzle/generator_iterator.hpp"
+#include "sbpuzzle/generation.hpp"
 #include "sbpuzzle/actions.hpp"
 #include "sbpuzzle/basic.hpp"
 #include "sbpuzzle/heuristics.hpp"

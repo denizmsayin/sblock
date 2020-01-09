@@ -27,7 +27,6 @@ namespace denizmsayin::sblock::sbpuzzle {
 
         static constexpr auto SIZE = details::SIZE<H, W>;
         static constexpr auto HOLE = details::HOLE<H, W>;
-        static constexpr auto SERIALIZED_SIZE = SIZE * sizeof(pcell_t);
 
         // given_hole_pos is not necessarily equal to the stored hole pos
         // for non-basic cases, i.e. when the hole can propagate (see MaskedNoHole)
@@ -41,9 +40,12 @@ namespace denizmsayin::sblock::sbpuzzle {
         psize_t hole_pos;
 
     public:
+        static constexpr auto SERIALIZED_SIZE = SIZE * sizeof(pcell_t);
 
         Basic(const Basic &) = default;
         Basic(Basic &&) = default;
+        Basic &operator=(const Basic &) = default;
+        Basic &operator=(Basic &&) = default;
 
         // Usually, when searching, almost every single puzzle
         // will be constructed using the copy constructor.
@@ -65,7 +67,7 @@ namespace denizmsayin::sblock::sbpuzzle {
             return Basic();
         }
 
-        Basic goal_state() const {
+        static Basic goal_state() {
             std::array<pcell_t, SIZE> tiles;
             details::tiles_correct_fill<H, W>(tiles);
             return Basic(tiles);

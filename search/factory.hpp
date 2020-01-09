@@ -59,8 +59,8 @@ namespace denizmsayin::sblock::search {
                                                 return a_star_search<P, A, HF, C, R>(p, hf);
                                             };
             case T::ID_ASTAR:               return [](const P &p, double w, size_t b, HF hf) {
-                                                return iterative_deepening_a_star<P, A, HF, C, R, B>
-                                                       (p, hf);
+                                                return iterative_deepening_a_star<P, A, HF, 
+                                                                                  C, R, B>(p, hf);
                                             };
             case T::WEIGHTED_ASTAR:         return [](const P &p, double w, size_t b, HF hf) {
                                                 return weighted_a_star_search<P, A, HF, C, R>

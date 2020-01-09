@@ -29,7 +29,7 @@ namespace denizmsayin::sblock::sbpuzzle {
                 throw std::invalid_argument("Constructing MaskedNoHole, but hole is in"
                                             " the provided mask.");
             for(size_t i = 0; i < B::SIZE; ++i) 
-                if(!mask[B::tiles[i]])
+                if(!mask[B::tiles[i]] && B::tiles[i] != B::HOLE)
                     B::tiles[i] = DONT_CARE;
             prop_hole();
         }

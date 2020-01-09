@@ -1,13 +1,11 @@
-#include "sbpuzzle.hpp"
-#include "sblock_utils.hpp"
+#include "../utils.hpp"
 
 using namespace std;
-using namespace sbpuzzle;
 
 constexpr uint8_t H = 3, W = 3;
 
 int main() {
-    std::vector<size_t> v = generate_different_bitstrings(10, 783);
+    std::vector<size_t> v = denizmsayin::sblock::utils::generate_different_bitstrings(10, 783);
     for(auto x : v)
         cout << x << endl;
     /*

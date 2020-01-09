@@ -6,11 +6,8 @@
 #include <vector>
 #include <functional>
 
-#include "sbpuzzle_generation.hpp"
-#include "sbpuzzle.hpp"
-#include "heuristics.hpp"
-#include "search2.hpp"
-#include "crdpdb.hpp"
+#include "../sbpuzzle.hpp"
+#include "../search.hpp"
 
 static inline size_t num_digits(size_t x) {
     // another crude but simple approach, wouldn't work well for largest 64b ints and slow
@@ -57,22 +54,27 @@ void print_crude_int_hist(ForwardItr begin, ForwardItr end, size_t damp) {
     std::cout << '|' << std::endl;
 }
 
-using namespace sbpuzzle;
-
-static constexpr size_t N = 20000;
+static constexpr size_t N = 200000;
 static constexpr int64_t sstart = 0, send = 30;
+
+namespace search = denizmsayin::sblock::search;
+using namespace denizmsayin::sblock::sbpuzzle;
+using namespace generation;
+using namespace heuristics;
+
+std::string PDB_PATH = "/home/deniz//sblock/datafiles/pdbs/dp3x3_full.db";
 
 int main() {
     constexpr uint8_t H = 3, W = 3;
     auto rng = std::default_random_engine(783);
-    std::vector<SBPuzzle<H, W>> puzzles;
+    std::vector<Basic<H, W>> puzzles(N, Basic<H, W>::uninitialized());
     using URNG = decltype(rng);
-    using OI = decltype(std::back_inserter(puzzles));
+    using OI = decltype(puzzles)::iterator;
 
-    auto hval = heuristic_factory<H, W>(HeuristicType::CPDB, "/home/deniz/ceng783-project/supervised/sblock/pdbs/dp3x3_full.db");
+    auto hval = heuristic_factory<H, W>(HeuristicType::CPDB, PDB_PATH);
     Heuristic<H, W> &heuristic = *hval;
 
-    auto solver = search2::search_factory<SBPuzzle<H, W>, TileSwapAction, Heuristic<H, W> &, sbpuzzle::pcost_t>(search2::SearchType::ID_ASTAR);
+    auto solver = search::search_factory<Basic<H, W>, TileSwapAction, Heuristic<H, W> &, pcost_t, true, true>(search::SearchType::ID_ASTAR);
 
     for(const std::string &stype_str : RANDOM_GENERATOR_STRINGS) {
         std::cout << stype_str << " scrambling " << sstart << "-" 
@@ -80,7 +82,7 @@ int main() {
         
         auto stype = str2randomgeneratortype(stype_str);
         auto gen = random_sbpuzzle_generator_factory<H, W, URNG, OI>(stype, sstart, send);
-        gen(N, rng, std::back_inserter(puzzles));
+        gen(N, rng, puzzles.begin());
         
         std::vector<int> costs;
         for(size_t i = 0; i < N; ++i) {

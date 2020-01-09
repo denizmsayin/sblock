@@ -3,7 +3,7 @@
 // __H & __W should be changed and different libraries compiled for different puzzle sizes
 // the build system handles this automatically
 
-#include "davi_input_generator.hpp"
+#include "sbpuzzle/generation/davi_input_generator.hpp"
 
 #ifndef __H
 #define __H 3
@@ -12,9 +12,11 @@
 #define __W 3
 #endif
 
+using namespace denizmsayin::sblock;
+
 constexpr sbpuzzle::psize_t H = __H, W = __W;
 
-using DIG = sbpuzzle::DaviInputGenerator<H, W>;
+using DIG = sbpuzzle::generation::DaviInputGenerator<H, W>;
 
 extern "C" {
     DIG *DIG_new(unsigned seed, size_t batch_size) {

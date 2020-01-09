@@ -10,6 +10,7 @@
 #include <numeric>
 
 #include "defs.hpp"
+#include "../utils.hpp"
 
 // TODO: cleanup
 
@@ -79,7 +80,7 @@ namespace denizmsayin::sblock::sbpuzzle {
 
         template <psize_t H, psize_t W>
         size_t tiles_hash(const array<pcell_t, H*W> tiles) {
-            return hash_byte_array(tiles.data(), H*W);
+            return utils::hash_byte_array(tiles.data(), H*W);
         }
 
         template <psize_t H, psize_t W>

@@ -19,6 +19,10 @@
 //          returns an instance of the goal state 
 //      }
 //
+//      static Puzzle uninitialized() {
+//          returns an uninitialized instance of the puzzle, for quick allocs
+//      }
+//
 //      bool operator==(const Puzzle &p) const { i
 //          check equality of states, necessary for using hash tables & comparing with goal
 //      }
@@ -70,7 +74,7 @@
 namespace denizmsayin::sblock::search {
 
     // Options for tracking generated node count, can be modified at runtime
-    SeriesTracker<size_t>::Options TRACKER_OPTS = SeriesTracker<size_t>::Options{}
+    utils::SeriesTracker<size_t>::Options TRACKER_OPTS = utils::SeriesTracker<size_t>::Options{}
         .do_track(false)
         .print_every(1000000)
         .name_str("Nodes expanded");

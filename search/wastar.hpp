@@ -29,7 +29,7 @@ namespace denizmsayin::sblock::search {
         if(start_puzzle == goal) return SearchResult(0, 0);
 
         // tracker for expanded nodes
-        SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
+        utils::SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
 
         // typedefs for the data structures 
         typedef std::unordered_map<Puzzle, Cost> hash_table_t;

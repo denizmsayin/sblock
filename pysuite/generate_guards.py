@@ -32,6 +32,7 @@ if __name__ == '__main__':
         exit(0)
 
     for header_file in argv[1:]:
+        print(f'File: {header_file}')
         defn_str = defs.HEADER_GUARD_PROJECT_PREFIX + '_' + defs.to_header_guard(header_file)
         with TemporaryFile(mode='w+') as tmpf:
             with open(header_file, 'r') as hf:

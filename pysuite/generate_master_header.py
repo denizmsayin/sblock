@@ -26,7 +26,6 @@ def generate_master_header(path, indent=0):
             if entry.name.endswith('.hpp'):
                 header_file.write(f'#include "{base_path}/{entry.name}"\n')
         header_file.write('\n#endif\n')
-    print(indent_str + f'Done generating {p}.')
 
 
 if __name__ == '__main__':

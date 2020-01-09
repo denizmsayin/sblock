@@ -11,7 +11,7 @@ namespace denizmsayin::sblock::search {
         struct CLDFSRec {
             const Puzzle goal;
             Cost cost_limit;
-            SeriesTrackedValue<size_t> exp_ctr;
+            utils::SeriesTrackedValue<size_t> exp_ctr;
             HeuristicFunc heuristic;
 
             // Only used for creating the initial state of the record

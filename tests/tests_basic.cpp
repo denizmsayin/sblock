@@ -91,7 +91,8 @@ void test_db(const std::vector<Puzzle> &puzzles, const PDB *db) {
 
         cout << "Testing IDA* with DB..." << endl;
         test_function(puzzles, [&](const Puzzle &p) {
-                return search2::iterative_deepening_a_star<Puzzle, Action>(p, dbh);
+                return search2::iterative_deepening_a_star<Puzzle, Action, PDBHeuristic,
+                                                           uint8_t, true, true>(p, dbh);
         });
 }
 

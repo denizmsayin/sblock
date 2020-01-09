@@ -43,7 +43,7 @@ namespace denizmsayin::sblock::search {
         if(start_puzzle == goal) return SearchResult(0, 0);
 
         // set up an expanded node counter and its tracker
-        SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
+        utils::SeriesTrackedValue<size_t> exp_ctr(0, TRACKER_OPTS);
 
         // the standard states that pointers/refs to both keys and values remain
         // unaffected. Since pairs are stored (defined as value_type), using a 
@@ -63,7 +63,7 @@ namespace denizmsayin::sblock::search {
         bool dummy;
         typename hash_table_t::iterator itr;
 
-        std::vector<Puzzle> batch_puzzles(batch_size);
+        std::vector<Puzzle> batch_puzzles(batch_size, Puzzle::uninitialized());
         std::vector<Cost> batch_h_costs(batch_size), batch_p_costs(batch_size);
         std::vector<entry_t> batch_entries(batch_size);
 

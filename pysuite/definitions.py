@@ -5,6 +5,7 @@ _CMAKELISTS_PATH = '/mnt/hdd/Documents/self/sblock/CMakeLists.txt'
 _UNDERSCORE_REPLS = (' ', '-', '::', '.', os.sep)
 
 def to_header_guard(name):
+    name = name.strip('./')
     for r in _UNDERSCORE_REPLS:
         name = name.replace(r, '_')
     return name.upper()

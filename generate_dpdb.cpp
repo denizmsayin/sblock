@@ -16,7 +16,9 @@
 #include <cctype>
 #include <string>
 
-#include "dpdb.hpp"
+#include "sbpuzzle/heuristics/pdb/dpdb.hpp"
+
+using namespace denizmsayin::sblock;
 
 constexpr sbpuzzle::psize_t H = __H, W = __W;
 constexpr int SIZE = H*W;
@@ -88,7 +90,7 @@ int main(int argc, char *argv[]) {
     // I wanted to create the files given a directory, but my current version
     // of g++ does not yet have the standard <filesystem> header
 
-    using sbpuzzle::DPDB;
+    using sbpuzzle::heuristics::pdb::DPDB;
 
     std::array<uint8_t, SIZE> groups;
     parse_group_string(argv[1], groups);

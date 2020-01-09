@@ -15,14 +15,9 @@
 #include <queue>
 #include <unistd.h>
 
-#include "search2.hpp"
+#include "utils.hpp"
+#include "search.hpp"
 #include "sbpuzzle.hpp"
-#include "sbpuzzle_generation.hpp"
-#include "pdb.hpp"
-#include "dpdb.hpp"
-#include "reflectdpdb.hpp"
-#include "combineddb.hpp"
-#include "heuristics.hpp"
 
 #ifndef __H
 #define __H 3
@@ -41,9 +36,12 @@ const std::string EVAL_HEURISTIC_STR = "H";
 
 //-------------------------------------------------------------------------------
 
+using namespace denizmsayin::sblock;
+namespace sbp = sbpuzzle;
+
 // typedef sbpuzzle::TileSwapAction Action;
-typedef sbpuzzle::DirectionAction Action;
-typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
+typedef sbp::DirectionAction Action;
+typedef sbp::Basic<H, W> Puzzle;
 typedef uint8_t cost_t;
 
 // compact struct to store puzzle solutions
@@ -70,7 +68,7 @@ template <typename Solver, typename HeuristicEvaluator>
 void solver_thread_routine(Solver solver, double w, size_t b, HeuristicEvaluator heuristic) {
     while(true) {
         // dequeue a puzzle from the generated ones if possible
-        Puzzle p;
+        Puzzle p = Puzzle::uninitialized();
         {
             std::scoped_lock lock(m_gpuzzles);
             // TODO: try to make this work with an initiall empty queue
@@ -80,7 +78,7 @@ void solver_thread_routine(Solver solver, double w, size_t b, HeuristicEvaluator
             gpuzzles.pop();
         }
         // solve the puzzle using A* search
-        search2::SearchResult r = solver(p, w, b, heuristic);
+        search::SearchResult r = solver(p, w, b, heuristic);
         // enqueue the solution and wake up the writer if necessary
         {
             std::scoped_lock lock(m_gsolutions);
@@ -95,9 +93,9 @@ void solver_thread_routine(Solver solver, double w, size_t b, HeuristicEvaluator
 }
 
 void writer_thread_routine(std::fstream &stream, size_t total_puzzles, bool write_file, 
-                           const SeriesTrackedValue<size_t>::Options &tracker_opts) 
+                           const utils::SeriesTrackedValue<size_t>::Options &tracker_opts) 
 {
-    SeriesTrackedValue<size_t> read_sols(0, tracker_opts);
+    utils::SeriesTrackedValue<size_t> read_sols(0, tracker_opts);
     // actual variables & logic
     std::queue<Solution> sols; // local queue for copying
     bool done = false;
@@ -148,11 +146,11 @@ std::string make_string_list(const std::vector<std::string> &strings) {
 }
 
 void show_usage() {
-    std::vector<std::string> ext(search2::SEARCH_STRINGS);
+    std::vector<std::string> ext(search::SEARCH_STRINGS);
     ext.emplace_back(EVAL_HEURISTIC_STR); // empty string for no search
     std::string sstring = make_string_list(ext);
-    std::string hstring = make_string_list(sbpuzzle::HEURISTIC_STRINGS);
-    std::string pstring = make_string_list(sbpuzzle::RANDOM_GENERATOR_STRINGS);
+    std::string hstring = make_string_list(sbp::heuristics::HEURISTIC_STRINGS);
+    std::string pstring = make_string_list(sbp::generation::RANDOM_GENERATOR_STRINGS);
 
     auto print_descrs = [](const std::vector<std::string> &strings,
                            const std::unordered_map<std::string, std::string> &descrs)
@@ -175,14 +173,16 @@ void show_usage() {
         << "                      generating heuristic values, rather than solving the puzzle.\n"
 
         << "       -h HEURISTIC   heuristic to use: " << hstring << "\n";
-        print_descrs(sbpuzzle::HEURISTIC_STRINGS, sbpuzzle::HEURISTIC_DESCR_MAP);
+        print_descrs(sbp::heuristics::HEURISTIC_STRINGS, 
+                     sbp::heuristics::HEURISTIC_DESCR_MAP);
     std::cout 
         << "                      only relevant if the search type is one of the A* types\n"
         << "                      default is manhattan\n";
 
     std::cout
         << "       -p PUZZLEGEN   puzzle generation method to use: " << pstring << "\n";
-        print_descrs(sbpuzzle::RANDOM_GENERATOR_STRINGS, sbpuzzle::RANDOM_GENERATOR_DESCR_MAP);
+        print_descrs(sbp::generation::RANDOM_GENERATOR_STRINGS, 
+                     sbp::generation::RANDOM_GENERATOR_DESCR_MAP);
     std::cout
         << "                      default is shuffle.\n"
         << "       -l LOWER       lower limit on the number of moves to apply during puzzle\n"
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
     size_t num_threads = 0;
     size_t track_value = 1;
 
-    search2::TRACKER_OPTS.do_track(true);
+    search::TRACKER_OPTS.do_track(true);
 
     if(argc == 1)
         std::cout << "For argument help: ./exe_file -?\n";
@@ -262,7 +262,8 @@ int main(int argc, char *argv[]) {
     }
 
 
-    using namespace sbpuzzle;
+    using namespace sbp::heuristics;
+    using namespace sbp::generation;
     // create n random puzzles
     std::vector<Puzzle> puzzles;
 
@@ -303,7 +304,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Read " << num_puzzles << " puzzles from file " << in_path << std::endl;
     }
     
-    using namespace search2;
+    using namespace search;
 
     HeuristicType heuristic;
     try {
@@ -339,7 +340,7 @@ int main(int argc, char *argv[]) {
         // fill an already_solved set from the file
         if(file_size > 0) {
             // check how many instances the output file contains
-            size_t storage_size = Puzzle::tile_size_in_bytes() + sizeof(Solution::cost);
+            size_t storage_size = Puzzle::SERIALIZED_SIZE + sizeof(Solution::cost);
             size_t file_num_puzzles = file_size / storage_size;
             size_t rem = file_size % storage_size;
             if(rem != 0) {
@@ -419,13 +420,14 @@ int main(int argc, char *argv[]) {
         gnum_nodes = 0;
         
         // initialize solution tracker options 
-        SeriesTrackedValue<size_t>::Options opts = SeriesTrackedValue<size_t>::Options{}
+        utils::SeriesTrackedValue<size_t>::Options opts = utils::
+            SeriesTrackedValue<size_t>::Options{}
             .print_every(track_value)
             .alpha(0.5)
             .target_value(num_puzzles);
 
         if(num_threads == 0) { // single threaded implementation
-            SeriesTrackedValue<size_t> nsolved(0, opts);
+            utils::SeriesTrackedValue<size_t> nsolved(0, opts);
             for(size_t i = 0, size = puzzles.size(); i < size; ++i) {
                 auto r = search_function(puzzles[i], weight, batch_size, std::ref(hf));
                 gnum_moves += r.cost;

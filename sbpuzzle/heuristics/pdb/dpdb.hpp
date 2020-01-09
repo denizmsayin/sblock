@@ -103,13 +103,13 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
             // first, find the combination index
             auto s = TileCombIterator<H, W>::begin(group_mask, tiles);
             auto e = TileCombIterator<H, W>::end(group_mask, tiles);
-            size_t comb_i = calculate_combindex(s, e, tiles.size(), group_size);
+            size_t comb_i = utils::calculate_combindex(s, e, tiles.size(), group_size);
             // then the lexicographical index of the group elements
             std::vector<pcell_t> group_tiles(group_size);
             sbpuzzle::details::tiles_fill_group<H, W>(group_mask, tiles, group_tiles.begin());
-            size_t lex_i = calculate_lexindex(group_tiles.begin(), group_tiles.end());
+            size_t lex_i = utils::calculate_lexindex(group_tiles.begin(), group_tiles.end());
             // calculate the total index and lookup the table
-            size_t index = comb_i * factorial(group_size) + lex_i;
+            size_t index = comb_i * utils::factorial(group_size) + lex_i;
             return index;
         }
 
@@ -137,7 +137,7 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
 
         // both static variables are used for printing details during generation
         // they should be changed before calling generate/generate_and_save
-        static SeriesTracker<size_t>::Options GEN_TRACKER_OPTS;
+        static utils::SeriesTracker<size_t>::Options GEN_TRACKER_OPTS;
         static bool GEN_VERBOSE;
 
         // calculate the index of the given tile configuration for the given group
@@ -171,8 +171,8 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
     };
 
     template <psize_t H, psize_t W>
-    SeriesTrackedValue<size_t>::Options DPDB<H, W>::GEN_TRACKER_OPTS = 
-        SeriesTrackedValue<size_t>::Options{}
+    utils::SeriesTrackedValue<size_t>::Options DPDB<H, W>::GEN_TRACKER_OPTS = 
+        utils::SeriesTrackedValue<size_t>::Options{}
             .do_track(false)
             .print_every(1000000)
             .name_str("States explored");
@@ -216,7 +216,8 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
         // initialize empty tables
         tables = std::vector<std::vector<pcost_t>>(num_groups);
         for(psize_t i = 0; i < num_groups; ++i) {
-            size_t db_size = combination(SIZE, group_counts[i]) * factorial(group_counts[i]);
+            size_t db_size = utils::combination(SIZE, group_counts[i]) * 
+                             utils::factorial(group_counts[i]);
             tables[i] = std::vector<pcost_t>(db_size, DIST_MAX);
             // set the initial distances to max value
         }
@@ -352,8 +353,8 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
         // the size of the visited lookup table will be +1 compared to the hole-less group
         // so (group_size + 1) times the cost lookup table
         // only a fraction will be utilized, but hopefully vector<bool> will help with space
-        size_t visited_size = combination(SIZE, group_counts[i] + 1) 
-                              * factorial(group_counts[i] + 1);
+        size_t visited_size = utils::combination(SIZE, group_counts[i] + 1) 
+                              * utils::factorial(group_counts[i] + 1);
         
         // sadly, bitset size has to be known at compile time,
         // so we're left with vector<bool>...
@@ -385,7 +386,7 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
         size_t start_ex_index = calculate_extended_index(i, start_state.get_tiles());
         visited[start_ex_index] = true;
         {
-            SeriesTrackedValue<size_t> ex_states(0, GEN_TRACKER_OPTS);
+            utils::SeriesTrackedValue<size_t> ex_states(0, GEN_TRACKER_OPTS);
             while(!q.empty()) {
                 Node node = q.front(); q.pop(); // get the next node
                 const auto &p = node.puzzle;

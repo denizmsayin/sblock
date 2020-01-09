@@ -10,9 +10,9 @@
 #include <array>
 #include <memory>
 
-#include "../puzzle.hpp"
+#include "../basic.hpp"
 
-namespace denizmsayin::sblock::sbpuzzle::heuristics::dlmodel {
+namespace denizmsayin::sblock::sbpuzzle::heuristics {
 
     namespace details {
         template <typename T1, typename T2>
@@ -29,7 +29,7 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::dlmodel {
         virtual ~DLModel() {}
 
         pcost_t forward(const std::array<pcell_t, H*W> &tiles) {
-            static constexpr size_t S = details::SIZE<H, W>;
+            static constexpr size_t S = sbpuzzle::details::SIZE<H, W>;
             // one-hot encode the tiles to float32
             std::array<float, S*S> enc;
             details::one_hot_encode<pcell_t, float>(tiles.data(), S, enc.data());
@@ -49,7 +49,7 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::dlmodel {
                      RandomAccessIterator end,
                      OutputIterator out)
         {
-            static constexpr size_t S = details::SIZE<H, W>;
+            static constexpr size_t S = sbpuzzle::details::SIZE<H, W>;
             // one hot encode all the puzzles in a cont. memory block
             long int n = static_cast<long int>(end - begin);
             std::vector<IType> enc(n * S * S); // in cont. memory
