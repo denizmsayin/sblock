@@ -1,5 +1,5 @@
-#ifndef __DPDB_HPP__
-#define __DPDB_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_PDB_DPDB_HPP
+#define DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_PDB_DPDB_HPP
 
 #include <algorithm>
 #include <cstdint>
@@ -10,8 +10,8 @@
 #include <chrono>
 #include <numeric>
 
-#include "pdb_base.hpp"
-#include "../../puzzle/maskednohole.hpp"
+#include "base.hpp"
+#include "../../maskednohole.hpp"
 #include "../../../utils.hpp"
 
 namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
@@ -116,7 +116,7 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
     }
 
     template <psize_t H, psize_t W>
-    class DPDB : public PDBBase<H, W> {
+    class DPDB : public Base<H, W> {
     public:
 
         // groups is supposed to contain a group for each tile

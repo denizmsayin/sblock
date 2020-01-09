@@ -1,7 +1,7 @@
-#ifdef W_TORCH
+#ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_DLMODEL_HPP
+#define DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_DLMODEL_HPP
 
-#ifndef __DLMODEL_HPP__
-#define __DLMODEL_HPP__
+#ifdef W_TORCH
 
 #include <torch/script.h>
 
@@ -10,9 +10,9 @@
 #include <array>
 #include <memory>
 
-#include "sbpuzzle.hpp"
+#include "../puzzle.hpp"
 
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle::heuristics::dlmodel {
 
     namespace details {
         template <typename T1, typename T2>
@@ -28,7 +28,7 @@ namespace sbpuzzle {
     public:
         virtual ~DLModel() {}
 
-        pcost_t forward(const std::array<uint8_t, H*W> &tiles) {
+        pcost_t forward(const std::array<pcell_t, H*W> &tiles) {
             static constexpr size_t S = details::SIZE<H, W>;
             // one-hot encode the tiles to float32
             std::array<float, S*S> enc;
@@ -74,7 +74,7 @@ namespace sbpuzzle {
                 *out++ = static_cast<OType>(acc[i]);
         }
 
-        uint8_t forward(const SBPuzzle<H, W> &p) {
+        uint8_t forward(const Basic<H, W> &p) {
             return forward(p.get_tiles());
         }
 

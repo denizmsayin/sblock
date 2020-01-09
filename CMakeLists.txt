@@ -31,6 +31,7 @@ function(add_target_to_build TRG SRCLIST)
     add_target_to_build_with_libs("${TRG}" "${SRCLIST}" "" "" FALSE)
 endfunction()
 
+if(FALSE)
 foreach(D 3 4 5)
     # add the solver
     set(SRCLIST "solver.cpp" "utils/basic.cpp")
@@ -42,12 +43,14 @@ foreach(D 3 4 5)
     set(SRCLIST "libdig.cpp" "utils/basic.cpp")
     add_target_to_build_with_libs("dig_${D}x${D}" "${SRCLIST}" "" "${D}" TRUE)
 endforeach()
+endif()
 
 # remaining misc. programs
 if(WITH_TESTS)
-    set(EXTRAS "cmp_solution_files;tests_basic;tests_distrs;tests_gen")
+    # set(EXTRAS "cmp_solution_files;tests_basic;tests_distrs;tests_gen")
+    set(EXTRAS "tests_basic")
 endif()
 
 foreach(T ${EXTRAS})
-    add_target_to_build("${T}" "${T}.cpp;utils/basic.cpp")
+    add_target_to_build("${T}" "tests/${T}.cpp;utils/basic.cpp")
 endforeach()

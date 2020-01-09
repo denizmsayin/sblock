@@ -39,6 +39,8 @@
 // as before, entirely statically.
 //
 
+#include "basic.hpp"
+
 namespace denizmsayin::sblock::sbpuzzle {
     // The derived class for the case where the hole is masked
     template <psize_t H, psize_t W>

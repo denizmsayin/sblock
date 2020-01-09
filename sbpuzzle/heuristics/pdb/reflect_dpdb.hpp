@@ -1,7 +1,7 @@
-#ifndef __REFLECTDPDB_HPP__
-#define __REFLECTDPDB_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_PDB_REFLECT_DPDB_HPP
+#define DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_PDB_REFLECT_DPDB_HPP
 
-#include "pdb_base.hpp"
+#include "base.hpp"
 #include "dpdb.hpp"
 
 namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
@@ -18,7 +18,7 @@ namespace denizmsayin::sblock::sbpuzzle::heuristics::pdb {
     
     namespace details {
         template <psize_t H, psize_t W, typename Storage>
-        class ReflectDPDB : public PDBBase<H, W> {
+        class ReflectDPDB : public Base<H, W> {
         public:
             pcost_t lookup(const std::array<pcell_t, H*W> &tiles) const;
 

@@ -35,7 +35,7 @@ namespace denizmsayin::sblock::search {
         typedef std::unordered_map<Puzzle, Cost> hash_table_t;
         typedef std::pair<const Puzzle, Cost> *entry_t;
         typedef HNode<entry_t, Cost> node_t;
-        typedef typename MaybeActionExtended<Rev, Action, node_t> mnode_t;
+        typedef MaybeActionExtended<Rev, Action, node_t> mnode_t;
         typedef std::priority_queue<mnode_t, std::vector<mnode_t>, std::greater<mnode_t>> 
                 pqueue_t;
 

@@ -4,6 +4,8 @@
 // Could not observe a speed difference between previous version
 // and simply using WA* with -O3, which is why A* calls WA*
 
+#include "wastar.hpp"
+
 namespace denizmsayin::sblock::search {
 
     template <class Puzzle, class Action, class HeuristicFunc, 
@@ -13,4 +15,5 @@ namespace denizmsayin::sblock::search {
     }
 
 }
+
 #endif

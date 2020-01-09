@@ -1,7 +1,6 @@
 #ifndef DENIZMSAYIN_SBLOCK_SEARCH_HPP
 #define DENIZMSAYIN_SBLOCK_SEARCH_HPP
 
-#include "search/nodes.hpp"
 #include "search/bwastar.hpp"
 #include "search/action_ext.hpp"
 #include "search/astar.hpp"

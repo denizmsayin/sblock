@@ -1,6 +1,8 @@
 #ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_MASKEDNOHOLE_HPP
 #define DENIZMSAYIN_SBLOCK_SBPUZZLE_MASKEDNOHOLE_HPP
 
+#include "basic.hpp"
+
 namespace denizmsayin::sblock::sbpuzzle {
     // The derived class for the case where the hole is not masked
     template <psize_t H, psize_t W>

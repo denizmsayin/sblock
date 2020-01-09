@@ -1,6 +1,10 @@
 #ifndef DENIZMSAYIN_SBLOCK_SEARCH_BWASTAR_HPP
 #define DENIZMSAYIN_SBLOCK_SEARCH_BWASTAR_HPP
+
+#include <unordered_map>
 #include <queue>
+#include <algorithm>
+#include <functional>
 
 #include "defs.hpp"
 #include "basic_nodes.hpp"

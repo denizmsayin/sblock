@@ -40,7 +40,7 @@ namespace denizmsayin::sblock::search {
 
     // construct either a normal node, or a node with an action depending on Extend
     template <bool Extend, class Action, class BaseNode, typename... Args>
-    typename MaybeActionExtended<Extend, Action, BaseNode>
+    MaybeActionExtended<Extend, Action, BaseNode>
     maybe_construct_action_extended_node(
             const std::optional<Action> &action, 
             Args&&... args) 

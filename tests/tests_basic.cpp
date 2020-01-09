@@ -7,14 +7,8 @@
 #include <string>
 #include <numeric>
 
-#include "search2.hpp"
-
-#include "sbpuzzle.hpp"
-#include "pdb.hpp"
-#include "dpdb.hpp"
-#include "reflectdpdb.hpp"
-#include "combineddb.hpp"
-#include "crdpdb.hpp"
+#include "../search.hpp"
+#include "../sbpuzzle.hpp"
 
 unsigned SEED = 42;
 constexpr int N = 300;
@@ -25,18 +19,21 @@ constexpr int OPTIMAL_MOVES = 6645;
 
 //-------------------------------------------------------------------------------
 
+namespace search2 = denizmsayin::sblock::search;
+namespace sbp = denizmsayin::sblock::sbpuzzle;
 using namespace std;
-typedef sbpuzzle::SBPuzzle<H, W> Puzzle;
-typedef sbpuzzle::TileSwapAction Action;
-typedef sbpuzzle::PDB<H, W> PDB;
-typedef sbpuzzle::DPDB<H, W> DPDB;
-typedef sbpuzzle::ReflectDPDBDependent<H, W> ReflectDPDB;
-typedef sbpuzzle::CombinedDB<H, W> CombinedDB;
-typedef sbpuzzle::CRDPDB<H, W> CRDPDB;
+
+typedef sbp::Basic<H, W> Puzzle;
+typedef sbp::TileSwapAction Action;
+typedef sbp::heuristics::pdb::Base<H, W> PDB;
+typedef sbp::heuristics::pdb::DPDB<H, W> DPDB;
+typedef sbp::heuristics::pdb::ReflectDPDBDependent<H, W> ReflectDPDB;
+typedef sbp::heuristics::pdb::CombinedDB<H, W> CombinedDB;
+typedef sbp::heuristics::pdb::CRDPDB<H, W> CRDPDB;
 
 std::vector<array<uint8_t, H*W>> DBGROUPS { 
-    {0, 0, 0, 1, 1, 1, 2, 2, sbpuzzle::DONT_CARE},
-    {0, 0, 0, 1, 1, 0, 1, 1, sbpuzzle::DONT_CARE} 
+    {0, 0, 0, 1, 1, 1, 2, 2, sbp::DONT_CARE},
+    {0, 0, 0, 1, 1, 0, 1, 1, sbp::DONT_CARE} 
 };
 // std::vector<const char *> DBFILES {"a1.db", "a2.db", "a3.db"};
 
@@ -46,7 +43,7 @@ Puzzle create_solvable_puzzle(URNG &&rng) {
     std::iota(tiles.begin(), tiles.end(), 0);
     do {
         std::shuffle(tiles.begin(), tiles.end(), rng); 
-    } while(!sbpuzzle::tiles_solvable<H, W>(tiles));
+    } while(!sbp::tiles_solvable<H, W>(tiles));
     return Puzzle(tiles);
 }
 

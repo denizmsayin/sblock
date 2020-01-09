@@ -1,16 +1,14 @@
-#ifndef __HEURISTICS_HPP__
-#define __HEURISTICS_HPP__
+#ifndef DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_HEURISTICS_HPP
+#define DENIZMSAYIN_SBLOCK_SBPUZZLE_HEURISTICS_HEURISTICS_HPP
 
 #include <utility>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
-#include "search2.hpp"
-#include "sbpuzzle.hpp"
+#include "../../search/bwastar.hpp"
+#include "../basic.hpp"
 #include "pdb.hpp"
-#include "dpdb.hpp"
-#include "reflectdpdb.hpp"
-#include "crdpdb.hpp"
 
 #ifdef W_TORCH
 #include "dlmodel.hpp"
@@ -24,7 +22,7 @@
 //  - add a case to the heuristic_factory function
 
 // enumeration and string conversion for the heuristic factory
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle::heuristics {
 
     enum class HeuristicType {
         MISPL,
@@ -90,36 +88,36 @@ namespace sbpuzzle {
 }
 
 // actual class implementations
-namespace sbpuzzle {
+namespace denizmsayin::sblock::sbpuzzle::heuristics {
 
     template <psize_t H, psize_t W>
     class Heuristic {
     public:
-        typedef std::vector<SBPuzzle<H, W>> pvector_t;
+        typedef std::vector<Basic<H, W>> pvector_t;
         typedef std::vector<pcost_t> cvector_t;
 
         virtual ~Heuristic() {}
 
-        virtual pcost_t operator()(const SBPuzzle<H, W> &h) = 0;
+        virtual pcost_t operator()(const Basic<H, W> &h) = 0;
 
         template <typename RandomAccessIterator, typename OutputIterator>
         void op_par_base(RandomAccessIterator begin, 
                          RandomAccessIterator end,
                          OutputIterator o)
         {
-            search2::BHFWrapper<SBPuzzle<H, W>, Heuristic&, pcost_t>(*this)(begin, end, o);
+            sblock::search::BHFWrapper<Basic<H, W>, Heuristic&, pcost_t>(*this)(begin, end, o);
         }
 
         // had to stick with vector since we cannot have templated virtual functions
-        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
-                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+        virtual void operator()(typename std::vector<Basic<H, W>>::const_iterator begin, 
+                                typename std::vector<Basic<H, W>>::const_iterator end,
                                 std::vector<pcost_t>::iterator o) 
         {
             op_par_base(begin, end, o);
         }
         
-        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
-                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+        virtual void operator()(typename std::vector<Basic<H, W>>::const_iterator begin, 
+                                typename std::vector<Basic<H, W>>::const_iterator end,
                                 std::back_insert_iterator<std::vector<pcost_t>> o) 
         {
             op_par_base(begin, end, o);
@@ -130,7 +128,7 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
     class MisplacedTileHeuristic : public Heuristic<H, W> {
     public:
-        pcost_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const Basic<H, W> &p) {
             return p.num_misplaced_tiles();
         }
     };
@@ -138,7 +136,7 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
     class ManhattanHeuristic : public Heuristic<H, W> {
     public:
-        pcost_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const Basic<H, W> &p) {
             return p.manhattan_distance_to_solution();
         }
     };
@@ -147,13 +145,13 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
     class PDBHeuristic : public Heuristic<H, W> {
     public:
-        PDBHeuristic(PDB<H, W> *p) : db(p) {}
+        PDBHeuristic(pdb::Base<H, W> *p) : db(p) {}
 
-        pcost_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const Basic<H, W> &p) {
             return db->lookup(p);
         }
     private:
-        std::unique_ptr<PDB<H, W>> db;
+        std::unique_ptr<pdb::Base<H, W>> db;
     };
 
     #ifdef W_TORCH
@@ -162,19 +160,19 @@ namespace sbpuzzle {
     public:
         DLModelHeuristic(std::unique_ptr<DLModel<H, W>> &&p) : model(std::move(p)) {}
 
-        pcost_t operator()(const SBPuzzle<H, W> &p) {
+        pcost_t operator()(const Basic<H, W> &p) {
             return model->forward(p);
         }
         
-        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
-                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+        virtual void operator()(typename std::vector<Basic<H, W>>::const_iterator begin, 
+                                typename std::vector<Basic<H, W>>::const_iterator end,
                                 std::vector<pcost_t>::iterator o) 
         {
             model->template forward<float, pcost_t>(begin, end, o);
         }
         
-        virtual void operator()(typename std::vector<SBPuzzle<H, W>>::const_iterator begin, 
-                                typename std::vector<SBPuzzle<H, W>>::const_iterator end,
+        virtual void operator()(typename std::vector<Basic<H, W>>::const_iterator begin, 
+                                typename std::vector<Basic<H, W>>::const_iterator end,
                                 std::back_insert_iterator<std::vector<pcost_t>> o) 
         {
             model->template forward<float, pcost_t>(begin, end, o);
@@ -188,7 +186,9 @@ namespace sbpuzzle {
     template <psize_t H, psize_t W>
     std::unique_ptr<Heuristic<H, W>> heuristic_factory(HeuristicType type, 
                                                        const std::string &file_path="",
-                                                       bool use_gpu=false) {
+                                                       bool use_gpu=false) 
+    {
+        using namespace pdb;
         typedef HeuristicType T;
         Heuristic<H, W> *p = nullptr;
         switch(type) {

@@ -65,6 +65,12 @@ namespace denizmsayin::sblock::sbpuzzle {
             return Basic();
         }
 
+        Basic goal_state() const {
+            std::array<pcell_t, SIZE> tiles;
+            details::tiles_correct_fill<H, W>(tiles);
+            return Basic(tiles);
+        }
+
         const std::array<pcell_t, H*W> &get_tiles() const {
             return tiles;
         }

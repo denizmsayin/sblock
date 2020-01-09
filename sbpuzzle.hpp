@@ -8,5 +8,6 @@
 #include "sbpuzzle/generator_iterator.hpp"
 #include "sbpuzzle/actions.hpp"
 #include "sbpuzzle/basic.hpp"
+#include "sbpuzzle/heuristics.hpp"
 
 #endif

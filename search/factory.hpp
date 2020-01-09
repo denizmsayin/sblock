@@ -1,5 +1,7 @@
 #ifndef DENIZMSAYIN_SBLOCK_SEARCH_FACTORY_HPP
 #define DENIZMSAYIN_SBLOCK_SEARCH_FACTORY_HPP
+
+#include "bfs.hpp"
 #include "astar.hpp"
 #include "wastar.hpp"
 #include "bwastar.hpp"

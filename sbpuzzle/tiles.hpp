@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <stdexcept>
+#include <numeric>
 
 #include "defs.hpp"
 
@@ -19,8 +20,7 @@ namespace denizmsayin::sblock::sbpuzzle {
 
         template <psize_t H, psize_t W>
         inline void tiles_correct_fill(array<pcell_t, H*W> &tiles) {
-            for(size_t size = tiles.size(), i = 0; i < size; ++i)
-                tiles[i] = i;
+            std::iota(tiles.begin(), tiles.end(), 0);
         }
 
         template <psize_t H, psize_t W>
@@ -244,7 +244,7 @@ namespace denizmsayin::sblock::sbpuzzle {
             // here rather than store it in each puzzle instance
             array<bool, SIZE<H, W>> mask;
             tiles_reconstruct_mask<H, W>(tiles, mask);
-            array<uint8_t, SIZE<H, W>> tiles2;
+            array<pcell_t, SIZE<H, W>> tiles2;
             tiles_correct_fill<H, W>(tiles2, mask);
             return P(tiles2, mask);
         }
